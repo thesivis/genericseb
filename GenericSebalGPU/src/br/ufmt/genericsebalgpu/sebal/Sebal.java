@@ -94,7 +94,7 @@ public abstract class Sebal {
 
         float z0m = (float) Math.exp(-5.809f + 5.62f * SAVI_hot);
 
-        float U_star = (float) (Constants.k * Uref / Math.log(Constants.Zref / z0m));
+        float U_star = (float) (Constants.k * Uref / Math.log(Constants.z200 / z0m));
 
         float r_ah = (float) (Math.log(Constants.z2 / Constants.z1) / (U_star * Constants.k));
 
@@ -128,7 +128,7 @@ public abstract class Sebal {
             th_2 = Psih(Constants.z2, L);
             th_0_1 = Psih(Constants.z1, L);
 
-            U_star = (float) (Constants.k * Uref / (Math.log(Constants.Zref / z0m) - tm_200));
+            U_star = (float) (Constants.k * Uref / (Math.log(Constants.z200 / z0m) - tm_200));
             r_ah_anterior = r_ah;
             r_ah = (float) ((Math.log(Constants.z2 / Constants.z1) - th_2 + th_0_1) / (U_star * Constants.k));
 

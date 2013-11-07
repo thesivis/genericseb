@@ -66,7 +66,7 @@ public class Constants {
     public static int SelectedDevice = 0;
     public static int nThreadsPerBlock = 64;
     
-    public static float Zref = 200.0f;
+    public static float z200 = 200.0f;
     public static float z2 = 2.0f;
     public static float z1 = 0.1f;
     public static float p = 1.15f;
