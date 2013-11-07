@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
@@ -28,11 +29,22 @@ public class Main {
 
         String eq = "z0m=exp(-5.809+5.62*SAVI)";
 
-//        eq = "4*x+5.2024-(Log(x,y)^-z)-300.12";
+        eq = "4*x+5.2024-(Log(x,y)^-z)-300.12";
         List<String> ret = tokenize(eq);
         for (String string : ret) {
             System.out.println(string);
         }
+        
+        ExpressionParser ex = new ExpressionParser();
+        System.out.println(ret.get(0).getClass());
+        Object[] t = (Object[])ret.toArray();
+        String[] a = new String[t.length];
+        for (int i = 0; i < a.length; i++) {
+//            System.out.println(i);
+            a[i]=(String)t[i];
+            
+        }
+        System.out.println(Arrays.toString(ExpressionParser.infixToRPN(a)));
 
     }
 
@@ -41,38 +53,16 @@ public class Main {
             StreamTokenizer tokenizer = new StreamTokenizer(new StringReader(s));
             tokenizer.ordinaryChar('-');  // Don't parse minus as part of numbers.
             List<String> tokBuf = new ArrayList<String>();
-            char menos = '-';
-            char c = ' ';
-            boolean hasMenos = false;
             while (tokenizer.nextToken() != StreamTokenizer.TT_EOF) {
                 switch (tokenizer.ttype) {
                     case StreamTokenizer.TT_NUMBER:
-                        String number = String.valueOf(tokenizer.nval);
-                        if (hasMenos) {
-                            number = menos + number;
-                        }
-                        tokBuf.add(number);
-                        hasMenos = false;
+                        tokBuf.add(String.valueOf(tokenizer.nval));
                         break;
                     case StreamTokenizer.TT_WORD:
-                        number = tokenizer.sval;
-                        if (hasMenos) {
-                            number = menos + number;
-                        }
-                        tokBuf.add(number);
-                        hasMenos = false;
+                        tokBuf.add(tokenizer.sval);
                         break;
                     default:  // operator
-                        if (hasMenos) {
-                            tokBuf.add(String.valueOf(c));
-                        }
-                        c = (char) tokenizer.ttype;
-                        if (c == menos) {
-                            hasMenos = true;
-                        } else {
-                            hasMenos = false;
-                            tokBuf.add(String.valueOf(c));
-                        }
+                        tokBuf.add(String.valueOf((char) tokenizer.ttype));
                 }
             }
             return tokBuf;
@@ -81,5 +71,6 @@ public class Main {
         }
         return null;
     }
+    
 
 }
