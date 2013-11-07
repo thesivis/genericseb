@@ -1,0 +1,14 @@
+z0m=exp(-5.809+5.62*SAVI)
+SWnet=(1.0 - albedo) * SWd
+LWnet=emissivity * LWd - emissivity * Sigma_SB * LST_K * LST_K * LST_K * LST_K
+Rn = SWnet + LWnet
+G0=Rn * (((LST_K - T0) / albedo) * (0.0038 * albedo + 0.0074 * albedo * albedo) * (1.0 - 0.98 * NDVI * NDVI * NDVI * NDVI))
+G0=0.3 * Rn;
+U_star= k * Uref / log(z200 / z0m)
+r_ah=log(z2 / z1) / (U_star * k)
+H = p * cp * (b + a * (LST_K - T0)) / r_ah
+LE = Rn - H - G0
+evap_fr = LE / (Rn - G0)
+Rn_24h= Rg_24h * (1.0 - albedo) - 110.0 * Tao_24h
+LE_24h= evap_fr * Rn_24h
+ET_24h = (evap_fr * Rn_24h * 86.4) / 2450.0
