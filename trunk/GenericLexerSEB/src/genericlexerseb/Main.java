@@ -29,7 +29,7 @@ public class Main {
 
         String eq = "z0m=exp(-5.809+5.62*SAVI)";
 
-        eq = "4*x+5.2024-(Log(x,y)^-z)-300.12";
+        eq = "4*x+5.2024-(log(x,y)^-z)-300.12";
         List<String> ret = tokenize(eq);
         for (String string : ret) {
             System.out.println(string);
