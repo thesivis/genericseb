@@ -10,7 +10,6 @@ import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +25,8 @@ import java.util.regex.Pattern;
  * on:
  * http://www.technical-recipes.com/2011/a-mathematical-expression-parser-in-java-and-cpp
  *
+ * @author Raphael de Souza Rosa Gomes (raphael@ic.ufmt.br) University Federal
+ * of Mato Grosso, Brazil
  */
 public class ExpressionParser {
     // Associativity constants for operators  
@@ -34,7 +35,8 @@ public class ExpressionParser {
     private static final int LEFT_ASSOC = 0;
     private static final int RIGHT_ASSOC = 1;
     // Operators      
-    private static final Map<String, int[]> OPERATORS = new HashMap<String, int[]>();
+    private static final Map<String, int[]> OPERATORS = new HashMap<>();
+    private List<String> variables = new ArrayList<>();
 
     static {
         // Map<"token", []{precendence, associativity, number of arguments}>          
@@ -47,6 +49,7 @@ public class ExpressionParser {
         OPERATORS.put("sqrt", new int[]{15, LEFT_ASSOC, 1});
         OPERATORS.put("ln", new int[]{15, LEFT_ASSOC, 1});
         OPERATORS.put("log", new int[]{15, LEFT_ASSOC, 1});
+        OPERATORS.put("logb", new int[]{15, LEFT_ASSOC, 2});
         OPERATORS.put("exp", new int[]{15, LEFT_ASSOC, 1});
         OPERATORS.put("abs", new int[]{15, LEFT_ASSOC, 1});
         OPERATORS.put("sin", new int[]{15, LEFT_ASSOC, 1});
@@ -57,27 +60,47 @@ public class ExpressionParser {
         OPERATORS.put("atan", new int[]{15, LEFT_ASSOC, 1});
         OPERATORS.put("signum", new int[]{15, LEFT_ASSOC, 1});
     }
-    private Map<String, Double> VARIABLES = new HashMap<String, Double>();
 
     public ExpressionParser() {
     }
 
-    public ExpressionParser(Map<String, Double> variables) {
+    public ExpressionParser(boolean debug) {
+        this(null, debug);
+    }
+
+    public ExpressionParser(List<String> variables) {
         this(variables, false);
     }
 
-    public ExpressionParser(Map<String, Double> variables, boolean debug) {
-        VARIABLES.put("PI", Math.PI);
-        VARIABLES.put("E", Math.E);
-        VARIABLES.putAll(variables);
+    public ExpressionParser(List<String> variables, boolean debug) {
         this.debug = debug;
+        this.variables.addAll(variables);
     }
 
-    private static boolean isOperator(String token) {
+    private boolean isOperator(String token) {
         return OPERATORS.containsKey(token);
     }
+    
+    private boolean isNumeric(String token){
+        try {
+            double d = Double.parseDouble(token);
+            return true;
+        } catch (NumberFormatException ex) {
+            return false;
+        }
+    }
 
-    private static boolean isAssociative(String token, int type) {
+    private boolean isVariable(String variable) {
+        if (variables.isEmpty()) {
+            return true;
+        }
+        if(!variables.contains(variable)){
+            throw new IllegalArgumentException("Variable '" + variable+"' doesn't exist!");
+        }
+        return true;
+    }
+
+    private boolean isAssociative(String token, int type) {
         if (!isOperator(token)) {
             throw new IllegalArgumentException("Invalid token: " + token);
         }
@@ -88,7 +111,7 @@ public class ExpressionParser {
         return false;
     }
 
-    private static int cmpPrecedence(String token1, String token2) {
+    private int cmpPrecedence(String token1, String token2) {
         if (!isOperator(token1) || !isOperator(token2)) {
             throw new IllegalArgumentException("Invalid tokens: " + token1
                     + " " + token2);
@@ -96,12 +119,17 @@ public class ExpressionParser {
         return OPERATORS.get(token1)[0] - OPERATORS.get(token2)[0];
     }
 
-    public static String[] infixToRPN(String[] inputTokens) {
-        ArrayList<String> out = new ArrayList<String>();
-        Stack<String> stack = new Stack<String>();
-        System.out.println("Input:" + Arrays.toString(inputTokens));
+    private String[] infixToRPN(String[] inputTokens) {
+        ArrayList<String> out = new ArrayList<>();
+        Stack<String> stack = new Stack<>();
+        if (debug) {
+            System.out.println("Input:" + Arrays.toString(inputTokens));
+        }
+
         for (String token : inputTokens) {
-            System.out.println("token:" + token);
+            if (debug) {
+                System.out.println("Token:" + token);
+            }
             if (isOperator(token)) {
                 while (!stack.empty() && isOperator(stack.peek())) {
                     if ((isAssociative(token, LEFT_ASSOC)
@@ -122,6 +150,9 @@ public class ExpressionParser {
                 }
                 stack.pop();
             } else {
+                if(!isNumeric(token)){
+                    isVariable(token);
+                }
                 out.add(token);
             }
         }
@@ -132,49 +163,42 @@ public class ExpressionParser {
         return out.toArray(output);
     }
 
-    public static boolean isNumeric(String token) {
+    private boolean RPNtoDouble(String[] tokens) {
         try {
-            double d = Double.parseDouble(token);
-            return true;
-        } catch (NumberFormatException ex) {
+            Stack<String> stack = new Stack<String>();
+            if (debug) {
+                System.out.println(Arrays.toString(tokens));
+            }
+            for (String token : tokens) {
+                if (!isOperator(token)) {
+                    stack.push(token);
+                } else {
+
+                    int[] op = OPERATORS.get(token);
+                    for (int i = 0; i < op[2]; i++) {
+                        stack.pop();
+                    }
+
+                    stack.push("1.0");
+                }
+            }
+
+            if (debug) {
+                System.out.println("Stack Size:" + stack.size());
+            }
+
+            return (stack.size() == 1);
+        } catch (Exception ex) {
             return false;
         }
-    }
-
-    public boolean isVariable(String token) {
-        return VARIABLES.containsKey(token);
-    }
-
-    public boolean RPNtoDouble(String[] tokens) {
-        Stack<String> stack = new Stack<String>();
-
-        for (String token : tokens) {
-            if (!isOperator(token)) {
-                stack.push(token);
-            } else {
-                int[] op = OPERATORS.get(token);
-                String[] d = new String[op[2]];
-                String tmp;
-                for (int i = 0; i < d.length; i++) {
-                    tmp = stack.pop();
-                    d[i] = "" + i;
-                }
-
-                Double result = 1.0;
-                stack.push(String.valueOf(result));
-            }
-        }
-
-        System.out.println("Pilha:" + stack.size());
-        return (stack.size() == 1 ? true : false);
     }
 
     public boolean evaluateExpr(String expr) {
         String str = preprocessExpr(expr);
         if (debug) {
-            System.out.println("Fim:"+str);
+            System.out.println("After:" + str);
         }
-        String[] input = str.split(" ");
+        String[] input = tokenize(str);
 
         String[] output = infixToRPN(input);
         if (debug) {
@@ -187,16 +211,7 @@ public class ExpressionParser {
         return result;
     }
 
-    public static String[] mysplit(String text, String pattern) {
-        List<String> s = new ArrayList<String>();
-        Matcher m = Pattern.compile(pattern).matcher(text);
-        while (m.find()) {
-            s.add(m.group());
-        }
-        return s.toArray(new String[s.size()]);
-    }
-
-    private static String fixUnaryMinus(String input, String pattern) {
+    private String fixUnaryMinus(String input, String pattern) {
         String str = new String(input);
         String tmp2;
         Matcher m = Pattern.compile(pattern).matcher(str);
@@ -211,7 +226,7 @@ public class ExpressionParser {
     private String preprocessExpr(String input) {
         String str = new String(input);
         str = str.replaceAll("\\s", "");
-        str = str.replaceAll(",", ".");
+        str = str.replaceAll(",", " ");
         if (debug) {
             System.out.println(str);
         }
@@ -231,75 +246,24 @@ public class ExpressionParser {
         str = fixUnaryMinus(str, "/-");
         str = fixUnaryMinus(str, "\\^-");
         if (debug) {
-            System.out.println(str);
-        }
-
-        ArrayList<String> ops = new ArrayList<String>();
-        ops.addAll(OPERATORS.keySet());
-        Collections.sort(ops, new StringLengthComparator());
-
-        ArrayList<String> vars = new ArrayList<String>();
-        vars.addAll(VARIABLES.keySet());
-        Collections.sort(vars, new StringLengthComparator());
-
-        String tmp;
-        int j;
-        for (int i = 0; i < str.length(); i++) {
-            tmp = str.substring(i);
-            System.out.println("tmp:" + tmp);
-            boolean op = false;
-            for (j = 0; j < ops.size(); j++) {
-                if (tmp.startsWith(ops.get(j))) {
-                    op = true;
-                    break;
-                }
-            }
-
-            if (op) {
-                str = str.substring(0, i) + " " + str.substring(i, str.length());
-                i += ops.get(j).length();
-            } else {
-                if (tmp.startsWith("(") || tmp.startsWith(")")) {
-//                    System.out.println("dentro1:" + str.substring(0, i));
-//                    System.out.println("dentro2:" + str.substring(i, str.length()));
-//                    str = str.substring(0, i) + " " + str.substring(i, i + 1) + " " + str.substring(i + 1, str.length());
-                    System.out.println("dentro3:" + str);
-                    i ++ ;
-                } else {
-                    boolean var = false;
-                    for (j = 0; j < vars.size(); j++) {
-                        if (tmp.startsWith(vars.get(j))) {
-                            var = true;
-                            break;
-                        }
-                    }
-
-                    if (var) {
-                        str = str.substring(0, i) + " " + str.substring(i, str.length());
-                        i += vars.get(j).length();
-                    }
-                }
-            }
-        }
-
-        str = str.replace("(", " (");
-        str = str.replace(")", " )");
-
-        Matcher m = Pattern.compile("[\\.0-9]+").matcher(str);
-        int c = 0;
-        while (m.find()) {
-            str = str.substring(0, m.start() + c) + " " + str.substring(m.start() + c, str.length());
-            c++;
+            System.out.println("Before:" + str);
         }
 
         str = str.trim();
         return str;
     }
 
-    public static List<String> tokenize(String s) {
+    public String[] tokenize(String s) {
         try {
-            StreamTokenizer tokenizer = new StreamTokenizer(new StringReader(s));
-            tokenizer.ordinaryChar('-');  // Don't parse minus as part of numbers.
+            String equation = s;
+            if (s.contains("=")) {
+                String[] vet = s.split("=");
+                isVariable(vet[0]);
+                equation = vet[1];
+            }
+            StreamTokenizer tokenizer = new StreamTokenizer(new StringReader(equation));
+            tokenizer.ordinaryChar('/');  // Don't parse div as part of numbers.
+            tokenizer.ordinaryChar('-');// Don't parse minus as part of numbers.
             List<String> tokBuf = new ArrayList<String>();
             while (tokenizer.nextToken() != StreamTokenizer.TT_EOF) {
                 switch (tokenizer.ttype) {
@@ -313,7 +277,9 @@ public class ExpressionParser {
                         tokBuf.add(String.valueOf((char) tokenizer.ttype));
                 }
             }
-            return tokBuf;
+            String[] ret = new String[tokBuf.size()];
+            ret = tokBuf.toArray(ret);
+            return ret;
         } catch (IOException ex) {
             Logger.getLogger(ExpressionParser.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -322,33 +288,12 @@ public class ExpressionParser {
 
     public static void main(String[] args) {
 
-        Map<String, Double> vars = new HashMap<String, Double>();
-//        vars.put("a", new Double(1.0));
-//        vars.put("b", new Double(1.0));
-        String str = "-2*ln(2)-(a-(b^-2))";
-        //String str = "( 1.0 + 2.123)*(2*a/b)-sqrt(5.0+6)";                
+//        String str = "-2*ln(2)-(a-(b^-2))";
+        String str = "( 1.0 + 2.123)*(2*a/b)-sqrt(5.0+6)";
         //String str = "a^-2";  
-        System.out.println(str);
-        ExpressionParser parser = new ExpressionParser(vars, true);
-//        List<String> ret = ExpressionParser.tokenize(str);
-//        System.out.println(Arrays.toString(ExpressionParser.infixToRPN(ret.toArray(new String[ret.size()]))));
+        ExpressionParser parser = new ExpressionParser(true);
         boolean result = parser.evaluateExpr(str);
         System.out.println("result = " + result);
 
-    }
-
-    private class StringLengthComparator implements java.util.Comparator<String> {
-
-        public StringLengthComparator() {
-            super();
-        }
-
-        @Override
-        public int compare(String s1, String s2) {
-            if (s1.length() == s2.length()) {
-                return s1.compareTo(s2);
-            }
-            return s2.length() - s1.length();
-        }
     }
 }
