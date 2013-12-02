@@ -4,7 +4,7 @@
  */
 package br.ufmt.genericsebalgpu.sebal;
 
-import static br.ufmt.genericsebalgpu.utils.Constants.*;
+import static br.ufmt.preprocessing.utils.Constants.*;
 
 /**
  *

@@ -4,11 +4,11 @@
  */
 package br.ufmt.genericsebalgpu.sebal;
 
-import br.ufmt.genericsebalgpu.utils.DataStructure;
 import br.ufmt.genericsebalgpu.utils.ExecutionEnum;
-import br.ufmt.genericsebalgpu.utils.ParameterEnum;
 import br.ufmt.genericsebalgpu.utils.SebalImportFiles;
-import br.ufmt.genericsebalgpu.utils.Utilities;
+import br.ufmt.preprocessing.utils.DataStructure;
+import br.ufmt.preprocessing.utils.ParameterEnum;
+import br.ufmt.preprocessing.utils.Utilities;
 
 import java.io.File;
 import java.util.List;
