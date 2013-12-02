@@ -6,7 +6,10 @@ package br.ufmt.genericsebalgpu.utils;
 
 
 
-import br.ufmt.genericsebalgpu.exceptions.EnterFileException;
+import br.ufmt.preprocessing.exceptions.EnterFileException;
+import br.ufmt.preprocessing.utils.DataStructure;
+import br.ufmt.preprocessing.utils.ParameterEnum;
+import br.ufmt.preprocessing.utils.Utilities;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;

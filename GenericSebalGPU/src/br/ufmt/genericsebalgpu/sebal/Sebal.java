@@ -5,9 +5,9 @@
 package br.ufmt.genericsebalgpu.sebal;
 
 
-import br.ufmt.genericsebalgpu.utils.Constants;
-import br.ufmt.genericsebalgpu.utils.DataStructure;
-import br.ufmt.genericsebalgpu.utils.ParameterEnum;
+
+import br.ufmt.preprocessing.utils.DataStructure;
+import br.ufmt.preprocessing.utils.ParameterEnum;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -90,87 +90,5 @@ public abstract class Sebal {
             float[] ET_24h,
             int DataSize);
 
-    public static void calculaAB(float[] coeficientes, float Rn_hot, float G_hot, float Uref, float SAVI_hot, float Ts_hot, float Ts_cold) {
-
-        float z0m = (float) Math.exp(-5.809f + 5.62f * SAVI_hot);
-
-        float U_star = (float) (Constants.k * Uref / Math.log(Constants.z200 / z0m));
-
-        float r_ah = (float) (Math.log(Constants.z2 / Constants.z1) / (U_star * Constants.k));
-
-        float H_hot = Rn_hot - G_hot;
-
-        float a = 0.0f;
-        float b = 0.0f;
-
-        float L;
-
-        float tm_200;
-        float th_2;
-        float th_0_1;
-
-        float errorH = 10.0f;
-        int step = 1;
-        float r_ah_anterior;
-        float H = H_hot;
-
-        while (errorH > Constants.MaxAllowedError && step < 100) {
-
-            a = ((H) * r_ah) / (Constants.p * Constants.cp * (Ts_hot - Ts_cold));
-            b = -a * (Ts_cold - Constants.T0);
-
-
-            H = Constants.p * Constants.cp * (b + a * (Ts_hot - Constants.T0)) / r_ah;
-
-            L = (float) (-(Constants.p * Constants.cp * U_star * U_star * U_star * (Ts_hot)) / (Constants.k * Constants.g * H));
-
-            tm_200 = Psim(L);
-            th_2 = Psih(Constants.z2, L);
-            th_0_1 = Psih(Constants.z1, L);
-
-            U_star = (float) (Constants.k * Uref / (Math.log(Constants.z200 / z0m) - tm_200));
-            r_ah_anterior = r_ah;
-            r_ah = (float) ((Math.log(Constants.z2 / Constants.z1) - th_2 + th_0_1) / (U_star * Constants.k));
-
-            errorH = Math.abs(((r_ah - r_ah_anterior) * 100) / r_ah);
-
-            step++;
-        }
-
-//        System.out.println("Total de Interações:" + step);
-        coeficientes[0] = a;
-        coeficientes[1] = b;
-
-    }
-
-    protected static float X(float Zref_m, float L) {
-        return (float) (Math.sqrt(Math.sqrt((1.0f - 16.0f * Zref_m / L))));
-    }
-
-    protected static float Psim(float L) {
-        if (L < 0.0f) {
-            /* unstable */
-            float x200 = X(200, L);
-            return (float) (2.0f * Math.log((1.0f + x200) / 2.0f) + Math.log((1.0f + x200 * x200) / (2.0f)) - 2.0f * Math.atan(x200) + 0.5f * Math.PI);
-        } else if (L > 0.0f) {
-            /* stable */
-            return (-5 * (2 / L));
-        } else {
-            return (0);
-        }
-    }
-
-    protected static float Psih(float Zref_h, float L) {
-        if (L < 0.0f) {
-            /* unstable */
-            float x = X(Zref_h, L);
-            return (float) (2.0f * Math.log((1.0f + x * x) / 2.0f));
-        } else if (L > 0.0f) {
-            /* stable */
-            return (-5 * (2 / L));
-        } else {
-            return (0);
-        }
-    }
 }
 

@@ -5,9 +5,9 @@
 package br.ufmt.genericsebalgpu;
 
 import br.ufmt.genericsebalgpu.sebal.SebalRun;
-import br.ufmt.genericsebalgpu.utils.DataStructure;
 import br.ufmt.genericsebalgpu.utils.ExecutionEnum;
-import br.ufmt.genericsebalgpu.utils.Utilities;
+import br.ufmt.preprocessing.utils.DataStructure;
+import br.ufmt.preprocessing.utils.Utilities;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
