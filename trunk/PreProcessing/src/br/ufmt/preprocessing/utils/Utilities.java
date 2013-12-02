@@ -51,11 +51,53 @@ import ucar.ma2.Array;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 
+import static br.ufmt.preprocessing.utils.Constants.*;
+
 /**
  *
  * @author raphael
  */
 public class Utilities {
+
+    private static List<br.ufmt.genericlexerseb.Variable> variables = new ArrayList<>();
+
+    static {
+        variables.add(new br.ufmt.genericlexerseb.Variable("pi", pi));
+        variables.add(new br.ufmt.genericlexerseb.Variable("deg2rad", deg2rad));
+        variables.add(new br.ufmt.genericlexerseb.Variable("kel2deg", kel2deg));
+        variables.add(new br.ufmt.genericlexerseb.Variable("k", k));
+        variables.add(new br.ufmt.genericlexerseb.Variable("Sigma_SB", Sigma_SB));
+        variables.add(new br.ufmt.genericlexerseb.Variable("T0", T0));
+        variables.add(new br.ufmt.genericlexerseb.Variable("Rso", Rso));
+        variables.add(new br.ufmt.genericlexerseb.Variable("g", g));
+        variables.add(new br.ufmt.genericlexerseb.Variable("Rmax", Rmax));
+        variables.add(new br.ufmt.genericlexerseb.Variable("Rmin", Rmin));
+        variables.add(new br.ufmt.genericlexerseb.Variable("Rd", Rd));
+        variables.add(new br.ufmt.genericlexerseb.Variable("Rv", Rv));
+        variables.add(new br.ufmt.genericlexerseb.Variable("Cpw", Cpw));
+        variables.add(new br.ufmt.genericlexerseb.Variable("Cpd", Cpd));
+        variables.add(new br.ufmt.genericlexerseb.Variable("Cd", Cd));
+        variables.add(new br.ufmt.genericlexerseb.Variable("Ct", Ct));
+        variables.add(new br.ufmt.genericlexerseb.Variable("gammaConst", gammaConst));
+        variables.add(new br.ufmt.genericlexerseb.Variable("Pr", Pr));
+        variables.add(new br.ufmt.genericlexerseb.Variable("Pr_u", Pr_u));
+        variables.add(new br.ufmt.genericlexerseb.Variable("Pr_s", Pr_s));
+        variables.add(new br.ufmt.genericlexerseb.Variable("ri_i", ri_i));
+        variables.add(new br.ufmt.genericlexerseb.Variable("L_e", L_e));
+        variables.add(new br.ufmt.genericlexerseb.Variable("rho_w", rho_w));
+        variables.add(new br.ufmt.genericlexerseb.Variable("PSI0", PSI0));
+        variables.add(new br.ufmt.genericlexerseb.Variable("DT", DT));
+        variables.add(new br.ufmt.genericlexerseb.Variable("MaxAllowedError", MaxAllowedError));
+        variables.add(new br.ufmt.genericlexerseb.Variable("dimx", dimx));
+        variables.add(new br.ufmt.genericlexerseb.Variable("dimy", dimy));
+        variables.add(new br.ufmt.genericlexerseb.Variable("SelectedDevice", SelectedDevice));
+        variables.add(new br.ufmt.genericlexerseb.Variable("nThreadsPerBlock", nThreadsPerBlock));
+        variables.add(new br.ufmt.genericlexerseb.Variable("z200", z200));
+        variables.add(new br.ufmt.genericlexerseb.Variable("z2", z2));
+        variables.add(new br.ufmt.genericlexerseb.Variable("z1", z1));
+        variables.add(new br.ufmt.genericlexerseb.Variable("p", p));
+        variables.add(new br.ufmt.genericlexerseb.Variable("cp", cp));
+    }
 
     public static float[] getData(List<DataStructure> datas, ParameterEnum parameter) {
         for (DataStructure dataStructure : datas) {
@@ -403,8 +445,7 @@ public class Utilities {
 //        System.out.println(ret);
         return ret;
     }
-    
-    
+
     public static void calculaAB(float[] coeficientes, float Rn_hot, float G_hot, float Uref, float SAVI_hot, float Ts_hot, float Ts_cold) {
 
         float z0m = (float) Math.exp(-5.809f + 5.62f * SAVI_hot);
@@ -486,5 +527,51 @@ public class Utilities {
         } else {
             return (0);
         }
+    }
+
+    public static List<String> getVariables() {
+        List<String> variables = new ArrayList<>();
+
+        variables.add("pi");
+        variables.add("deg2rad");
+        variables.add("kel2deg");
+        variables.add("k");
+        variables.add("Sigma_SB");
+        variables.add("T0");
+        variables.add("Rso");
+        variables.add("g");
+        variables.add("Rmax");
+        variables.add("Rmin");
+        variables.add("Rd");
+        variables.add("Rv");
+        variables.add("Cpw");
+        variables.add("Cpd");
+        variables.add("Cd");
+        variables.add("Ct");
+        variables.add("gammaConst");
+        variables.add("Pr");
+        variables.add("Pr_u");
+        variables.add("Pr_s");
+        variables.add("ri_i");
+        variables.add("L_e");
+        variables.add("rho_w");
+        variables.add("PSI0");
+        variables.add("DT");
+        variables.add("MaxAllowedError");
+        variables.add("dimx");
+        variables.add("dimy");
+        variables.add("SelectedDevice");
+        variables.add("nThreadsPerBlock");
+        variables.add("z200");
+        variables.add("z2");
+        variables.add("z1");
+        variables.add("p");
+        variables.add("cp");
+
+        return variables;
+    }
+
+    public static List<br.ufmt.genericlexerseb.Variable> getVariable() {
+        return variables;
     }
 }

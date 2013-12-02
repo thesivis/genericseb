@@ -26,11 +26,11 @@ public enum ParameterEnum {
     SAVI_hot("SAVI_HOT.dat"),
     Albedo("ALBEDO.dat"),
     Emissivity("EMISSIVITY.dat"),
-    SWd("SWD.dat"),
-    LWd("LWD.dat"),
+    SWnet("SWD.dat"),
+    LWnet("LWD.dat"),
     Rg_24h("RG_24H.dat"),
     Tao_24h("TAO_24H.dat"),
-    R_AH("R_AH.dat"),
+    r_ah("R_AH.dat"),
     d0("d0.dat"),
     z0h("z0h.dat"),
     z0m("z0m.dat"),
@@ -40,7 +40,7 @@ public enum ParameterEnum {
     LE("LE.dat"),
     EF("EF.dat"),
     re_i("re_i.dat"),
-    ustar("U_STAR.dat"),
+    U_star("U_STAR.dat"),
     H_DL("H_DL.dat"),
     H_WL("H_WL.dat"),
     Rn_24h("RN_24H.dat"),
@@ -60,7 +60,8 @@ public enum ParameterEnum {
     lat_rad("lat_rad.dat"),
     Ta_av_K("Ta_av_K.dat"),
     Ns("Ns.dat"),
-    ComptMask("ComptMask.dat");
+    ComptMask("ComptMask.dat"),
+    evap_fr("evap_fr.dat");
 
     private ParameterEnum(String fileName) {
         this.fileName = fileName;

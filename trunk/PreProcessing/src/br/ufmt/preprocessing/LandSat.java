@@ -153,8 +153,8 @@ public class LandSat {
                         parameters.add(ParameterEnum.Emissivity);
                         parameters.add(ParameterEnum.LAI);
                         parameters.add(ParameterEnum.EmissividadeNB);
-                        parameters.add(ParameterEnum.LWd);
-                        parameters.add(ParameterEnum.SWd);
+                        parameters.add(ParameterEnum.LWnet);
+                        parameters.add(ParameterEnum.SWnet);
                         parameters.add(ParameterEnum.Rn);
                         parameters.add(ParameterEnum.Tao_24h);
                         parameters.add(ParameterEnum.Rg_24h);
@@ -276,11 +276,11 @@ public class LandSat {
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             fosEmissividadeNB = new FileOutputStream(pathTiff);
 
-                            pathTiff = parent + ParameterEnum.LWd.getFileName();
+                            pathTiff = parent + ParameterEnum.LWnet.getFileName();
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             fosLWd = new FileOutputStream(pathTiff);
 
-                            pathTiff = parent + ParameterEnum.SWd.getFileName();
+                            pathTiff = parent + ParameterEnum.SWnet.getFileName();
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             fosSWd = new FileOutputStream(pathTiff);
 
@@ -673,11 +673,11 @@ public class LandSat {
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterEmissividadeNB);
 
-                            pathTiff = parent + ParameterEnum.LWd.getFileName();
+                            pathTiff = parent + ParameterEnum.LWnet.getFileName();
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterLWd);
 
-                            pathTiff = parent + ParameterEnum.SWd.getFileName();
+                            pathTiff = parent + ParameterEnum.SWnet.getFileName();
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterSWd);
 

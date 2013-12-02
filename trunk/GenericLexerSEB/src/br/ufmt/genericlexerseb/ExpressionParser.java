@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -37,6 +38,7 @@ public class ExpressionParser {
     // Operators      
     private static final Map<String, int[]> OPERATORS = new HashMap<>();
     private List<String> variables = new ArrayList<>();
+    private String[] output;
 
     static {
         // Map<"token", []{precendence, associativity, number of arguments}>          
@@ -80,8 +82,8 @@ public class ExpressionParser {
     private boolean isOperator(String token) {
         return OPERATORS.containsKey(token);
     }
-    
-    private boolean isNumeric(String token){
+
+    private boolean isNumeric(String token) {
         try {
             double d = Double.parseDouble(token);
             return true;
@@ -90,12 +92,12 @@ public class ExpressionParser {
         }
     }
 
-    private boolean isVariable(String variable) {
+    private boolean isVariable(String variable) throws IllegalArgumentException {
         if (variables.isEmpty()) {
             return true;
         }
-        if(!variables.contains(variable)){
-            throw new IllegalArgumentException("Variable '" + variable+"' doesn't exist!");
+        if (!variables.contains(variable)) {
+            throw new IllegalArgumentException("Variable '" + variable + "' doesn't exist!");
         }
         return true;
     }
@@ -150,7 +152,7 @@ public class ExpressionParser {
                 }
                 stack.pop();
             } else {
-                if(!isNumeric(token)){
+                if (!isNumeric(token)) {
                     isVariable(token);
                 }
                 out.add(token);
@@ -199,16 +201,24 @@ public class ExpressionParser {
             System.out.println("After:" + str);
         }
         String[] input = tokenize(str);
+        this.output = input;
 
-        String[] output = infixToRPN(input);
+        String[] output2 = infixToRPN(input);
+//        System.out.println(Arrays.toString(input));
         if (debug) {
-            for (String token : output) {
+            for (String token : output2) {
                 System.out.print(token + " ");
             }
             System.out.println("");
         }
-        boolean result = RPNtoDouble(output);
+        boolean result = RPNtoDouble(output2);
         return result;
+    }
+
+    public boolean evaluateExpr(String expr, List<String> variables) {
+        this.variables.clear();
+        this.variables.addAll(variables);
+        return evaluateExpr(expr);
     }
 
     private String fixUnaryMinus(String input, String pattern) {
@@ -262,8 +272,10 @@ public class ExpressionParser {
                 equation = vet[1];
             }
             StreamTokenizer tokenizer = new StreamTokenizer(new StringReader(equation));
+//            StringTokenizer st = new StringTokenizer(equation);
             tokenizer.ordinaryChar('/');  // Don't parse div as part of numbers.
             tokenizer.ordinaryChar('-');// Don't parse minus as part of numbers.
+            tokenizer.wordChars('_','_');// Don't parse minus as part of numbers.
             List<String> tokBuf = new ArrayList<String>();
             while (tokenizer.nextToken() != StreamTokenizer.TT_EOF) {
                 switch (tokenizer.ttype) {
@@ -271,6 +283,7 @@ public class ExpressionParser {
                         tokBuf.add(String.valueOf(tokenizer.nval));
                         break;
                     case StreamTokenizer.TT_WORD:
+//                        System.out.println(tokenizer.sval);
                         tokBuf.add(tokenizer.sval);
                         break;
                     default:  // operator
@@ -296,4 +309,9 @@ public class ExpressionParser {
         System.out.println("result = " + result);
 
     }
+
+    public String[] getOutput() {
+        return output;
+    }
+    
 }
