@@ -71,8 +71,8 @@ public class SebalImportFiles {
             outputs.add(new DataStructure(ParameterEnum.B, b));
             outputs.add(new DataStructure(ParameterEnum.Albedo, Albedo));
             outputs.add(new DataStructure(ParameterEnum.Emissivity, Emissivity));
-            outputs.add(new DataStructure(ParameterEnum.SWd, SWd));
-            outputs.add(new DataStructure(ParameterEnum.LWd, LWd));
+            outputs.add(new DataStructure(ParameterEnum.SWnet, SWd));
+            outputs.add(new DataStructure(ParameterEnum.LWnet, LWd));
             outputs.add(new DataStructure(ParameterEnum.Rg_24h, Rg_24h));
             outputs.add(new DataStructure(ParameterEnum.Tao_24h, Tao_24h));
 

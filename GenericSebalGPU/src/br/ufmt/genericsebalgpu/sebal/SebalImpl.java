@@ -4,7 +4,14 @@
  */
 package br.ufmt.genericsebalgpu.sebal;
 
+import br.ufmt.genericlexerseb.GenericLexerSEB;
+import br.ufmt.genericlexerseb.LanguageType;
+import br.ufmt.genericlexerseb.Structure;
+import br.ufmt.genericlexerseb.Variable;
 import static br.ufmt.preprocessing.utils.Constants.*;
+import br.ufmt.preprocessing.utils.ParameterEnum;
+import br.ufmt.preprocessing.utils.Utilities;
+import java.util.List;
 
 /**
  *
@@ -110,7 +117,27 @@ public class SebalImpl extends Sebal {
             float[] ET_24h,
             int idx) {
 
-        z0m[idx] = (float) Math.exp(-5.809f + 5.62f * SAVI);
+        GenericLexerSEB lexer = new GenericLexerSEB();
+        Structure structure = new Structure();
+        structure.setToken("z0m");
+        String equation = lexer.analyse(equations.get(ParameterEnum.z0m), structure, null, LanguageType.PYTHON);
+        List<Variable> variables = Utilities.getVariable();
+        variables.add(new Variable("SWd", SWd));
+        variables.add(new Variable("LWd", LWd));
+        variables.add(new Variable("albedo", albedo));
+        variables.add(new Variable("emissivity", emissivity));
+        variables.add(new Variable("LST_K", LST_K));
+        variables.add(new Variable("NDVI", NDVI));
+        variables.add(new Variable("Uref", Uref));
+        variables.add(new Variable("SAVI", SAVI));
+        variables.add(new Variable("a", a));
+        variables.add(new Variable("b", b));
+        variables.add(new Variable("Rg_24h", Rg_24h));
+        variables.add(new Variable("Tao_24h", Tao_24h));
+
+        z0m[idx] = (float) lexer.getResult(equation, variables);
+        variables.add(new Variable("z0m", z0m[idx]));
+
 
         /* Classification */
         boolean I_snow = (NDVI < 0.0f) && (albedo > 0.47f);
@@ -119,9 +146,21 @@ public class SebalImpl extends Sebal {
         /*	% NOTE: esat_WL is only used for the wet-limit. To get a true upperlimit for the sensible heat
          % the Landsurface Temperature is used as a proxy instead of air temperature.
          %% Net Radiation */
-        float SWnet = (1.0f - albedo) * SWd; /* Shortwave Net Radiation [W/m2] */
 
-        float LWnet = (float) (emissivity * LWd - emissivity * Sigma_SB * LST_K * LST_K * LST_K * LST_K); /* Longwave Net Radiation [W/m2] */
+        structure = new Structure();
+        structure.setToken("SWnet");
+        equation = lexer.analyse(equations.get(ParameterEnum.SWnet), structure, null, LanguageType.PYTHON);
+
+        float SWnet = (float) lexer.getResult(equation, variables);  /* Shortwave Net Radiation [W/m2] */
+        variables.add(new Variable("SWnet", SWnet));
+        
+        
+        structure = new Structure();
+        structure.setToken("LWnet");
+        equation = lexer.analyse(equations.get(ParameterEnum.LWnet), structure, null, LanguageType.PYTHON);
+
+        float LWnet = (float) lexer.getResult(equation, variables);  /* Longwave Net Radiation [W/m2] */
+        variables.add(new Variable("LWnet", LWnet));
 
         Rn[idx] = SWnet + LWnet; /* Total Net Radiation [W/m2] */
 

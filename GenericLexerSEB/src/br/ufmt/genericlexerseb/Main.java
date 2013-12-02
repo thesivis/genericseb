@@ -22,11 +22,12 @@ public class Main {
     public static void main(String[] args) {
         // TODO code application logic here
 
-        String eq = "z0m=exp(-5.809+5.62*SAVI)";
+        String eq = "z0m=exp(-5.809+5.62*SAVI*SIGMA_T)";
         
         List<String> variables = new ArrayList<>();
         variables.add("z0m");
         variables.add("SAVI");
+        variables.add("SIGMA_T");
 
 //        eq = "4*x+5.2024-(logb(x,y)^-z)-300.12";
 //        eq = "(-1.0 + 2.123)*(2*a/b)-sqrt(5.0+6)";

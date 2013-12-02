@@ -47,8 +47,8 @@ public class SebalRun {
 //            for (int i = 0; i < 20; i++) {
                 long tempo = System.currentTimeMillis();
                 ret = sebal.executar(a,b,
-                        Utilities.getData(datas, ParameterEnum.SWd),
-                        Utilities.getData(datas, ParameterEnum.LWd),
+                        Utilities.getData(datas, ParameterEnum.SWnet),
+                        Utilities.getData(datas, ParameterEnum.LWnet),
                         Utilities.getData(datas, ParameterEnum.Albedo),
                         Utilities.getData(datas, ParameterEnum.Emissivity),
                         Utilities.getData(datas, ParameterEnum.NDVI),
@@ -63,8 +63,8 @@ public class SebalRun {
             datas = ret;
         } else {
             datas = sebal.executar(a,b,
-                    Utilities.getData(datas, ParameterEnum.SWd),
-                    Utilities.getData(datas, ParameterEnum.LWd),
+                    Utilities.getData(datas, ParameterEnum.SWnet),
+                    Utilities.getData(datas, ParameterEnum.LWnet),
                     Utilities.getData(datas, ParameterEnum.Albedo),
                     Utilities.getData(datas, ParameterEnum.Emissivity),
                     Utilities.getData(datas, ParameterEnum.NDVI),

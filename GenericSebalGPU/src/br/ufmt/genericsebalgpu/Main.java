@@ -4,6 +4,7 @@
  */
 package br.ufmt.genericsebalgpu;
 
+import br.ufmt.genericsebalgpu.sebal.SebalImpl;
 import br.ufmt.genericsebalgpu.sebal.SebalRun;
 import br.ufmt.genericsebalgpu.utils.ExecutionEnum;
 import br.ufmt.preprocessing.utils.DataStructure;
@@ -23,7 +24,12 @@ public class Main {
      */
     public static void main(String[] args) {
         // TODO code application logic here
+        
+        SebalImpl s = new SebalImpl();
+        s.verifyEquations();
 
+//        System.exit(1);
+        
         List<File> arqs = new ArrayList<File>();
         arqs.add(new File(System.getProperty("user.dir") + "/InputSebal/NDVI.dat"));
         arqs.add(new File(System.getProperty("user.dir") + "/InputSebal/Ts.dat"));
@@ -41,11 +47,11 @@ public class Main {
         SebalRun sebal = new SebalRun();
         List<DataStructure> datas;
 
-        System.out.println("CUDA");
-        datas = sebal.calculate(arqs, ExecutionEnum.CUDA);
-
-        System.out.println("OpenCL");
-        datas = sebal.calculate(arqs, ExecutionEnum.OPENCL);
+//        System.out.println("CUDA");
+//        datas = sebal.calculate(arqs, ExecutionEnum.CUDA);
+//
+//        System.out.println("OpenCL");
+//        datas = sebal.calculate(arqs, ExecutionEnum.OPENCL);
 
         System.out.println("Java");
         datas = sebal.calculate(arqs, ExecutionEnum.NORMAL);
