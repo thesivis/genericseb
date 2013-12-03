@@ -135,6 +135,7 @@ public class SebalImpl extends Sebal {
         variables.add(new Variable("Rg_24h", Rg_24h));
         variables.add(new Variable("Tao_24h", Tao_24h));
 
+        //z0m
         z0m[idx] = (float) lexer.getResult(equation, variables);
         variables.add(new Variable("z0m", z0m[idx]));
 
@@ -147,14 +148,15 @@ public class SebalImpl extends Sebal {
          % the Landsurface Temperature is used as a proxy instead of air temperature.
          %% Net Radiation */
 
+        //SWnet
         structure = new Structure();
         structure.setToken("SWnet");
         equation = lexer.analyse(equations.get(ParameterEnum.SWnet), structure, null, LanguageType.PYTHON);
 
         float SWnet = (float) lexer.getResult(equation, variables);  /* Shortwave Net Radiation [W/m2] */
         variables.add(new Variable("SWnet", SWnet));
-        
-        
+
+        //LWnet
         structure = new Structure();
         structure.setToken("LWnet");
         equation = lexer.analyse(equations.get(ParameterEnum.LWnet), structure, null, LanguageType.PYTHON);
@@ -162,40 +164,107 @@ public class SebalImpl extends Sebal {
         float LWnet = (float) lexer.getResult(equation, variables);  /* Longwave Net Radiation [W/m2] */
         variables.add(new Variable("LWnet", LWnet));
 
-        Rn[idx] = SWnet + LWnet; /* Total Net Radiation [W/m2] */
+        //Rn
+        structure = new Structure();
+        structure.setToken("Rn");
+        equation = lexer.analyse(equations.get(ParameterEnum.Rn), structure, null, LanguageType.PYTHON);
+
+        Rn[idx] = (float) lexer.getResult(equation, variables); /* Total Net Radiation [W/m2] */
+        variables.add(new Variable("Rn", Rn[idx]));
 
         /* Ground Heat Flux */
         /* Kustas et al 1993 */
         /* Kustas, W.P., Daughtry, C.S.T. van Oevelen P.J., 
          Analatytical Treatment of Relationships between Soil heat flux/net radiation and Vegetation Indices, 
          Remote sensing of environment,46:319-330 (1993) */
-        G0[idx] = (float) (Rn[idx] * (((LST_K - T0) / albedo) * (0.0038f * albedo + 0.0074f * albedo * albedo) * (1.0f - 0.98f * NDVI * NDVI * NDVI * NDVI)));
+        //G0
+        structure = new Structure();
+        structure.setToken("G0");
+        equation = lexer.analyse(equations.get(ParameterEnum.G0), structure, null, LanguageType.PYTHON);
+
+        G0[idx] = (float) lexer.getResult(equation, variables); /* Total Net Radiation [W/m2] */
+        variables.add(new Variable("G0", G0[idx]));
 
         if (I_water || I_snow) {
-            G0[idx] = 0.3f * Rn[idx];
+            structure = new Structure();
+            structure.setToken("G0");
+            equation = lexer.analyse(equations.get(ParameterEnum.G02), structure, null, LanguageType.PYTHON);
+
+            G0[idx] = (float) lexer.getResult(equation, variables); /* Total Net Radiation [W/m2] */
+            variables.add(new Variable("G0", G0[idx]));
         }
+        //U_star
+        structure = new Structure();
+        structure.setToken("U_star");
+        equation = lexer.analyse(equations.get(ParameterEnum.U_star), structure, null, LanguageType.PYTHON);
 
-        U_star[idx] = (float) (k * Uref / Math.log(z200 / z0m[idx]));
+        U_star[idx] = (float) lexer.getResult(equation, variables);
+        variables.add(new Variable("U_star", U_star[idx]));
 
-        r_ah[idx] = (float) (Math.log(z2 / z1) / (U_star[idx] * k));
+        //r_ah
+        structure = new Structure();
+        structure.setToken("r_ah");
+        equation = lexer.analyse(equations.get(ParameterEnum.r_ah), structure, null, LanguageType.PYTHON);
 
-        H[idx] = (float) (p * cp * (b + a * (LST_K - T0)) / r_ah[idx]);
+        r_ah[idx] = (float) lexer.getResult(equation, variables);
+        variables.add(new Variable("r_ah", r_ah[idx]));
 
-        LE[idx] = Rn[idx] - H[idx] - G0[idx];
+        //H
+        structure = new Structure();
+        structure.setToken("H");
+        equation = lexer.analyse(equations.get(ParameterEnum.H), structure, null, LanguageType.PYTHON);
+
+        H[idx] = (float) lexer.getResult(equation, variables);
+        variables.add(new Variable("H", H[idx]));
+
+        //LE
+        structure = new Structure();
+        structure.setToken("LE");
+        equation = lexer.analyse(equations.get(ParameterEnum.LE), structure, null, LanguageType.PYTHON);
+
+        LE[idx] = (float) lexer.getResult(equation, variables);
+        variables.add(new Variable("LE", LE[idx]));
 
         /* Evaporative fraction */
         evap_fr[idx] = 0.0f;
         if ((Rn[idx] - G0[idx]) != 0.0f) {
-            evap_fr[idx] = LE[idx] / (Rn[idx] - G0[idx]); /* evaporative fraction [] */
+            //evap_fr
+            structure = new Structure();
+            structure.setToken("evap_fr");
+            equation = lexer.analyse(equations.get(ParameterEnum.evap_fr), structure, null, LanguageType.PYTHON);/* evaporative fraction [] */
+
+            evap_fr[idx] = (float) lexer.getResult(equation, variables);
+            variables.add(new Variable("evap_fr", evap_fr[idx]));
 
         } else {
             evap_fr[idx] = 1.0f; /* evaporative fraction upper limit [] (for negative available energy) */
 
         }
 
-        Rn_24h[idx] = Rg_24h * (1.0f - albedo) - 110 * Tao_24h;
-        LE_24h[idx] = evap_fr[idx] * Rn_24h[idx];
-        ET_24h[idx] = (evap_fr[idx] * Rn_24h[idx] * 86.4f) / 2450.0f;
+        //Rn_24h
+        structure = new Structure();
+        structure.setToken("Rn_24h");
+        equation = lexer.analyse(equations.get(ParameterEnum.Rn_24h), structure, null, LanguageType.PYTHON);/* evaporative fraction [] */
+
+        Rn_24h[idx] = (float) lexer.getResult(equation, variables);
+        variables.add(new Variable("Rn_24h", Rn_24h[idx]));
+
+
+        //LE_24h
+        structure = new Structure();
+        structure.setToken("LE_24h");
+        equation = lexer.analyse(equations.get(ParameterEnum.LE_24h), structure, null, LanguageType.PYTHON);/* evaporative fraction [] */
+
+        LE_24h[idx] = (float) lexer.getResult(equation, variables);
+        variables.add(new Variable("LE_24h", LE_24h[idx]));
+
+        //ET_24h
+        structure = new Structure();
+        structure.setToken("ET_24h");
+        equation = lexer.analyse(equations.get(ParameterEnum.ET_24h), structure, null, LanguageType.PYTHON);/* evaporative fraction [] */
+
+        ET_24h[idx] = (float) lexer.getResult(equation, variables);
+        variables.add(new Variable("ET_24h", ET_24h[idx]));
 
     }
 }
