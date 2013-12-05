@@ -22,7 +22,7 @@ import org.python.util.PythonInterpreter;
  */
 public class GenericLexerSEB {
 
-    public static HashMap<LanguageType, HashMap<String, String>> functions = new HashMap<>();
+    public final static HashMap<LanguageType, HashMap<String, String>> functions = new HashMap<>();
 
     static {
 
@@ -84,24 +84,41 @@ public class GenericLexerSEB {
         expressionParser.evaluateExpr(equation);
         String[] terms = expressionParser.getOutput();
         String function;
-        
-        if (language.equals(LanguageType.PYTHON)) {
-            //REPLACE FUNCTIONS
-            HashMap<String, String> funcs = functions.get(LanguageType.PYTHON);
+        HashMap<String, String> funcs = functions.get(language);
+        Structure independent;
 
-            equation = dependent.getToken() + (dependent.isVector() ? "[" + dependent.getIndex() + "]" : "") + "=";
-            for (int i = 0; i < terms.length; i++) {
-                function = funcs.get(terms[i]);
-                if (function != null) {
-                    terms[i] = function;
-                } else if (terms[i].equals("~")) {
-                    terms[i] = "-";
-                }
-                equation += terms[i];
+
+        if (dependent.isVector()) {
+            if (dependent.getIndex().equalsIgnoreCase("*")) {
+                equation = "*" + dependent.getToken() + "=";
+            } else {
+                equation = dependent.getToken() + "[" + dependent.getIndex() + "]" + "=";
             }
-            System.out.println(equation);
+        } else {
+            equation = dependent.getToken() + "=";
+        }
+        for (int i = 0; i < terms.length; i++) {
+            function = funcs.get(terms[i]);
+            if (function != null) {
+                terms[i] = function;
+            } else if (terms[i].equals("~")) {
+                terms[i] = "-";
+            } else if(variables != null){
+                independent = variables.get(terms[i]);
+                if (independent != null) {
+                    if (independent.isVector()) {
+                        if (independent.getIndex().equalsIgnoreCase("*")) {
+                            terms[i] = " *" + independent.getToken();
+                        } else {
+                            terms[i] = independent.getToken() + "[" + independent.getIndex() + "]";
+                        }
+                    }
+                }
+            }
+            equation += terms[i];
         }
 
+        System.out.println(equation);
         return equation;
     }
 

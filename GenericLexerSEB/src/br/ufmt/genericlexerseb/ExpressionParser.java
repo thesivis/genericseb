@@ -5,6 +5,8 @@
  */
 package br.ufmt.genericlexerseb;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
@@ -48,19 +50,52 @@ public class ExpressionParser {
         OPERATORS.put("/", new int[]{5, LEFT_ASSOC, 2});
         OPERATORS.put("^", new int[]{10, RIGHT_ASSOC, 2});
         OPERATORS.put("~", new int[]{12, LEFT_ASSOC, 1});
-        OPERATORS.put("sqrt", new int[]{15, LEFT_ASSOC, 1});
-        OPERATORS.put("ln", new int[]{15, LEFT_ASSOC, 1});
-        OPERATORS.put("log", new int[]{15, LEFT_ASSOC, 1});
-        OPERATORS.put("logb", new int[]{15, LEFT_ASSOC, 2});
-        OPERATORS.put("exp", new int[]{15, LEFT_ASSOC, 1});
-        OPERATORS.put("abs", new int[]{15, LEFT_ASSOC, 1});
-        OPERATORS.put("sin", new int[]{15, LEFT_ASSOC, 1});
-        OPERATORS.put("cos", new int[]{15, LEFT_ASSOC, 1});
-        OPERATORS.put("tan", new int[]{15, LEFT_ASSOC, 1});
-        OPERATORS.put("asin", new int[]{15, LEFT_ASSOC, 1});
-        OPERATORS.put("acos", new int[]{15, LEFT_ASSOC, 1});
-        OPERATORS.put("atan", new int[]{15, LEFT_ASSOC, 1});
-        OPERATORS.put("signum", new int[]{15, LEFT_ASSOC, 1});
+
+        BufferedReader bur = null;
+        try {
+            String path = GenericLexerSEB.class.getResource("/functions/functions.csv").getPath();
+            bur = new BufferedReader(new FileReader(path));
+            String line = bur.readLine();
+            line = bur.readLine();
+
+            String vet[];
+            String type;
+            int t;
+            while (line != null) {
+                vet = line.split(";");
+                type = vet[vet.length - 2];
+                t = LEFT_ASSOC;
+                if (type.equalsIgnoreCase("R")) {
+                    t = RIGHT_ASSOC;
+                }
+                OPERATORS.put(vet[0], new int[]{15, t, Integer.parseInt(vet[vet.length - 1])});
+
+                line = bur.readLine();
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(ExpressionParser.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                bur.close();
+            } catch (IOException ex) {
+                Logger.getLogger(ExpressionParser.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+
+//        OPERATORS.put("sqrt", new int[]{15, LEFT_ASSOC, 1});
+//        OPERATORS.put("ln", new int[]{15, LEFT_ASSOC, 1});
+//        OPERATORS.put("log", new int[]{15, LEFT_ASSOC, 1});
+//        OPERATORS.put("logb", new int[]{15, LEFT_ASSOC, 2});
+//        OPERATORS.put("exp", new int[]{15, LEFT_ASSOC, 1});
+//        OPERATORS.put("abs", new int[]{15, LEFT_ASSOC, 1});
+//        OPERATORS.put("sin", new int[]{15, LEFT_ASSOC, 1});
+//        OPERATORS.put("cos", new int[]{15, LEFT_ASSOC, 1});
+//        OPERATORS.put("tan", new int[]{15, LEFT_ASSOC, 1});
+//        OPERATORS.put("asin", new int[]{15, LEFT_ASSOC, 1});
+//        OPERATORS.put("acos", new int[]{15, LEFT_ASSOC, 1});
+//        OPERATORS.put("atan", new int[]{15, LEFT_ASSOC, 1});
+//        OPERATORS.put("signum", new int[]{15, LEFT_ASSOC, 1});
     }
 
     public ExpressionParser() {
@@ -275,7 +310,7 @@ public class ExpressionParser {
 //            StringTokenizer st = new StringTokenizer(equation);
             tokenizer.ordinaryChar('/');  // Don't parse div as part of numbers.
             tokenizer.ordinaryChar('-');// Don't parse minus as part of numbers.
-            tokenizer.wordChars('_','_');// Don't parse minus as part of numbers.
+            tokenizer.wordChars('_', '_');// Don't parse minus as part of numbers.
             List<String> tokBuf = new ArrayList<String>();
             while (tokenizer.nextToken() != StreamTokenizer.TT_EOF) {
                 switch (tokenizer.ttype) {
@@ -313,5 +348,4 @@ public class ExpressionParser {
     public String[] getOutput() {
         return output;
     }
-    
 }
