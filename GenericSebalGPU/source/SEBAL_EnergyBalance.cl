@@ -36,7 +36,8 @@ void SEBAL_EnergyBalance_G(
 			int idx)
 {
 
-	z0m[idx] = exp(-5.809f+5.62f*SAVI);
+//	z0m[idx] = exp(-5.809f+5.62f*SAVI);
+        equation:z0m:idx
 
 	/* Classification */
 	bool I_snow = (NDVI<0.0f) && (albedo>0.47f);
@@ -45,45 +46,61 @@ void SEBAL_EnergyBalance_G(
 /*	% NOTE: esat_WL is only used for the wet-limit. To get a true upperlimit for the sensible heat
 	% the Landsurface Temperature is used as a proxy instead of air temperature.
 	%% Net Radiation */
-	float SWnet = (1.0f - albedo) * SWd; /* Shortwave Net Radiation [W/m2] */
-	float LWnet = emissivity*LWd - emissivity*Sigma_SB*LST_K*LST_K*LST_K*LST_K; /* Longwave Net Radiation [W/m2] */
-	Rn[idx] = SWnet+LWnet; /* Total Net Radiation [W/m2] */
+//	float SWnet = (1.0f - albedo) * SWd; /* Shortwave Net Radiation [W/m2] */
+        float SWnet = 0.0f;
+        equation:SWnet
+
+//	float LWnet = emissivity*LWd - emissivity*Sigma_SB*LST_K*LST_K*LST_K*LST_K; /* Longwave Net Radiation [W/m2] */
+        float LWnet = 0.0f;
+        equation:LWnet
+//	Rn[idx] = SWnet+LWnet; /* Total Net Radiation [W/m2] */
+        equation:Rn:idx
 	
 	/* Ground Heat Flux */
 	/* Kustas et al 1993 */
 	/* Kustas, W.P., Daughtry, C.S.T. van Oevelen P.J., 
 	Analatytical Treatment of Relationships between Soil heat flux/net radiation and Vegetation Indices, 
 	Remote sensing of environment,46:319-330 (1993) */
-	G0[idx] = Rn[idx] * (((LST_K-T0)/albedo)*(0.0038f*albedo+0.0074*albedo*albedo)*(1.0f-0.98f*NDVI*NDVI*NDVI*NDVI)); 
+//	G0[idx] = Rn[idx] * (((LST_K-T0)/albedo)*(0.0038f*albedo+0.0074*albedo*albedo)*(1.0f-0.98f*NDVI*NDVI*NDVI*NDVI)); 
+        equation:G0:idx
 
 	if (I_water || I_snow)
 	{
-		G0[idx]= 0.3f* Rn[idx]; 
+//		G0[idx]= 0.3f* Rn[idx]; 
+                equation:G02:idx
 	}
 	
-	U_star[idx] = k*Uref/log(z200/ z0m[idx]);
+//	U_star[idx] = k*Uref/log(z200/ z0m[idx]);
+        equation:U_star:idx
 	
-	r_ah[idx] = log(z2/z1)/(U_star[idx]*k);
+//	r_ah[idx] = log(z2/z1)/(U_star[idx]*k);
+        equation:r_ah:idx
 	
-	H[idx] = p*cp*(b+a*(LST_K - T0))/ r_ah[idx];
+//	H[idx] = p*cp*(b+a*(LST_K - T0))/ r_ah[idx];
+        equation:H:idx
 
-	LE[idx] = Rn[idx] - H[idx]	- G0[idx];
+//	LE[idx] = Rn[idx] - H[idx]	- G0[idx];
+        equation:LE:idx
 	
 	/* Evaporative fraction */
 	evap_fr[idx] = 0.0f;
 	if ((Rn[idx] - G0[idx]) != 0.0f)
 	{
-		evap_fr[idx] = LE[idx]/(Rn[idx]-G0[idx]); /* evaporative fraction [] */
+//		evap_fr[idx] = LE[idx]/(Rn[idx]-G0[idx]); /* evaporative fraction [] */
+                equation:evap_fr:idx
 	}
 	else
 	{
 		evap_fr[idx] = 1.0f; /* evaporative fraction upper limit [] (for negative available energy) */
 	}
 
-	Rn_24h[idx] = Rg_24h*(1.0f-albedo) - 110*Tao_24h;
-	LE_24h[idx] = evap_fr[idx] * Rn_24h[idx];
+//	Rn_24h[idx] = Rg_24h*(1.0f-albedo) - 110*Tao_24h;
+        equation:Rn_24h:idx
+//	LE_24h[idx] = evap_fr[idx] * Rn_24h[idx];
+        equation:LE_24h:idx
 
-	ET_24h[idx] = (evap_fr[idx] * Rn_24h[idx]*86.4f)/2450.0f;
+//	ET_24h[idx] = (evap_fr[idx] * Rn_24h[idx]*86.4f)/2450.0f;
+        equation:ET_24h:idx
 	
 }
 
