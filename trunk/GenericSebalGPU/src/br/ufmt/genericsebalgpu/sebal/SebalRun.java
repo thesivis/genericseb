@@ -79,7 +79,7 @@ public class SebalRun {
 //        System.out.println(Utilities.getData(datas, ParameterEnum.Rn)[653]);
 //        System.out.println(Utilities.getData(datas, ParameterEnum.H)[653]);
 //        System.out.println(Utilities.getData(datas, ParameterEnum.G0)[653]);
-//        System.out.println(Utilities.getData(datas, ParameterEnum.LE)[653]);
+        System.out.println(Utilities.getData(datas, ParameterEnum.ET_24h)[653]);
 
         return datas;
     }

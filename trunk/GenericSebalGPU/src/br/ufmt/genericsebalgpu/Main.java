@@ -25,6 +25,15 @@ public class Main {
     public static void main(String[] args) {
         // TODO code application logic here
         
+//        String v = "-123.123";
+//        if(v.matches("(-?)[0-9]+[\\.][0-9]+")){
+//            System.out.println("Sim");
+//        }else{
+//            System.out.println("nao");
+//        }
+//        
+//        System.exit(1);
+        
         SebalImpl s = new SebalImpl();
         s.verifyEquations();
 
@@ -47,16 +56,16 @@ public class Main {
         SebalRun sebal = new SebalRun();
         List<DataStructure> datas;
 
-//        System.out.println("CUDA");
-//        datas = sebal.calculate(arqs, ExecutionEnum.CUDA);
+        System.out.println("CUDA");
+        datas = sebal.calculate(arqs, ExecutionEnum.CUDA);
 //
 //        System.out.println("OpenCL");
 //        datas = sebal.calculate(arqs, ExecutionEnum.OPENCL);
 
-        System.out.println("Java");
-        datas = sebal.calculate(arqs, ExecutionEnum.NORMAL);
+//        System.out.println("Java");
+//        datas = sebal.calculate(arqs, ExecutionEnum.NORMAL);
 
-        Utilities.exportTXT(System.getProperty("user.dir") + "/OutputSebal", datas);
+//        Utilities.exportTXT(System.getProperty("user.dir") + "/OutputSebal", datas);
 
 
     }

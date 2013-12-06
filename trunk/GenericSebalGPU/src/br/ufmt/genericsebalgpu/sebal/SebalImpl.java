@@ -265,6 +265,5 @@ public class SebalImpl extends Sebal {
 
         ET_24h[idx] = (float) lexer.getResult(equation, variables);
         variables.add(new Variable("ET_24h", ET_24h[idx]));
-
     }
 }
