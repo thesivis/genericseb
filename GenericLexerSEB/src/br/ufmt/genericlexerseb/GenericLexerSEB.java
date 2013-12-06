@@ -103,7 +103,9 @@ public class GenericLexerSEB {
                 terms[i] = function;
             } else if (terms[i].equals("~")) {
                 terms[i] = "-";
-            } else if(variables != null){
+            } else if (!(language.equals(LanguageType.PYTHON)) && terms[i].matches("(-?)[0-9]+[\\.][0-9]+")) {
+                terms[i] = terms[i] + "f";
+            } else if (variables != null) {
                 independent = variables.get(terms[i]);
                 if (independent != null) {
                     if (independent.isVector()) {
