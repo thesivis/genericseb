@@ -1,0 +1,11 @@
+dr = 1.0 + 0.033 * cos(julianDay * 2 * pi / 365)
+cosZ = cos(((90.0 - Z) * pi) / 180.0)
+declinacaoSolar = radians(23.45 * sin(radians(360.0 * (julianDay - 80) / 365)))
+anguloHorarioNascerSol = acos(-tan(pi * latitude / 180.0) * tan(declinacaoSolar))
+rad_solar_toa = 24.0 * 60.0 * 0.082 * dr * (anguloHorarioNascerSol * sin(pi * latitude / 180.0) * sin(declinacaoSolar) + cos(pi * latitude / 180.0) * cos(declinacaoSolar) * sin(anguloHorarioNascerSol)) / pi
+Rg_24h_mj = 0.0864 * Rg_24h
+transmissividade24h = Rg_24h_mj / rad_solar_toa
+ea = (0.61078 * exp(17.269 * Ta / (237.3 + Ta))) * UR / 100
+W = 0.14 * ea * P + 2.1
+transmissividade = 0.35 + 0.627 * exp((-0.00146 * P / (Kt * cosZ)) - 0.075 * pow((W / cosZ), 0.4))
+emissivityAtmosfera = 0.625 * pow((1000.0 * ea / (Ta + T0)), 0.131)
