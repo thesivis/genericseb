@@ -168,8 +168,6 @@ public class LandSat {
                         variables.add(new Variable("Rg_24h", Rg_24h));
                         variables.add(new Variable("Uref", Uref));
 
-
-
                         float dr;
                         structure = new Structure();
                         structure.setToken("dr");
@@ -229,29 +227,32 @@ public class LandSat {
                         equation = lexer.analyse(equations.get(ParameterEnum.ea), structure, null, LanguageType.PYTHON);
                         ea = (float) lexer.getResult(equation, variables);
                         variables.add(new Variable("ea", ea));
-                        
+
                         float W;
                         structure = new Structure();
                         structure.setToken("W");
                         equation = lexer.analyse(equations.get(ParameterEnum.W), structure, null, LanguageType.PYTHON);
                         W = (float) lexer.getResult(equation, variables);
                         variables.add(new Variable("W", W));
-                        
+
                         float transmissividade;
                         structure = new Structure();
                         structure.setToken("transmissividade");
                         equation = lexer.analyse(equations.get(ParameterEnum.transmissividade), structure, null, LanguageType.PYTHON);
                         transmissividade = (float) lexer.getResult(equation, variables);
                         variables.add(new Variable("transmissividade", transmissividade));
-                        
+
                         float emissivityAtmosfera;
                         structure = new Structure();
                         structure.setToken("emissivityAtmosfera");
                         equation = lexer.analyse(equations.get(ParameterEnum.emissivityAtmosfera), structure, null, LanguageType.PYTHON);
                         emissivityAtmosfera = (float) lexer.getResult(equation, variables);
                         variables.add(new Variable("emissivityAtmosfera", emissivityAtmosfera));
-                        
+
 //                        EXP((-0,00146*P/(KT*COSZ)-0,075*(W/COSZ)^0,4))
+
+                        float SWdVet = (S * cosZ * cosZ) / (1.085f * cosZ + 10.0f * ea * (2.7f + cosZ) * 0.001f + 0.2f);
+                        float LWdAtmosfera = (float) (emissivityAtmosfera * StefanBoltzman * (Math.pow(Ta + T0, 4)));
 
                         System.exit(1);
 //                        System.out.println("transmissividade:" + transmissividade);
@@ -282,9 +283,10 @@ public class LandSat {
                         float[] IAFVet = null;
                         float[] emissividadeNBVet = null;
                         float[] LWdVet = null;
-                        float SWdVet = (S * cosZ * cosZ) / (1.085f * cosZ + 10.0f * ea * (2.7f + cosZ) * 0.001f + 0.2f);
+
 
                         float albedo;
+                        float somaBandas;
                         float NDVI;
                         float Rn;
                         float SAVI;
@@ -475,7 +477,8 @@ public class LandSat {
                             pw.close();
                         }
 
-                        float banda4, banda3;
+                        float banda4, banda3, banda1, banda2, banda5, banda6, banda7;
+                        float bandaRefletida4, bandaRefletida3, bandaRefletida1, bandaRefletida2, bandaRefletida5, bandaRefletida7;
 
                         double[] valor = null;
                         int idx = 0;
@@ -498,7 +501,6 @@ public class LandSat {
                         TIFFField[] allTiffFields = ifd.getTIFFFields();
 
                         System.out.println("Calculating " + quant);
-                        float LWdAtmosfera = (float) (emissivityAtmosfera * StefanBoltzman * (Math.pow(Ta + T0, 4)));
 
                         for (int i = 0; i < height; i++) {
                             for (int j = 0; j < width; j++) {
@@ -508,44 +510,52 @@ public class LandSat {
                                 k = 0;
                                 calibracao = (float) (calibration[k][0] + ((calibration[k][1] - calibration[k][0]) / 255.f) * valor[k]);
                                 reflectancia = (float) ((Math.PI * calibracao) / (calibration[k][2] * cosZ * dr));
-                                albedo = parameterAlbedo[k] * reflectancia;
+                                bandaRefletida1 = reflectancia;
+                                banda1 = calibracao;
+                                somaBandas = parameterAlbedo[k] * reflectancia;
 
                                 k = 1;
                                 calibracao = (float) (calibration[k][0] + ((calibration[k][1] - calibration[k][0]) / 255.f) * valor[k]);
                                 reflectancia = (float) ((Math.PI * calibracao) / (calibration[k][2] * cosZ * dr));
-                                albedo = albedo + parameterAlbedo[k] * reflectancia;
+                                bandaRefletida2 = reflectancia;
+                                banda2 = calibracao;
+                                somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
 
                                 k = 2;
 
                                 calibracao = (float) (calibration[k][0] + ((calibration[k][1] - calibration[k][0]) / 255.f) * valor[k]);
                                 reflectancia = (float) ((Math.PI * calibracao) / (calibration[k][2] * cosZ * dr));
-                                albedo = albedo + parameterAlbedo[k] * reflectancia;
-
-                                banda3 = reflectancia;
+                                somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
+                                bandaRefletida3 = reflectancia;
+                                banda3 = calibracao;
 
                                 k = 3;
 
                                 calibracao = (float) (calibration[k][0] + ((calibration[k][1] - calibration[k][0]) / 255.f) * valor[k]);
                                 reflectancia = (float) ((Math.PI * calibracao) / (calibration[k][2] * cosZ * dr));
-                                albedo = albedo + parameterAlbedo[k] * reflectancia;
-
-                                banda4 = reflectancia;
+                                somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
+                                bandaRefletida4 = reflectancia;
+                                banda4 = calibracao;
 
                                 k = 4;
                                 calibracao = (float) (calibration[k][0] + ((calibration[k][1] - calibration[k][0]) / 255.f) * valor[k]);
                                 reflectancia = (float) ((Math.PI * calibracao) / (calibration[k][2] * cosZ * dr));
-                                albedo = albedo + parameterAlbedo[k] * reflectancia;
+                                bandaRefletida5 = reflectancia;
+                                banda5 = calibracao;
+                                somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
 
                                 k = 6;
                                 calibracao = (float) (calibration[k][0] + ((calibration[k][1] - calibration[k][0]) / 255.f) * valor[k]);
                                 reflectancia = (float) ((Math.PI * calibracao) / (calibration[k][2] * cosZ * dr));
-                                albedo = albedo + parameterAlbedo[k] * reflectancia;
+                                bandaRefletida7 = reflectancia;
+                                banda7 = calibracao;
+                                somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
 
-                                albedo = (albedo - reflectanciaAtmosfera) / (transmissividade * transmissividade);
+                                albedo = (somaBandas - reflectanciaAtmosfera) / (transmissividade * transmissividade);
 
-                                NDVI = (banda4 - banda3) / (banda4 + banda3);
+                                NDVI = (bandaRefletida4 - bandaRefletida3) / (bandaRefletida4 + bandaRefletida3);
 
-                                SAVI = ((1.0f + L) * (banda4 - banda3)) / (L + banda4 + banda3);
+                                SAVI = ((1.0f + L) * (bandaRefletida4 - bandaRefletida3)) / (L + bandaRefletida4 + bandaRefletida3);
 
                                 if (SAVI <= 0.1f) {
                                     IAF = 0.0f;
@@ -568,6 +578,7 @@ public class LandSat {
 
                                 k = 5;
                                 calibracao = (float) (calibration[k][0] + ((calibration[k][1] - calibration[k][0]) / 255.0f) * valor[k]);
+                                banda6 = calibracao;
                                 Ts = (float) (K2 / (Math.log((emissividadeNB * K1 / calibracao) + 1.0f)));
 
                                 LWd = (float) (emissivity * StefanBoltzman * (Math.pow(Ts, 4)));

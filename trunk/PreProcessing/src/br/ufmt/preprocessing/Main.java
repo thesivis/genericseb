@@ -5,7 +5,10 @@
 package br.ufmt.preprocessing;
 
 import br.ufmt.genericlexerseb.ExpressionParser;
+import br.ufmt.genericlexerseb.Variable;
 import br.ufmt.preprocessing.utils.DataFile;
+import br.ufmt.preprocessing.utils.Utilities;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -25,8 +28,16 @@ public class Main {
 //        expressionParser.evaluateExpr("transmissividade = 0.35 + 0.627 * exp((-0.00146 * P / (Kt * cosZ)) - 0.075 * pow((W / cosZ), 0.4))");
 //        String[] terms = expressionParser.getOutput();
 //        System.out.println(Arrays.toString(terms));
-//        System.exit(1);
+        List<Variable> variables = new ArrayList<>();
+        variables.add(new Variable("julianDay", 123));
+        variables.add(new Variable("julianDay", 321));
         
+        for (Variable variable : variables) {
+            System.out.println(variable.getValue());
+        }
+
+        System.exit(1);
+
         LandSat land = new LandSat();
         String path = "/media/raphael/DISK/Faculdade/Doutorado/Artigos/EnviromentModelingSoftware/GPUSensoriamento/TIFF/rppn.tif";
         int julianDay = 248;
