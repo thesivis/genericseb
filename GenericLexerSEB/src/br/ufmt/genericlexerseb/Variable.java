@@ -8,7 +8,7 @@ package br.ufmt.genericlexerseb;
  *
  * @author raphael
  */
-public class Variable {
+public class Variable implements Comparable<Variable>{
     
     private String name;
     private Object value;
@@ -41,5 +41,21 @@ public class Variable {
     public void setValue(Object value) {
         this.value = value;
     }
+
+    @Override
+    public int compareTo(Variable o) {
+        return this.name.compareTo(o.name);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof Variable){
+            Variable o = (Variable) obj;
+            return this.name.equals(o.name);
+        }
+        return false; //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    
     
 }
