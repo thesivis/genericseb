@@ -56,14 +56,14 @@ public class Main {
         SebalRun sebal = new SebalRun();
         List<DataStructure> datas;
 
-        System.out.println("CUDA");
-        datas = sebal.calculate(arqs, ExecutionEnum.CUDA);
+//        System.out.println("CUDA");
+//        datas = sebal.calculate(arqs, ExecutionEnum.CUDA);
 //
 //        System.out.println("OpenCL");
 //        datas = sebal.calculate(arqs, ExecutionEnum.OPENCL);
 
-//        System.out.println("Java");
-//        datas = sebal.calculate(arqs, ExecutionEnum.NORMAL);
+        System.out.println("Java");
+        datas = sebal.calculate(arqs, ExecutionEnum.NORMAL);
 
 //        Utilities.exportTXT(System.getProperty("user.dir") + "/OutputSebal", datas);
 

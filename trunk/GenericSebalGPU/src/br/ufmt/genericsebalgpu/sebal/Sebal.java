@@ -78,7 +78,7 @@ public abstract class Sebal {
     public static boolean verifyEquations() {
         BufferedReader bur = null;
         try {
-            String path = System.getProperty("user.dir") + "/source/equations.prop";
+            String path = System.getProperty("user.dir") + "/source/sebal.prop";
             bur = new BufferedReader(new FileReader(path));
             String line = bur.readLine();
 
