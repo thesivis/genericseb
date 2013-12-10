@@ -4,13 +4,15 @@
  */
 package br.ufmt.preprocessing;
 
-
-
-
+import br.ufmt.genericlexerseb.ExpressionParser;
+import br.ufmt.genericlexerseb.GenericLexerSEB;
+import br.ufmt.genericlexerseb.LanguageType;
+import br.ufmt.genericlexerseb.Structure;
+import br.ufmt.genericlexerseb.Variable;
 import br.ufmt.preprocessing.exceptions.CalibrationException;
 import br.ufmt.preprocessing.exceptions.TiffErrorBandsException;
 import br.ufmt.preprocessing.exceptions.TiffNotFoundException;
-import br.ufmt.preprocessing.utils.Constants;
+import static br.ufmt.preprocessing.utils.Constants.*;
 import br.ufmt.preprocessing.utils.DataFile;
 import br.ufmt.preprocessing.utils.ParameterEnum;
 import br.ufmt.preprocessing.utils.Utilities;
@@ -38,6 +40,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -57,8 +60,69 @@ public class LandSat {
 
     private static int QUANTITY = 40000000;
 //    private static int QUANTITY_LINES = 1000;
+    public static HashMap<ParameterEnum, String> equations = new HashMap<>();
 
-    public List<DataFile> preprocessing(String pathToOriginalTiff, float[][] calibration, float[] parameterAlbedo, int julianDay, float Z, float reflectancaAtmosfera, float P, float UR, float Ta, float Kt, float L, float K1, float K2, float S, float StefanBoltzman, float latitude, float Rg_24h, float Uref) {
+    static {
+        verifyEquations();
+    }
+
+    public static boolean verifyEquations() {
+        BufferedReader bur = null;
+        try {
+            String path = System.getProperty("user.dir") + "/source/landsat.prop";
+            bur = new BufferedReader(new FileReader(path));
+            String line = bur.readLine();
+
+            List<String> variables = getVariables();
+            ExpressionParser ex = new ExpressionParser();
+            String vet[];
+            while (line != null) {
+//                System.out.println(line);
+                line = line.replaceAll("[ ]+", "");
+                vet = line.split("=");
+                variables.add(vet[0]);
+                try {
+                    ex.evaluateExpr(line, variables);
+                    equations.put(ParameterEnum.valueOf(vet[0]), line);
+                } catch (IllegalArgumentException e) {
+//                    System.out.println("Equation is wrong: " + line);
+                    System.out.println(e.getMessage());
+                }
+                line = bur.readLine();
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(LandSat.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                bur.close();
+            } catch (IOException ex) {
+                Logger.getLogger(LandSat.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return false;
+    }
+
+    public static List<String> getVariables() {
+        List<String> variables = Utilities.getVariables();
+        variables.add("julianDay");
+        variables.add("Z");
+        variables.add("reflectanciaAtmosfera");
+        variables.add("P");
+        variables.add("UR");
+        variables.add("Ta");
+        variables.add("Kt");
+        variables.add("L");
+        variables.add("K1");
+        variables.add("K2");
+        variables.add("S");
+        variables.add("StefanBoltzman");
+        variables.add("latitude");
+        variables.add("Rg_24h");
+        variables.add("Uref");
+        return variables;
+    }
+
+    public List<DataFile> preprocessing(String pathToOriginalTiff, float[][] calibration, float[] parameterAlbedo, int julianDay, float Z, float reflectanciaAtmosfera, float P, float UR, float Ta, float Kt, float L, float K1, float K2, float S, float StefanBoltzman, float latitude, float Rg_24h, float Uref) {
 
         File tiff = new File(pathToOriginalTiff);
         if (tiff.exists() && tiff.getName().endsWith(".tif")) {
@@ -66,7 +130,7 @@ public class LandSat {
                 SeekableStream s = null;
                 try {
                     List<DataFile> ret = new ArrayList<>();
-                    System.out.println("Arq:" + tiff.getName());
+//                    System.out.println("Arq:" + tiff.getName());
                     s = new FileSeekableStream(tiff);
                     TIFFDecodeParam param = null;
                     ImageDecoder dec = ImageCodec.createImageDecoder("tiff", s, param);
@@ -79,27 +143,117 @@ public class LandSat {
                     int width = raster.getWidth();
                     int height = raster.getHeight();
                     int tam = width * height;
-                    System.out.println("W:" + raster.getWidth() + " H:" + raster.getHeight());
-                    System.out.println("Size:" + tam);
+//                    System.out.println("W:" + raster.getWidth() + " H:" + raster.getHeight());
+//                    System.out.println("Size:" + tam);
 
                     if (bands == 7) {
 
-                        float dr = (float) (1.0f + 0.033f * Math.cos(julianDay * 2 * Math.PI / 365.0f));
-                        float cosZ = (float) Math.cos(((90.0f - Z) * Math.PI) / 180.0f);
+                        GenericLexerSEB lexer = new GenericLexerSEB();
+                        Structure structure;
+                        String equation;
+                        List<Variable> variables = Utilities.getVariable();
+                        variables.add(new Variable("julianDay", julianDay));
+                        variables.add(new Variable("Z", Z));
+                        variables.add(new Variable("reflectanciaAtmosfera", reflectanciaAtmosfera));
+                        variables.add(new Variable("P", P));
+                        variables.add(new Variable("UR", UR));
+                        variables.add(new Variable("Ta", Ta));
+                        variables.add(new Variable("Kt", Kt));
+                        variables.add(new Variable("L", L));
+                        variables.add(new Variable("K1", K1));
+                        variables.add(new Variable("K2", K2));
+                        variables.add(new Variable("S", s));
+                        variables.add(new Variable("StefanBoltzman", StefanBoltzman));
+                        variables.add(new Variable("latitude", latitude));
+                        variables.add(new Variable("Rg_24h", Rg_24h));
+                        variables.add(new Variable("Uref", Uref));
 
-                        float declinacaoSolar = (float) Math.toRadians(23.45f * Math.sin(Math.toRadians(360.0f * (julianDay - 80) / 365.f)));
-                        float anguloHorarioNascerSol = (float) Math.acos(-Math.tan(Math.PI * latitude / 180.0f) * Math.tan(declinacaoSolar));
-                        float rad_solar_toa = (float) (24.0f * 60.0f * 0.082f * dr * (anguloHorarioNascerSol * Math.sin(Math.PI * latitude / 180.0f) * Math.sin(declinacaoSolar) + Math.cos(Math.PI * latitude / 180.0f) * Math.cos(declinacaoSolar) * Math.sin(anguloHorarioNascerSol)) / Math.PI);
-                        float Rg_24h_mj = 0.0864f * Rg_24h;
-                        float transmissividade24h = Rg_24h_mj / rad_solar_toa;
+
+
+                        float dr;
+                        structure = new Structure();
+                        structure.setToken("dr");
+                        equation = lexer.analyse(equations.get(ParameterEnum.dr), structure, null, LanguageType.PYTHON);
+                        dr = (float) lexer.getResult(equation, variables);
+                        variables.add(new Variable("dr", dr));
+
+
+                        float cosZ;
+                        structure = new Structure();
+                        structure.setToken("cosZ");
+                        equation = lexer.analyse(equations.get(ParameterEnum.cosZ), structure, null, LanguageType.PYTHON);
+                        cosZ = (float) lexer.getResult(equation, variables);
+                        variables.add(new Variable("cosZ", cosZ));
+
+
+                        float declinacaoSolar;
+                        structure = new Structure();
+                        structure.setToken("declinacaoSolar");
+                        equation = lexer.analyse(equations.get(ParameterEnum.declinacaoSolar), structure, null, LanguageType.PYTHON);
+                        declinacaoSolar = (float) lexer.getResult(equation, variables);
+                        variables.add(new Variable("declinacaoSolar", declinacaoSolar));
+
+                        float anguloHorarioNascerSol;
+                        structure = new Structure();
+                        structure.setToken("anguloHorarioNascerSol");
+                        equation = lexer.analyse(equations.get(ParameterEnum.anguloHorarioNascerSol), structure, null, LanguageType.PYTHON);
+                        anguloHorarioNascerSol = (float) lexer.getResult(equation, variables);
+                        variables.add(new Variable("anguloHorarioNascerSol", anguloHorarioNascerSol));
+
+
+                        float rad_solar_toa;
+                        structure = new Structure();
+                        structure.setToken("rad_solar_toa");
+                        equation = lexer.analyse(equations.get(ParameterEnum.rad_solar_toa), structure, null, LanguageType.PYTHON);
+                        rad_solar_toa = (float) lexer.getResult(equation, variables);
+                        variables.add(new Variable("rad_solar_toa", rad_solar_toa));
+
+                        float Rg_24h_mj;
+                        structure = new Structure();
+                        structure.setToken("Rg_24h_mj");
+                        equation = lexer.analyse(equations.get(ParameterEnum.Rg_24h_mj), structure, null, LanguageType.PYTHON);
+                        Rg_24h_mj = (float) lexer.getResult(equation, variables);
+                        variables.add(new Variable("Rg_24h_mj", Rg_24h_mj));
+
+                        float transmissividade24h;
+                        structure = new Structure();
+                        structure.setToken("transmissividade24h");
+                        equation = lexer.analyse(equations.get(ParameterEnum.transmissividade24h), structure, null, LanguageType.PYTHON);
+                        transmissividade24h = (float) lexer.getResult(equation, variables);
+                        variables.add(new Variable("transmissividade24h", transmissividade24h));
 
 //                        float transmissividade = (float) (0.75f + 2 * Math.pow(10, -5) * altura);
-                        float ea = (float) ((0.61078f * Math.exp(17.269f * Ta / (237.3f + Ta))) * UR / 100.f);
-                        float W = 0.14f * ea * P + 2.1f;
-                        float transmissividade = (float) (0.35f + 0.627f * Math.exp((-0.00146f * P / (Kt * cosZ)) - 0.075f * Math.pow((W / cosZ), 0.4f)));
-                        float emissivityAtmosfera = (float) (0.625f * Math.pow((1000.0f * ea / (Ta + Constants.T0)), 0.131f));
+                        float ea;
+                        structure = new Structure();
+                        structure.setToken("ea");
+                        equation = lexer.analyse(equations.get(ParameterEnum.ea), structure, null, LanguageType.PYTHON);
+                        ea = (float) lexer.getResult(equation, variables);
+                        variables.add(new Variable("ea", ea));
+                        
+                        float W;
+                        structure = new Structure();
+                        structure.setToken("W");
+                        equation = lexer.analyse(equations.get(ParameterEnum.W), structure, null, LanguageType.PYTHON);
+                        W = (float) lexer.getResult(equation, variables);
+                        variables.add(new Variable("W", W));
+                        
+                        float transmissividade;
+                        structure = new Structure();
+                        structure.setToken("transmissividade");
+                        equation = lexer.analyse(equations.get(ParameterEnum.transmissividade), structure, null, LanguageType.PYTHON);
+                        transmissividade = (float) lexer.getResult(equation, variables);
+                        variables.add(new Variable("transmissividade", transmissividade));
+                        
+                        float emissivityAtmosfera;
+                        structure = new Structure();
+                        structure.setToken("emissivityAtmosfera");
+                        equation = lexer.analyse(equations.get(ParameterEnum.emissivityAtmosfera), structure, null, LanguageType.PYTHON);
+                        emissivityAtmosfera = (float) lexer.getResult(equation, variables);
+                        variables.add(new Variable("emissivityAtmosfera", emissivityAtmosfera));
+                        
 //                        EXP((-0,00146*P/(KT*COSZ)-0,075*(W/COSZ)^0,4))
 
+                        System.exit(1);
 //                        System.out.println("transmissividade:" + transmissividade);
 //                        System.out.println("w:" + W);
 //                        System.out.println("ea:" + ea);
@@ -344,7 +498,7 @@ public class LandSat {
                         TIFFField[] allTiffFields = ifd.getTIFFFields();
 
                         System.out.println("Calculating " + quant);
-                        float LWdAtmosfera = (float) (emissivityAtmosfera * StefanBoltzman * (Math.pow(Ta + Constants.T0, 4)));
+                        float LWdAtmosfera = (float) (emissivityAtmosfera * StefanBoltzman * (Math.pow(Ta + T0, 4)));
 
                         for (int i = 0; i < height; i++) {
                             for (int j = 0; j < width; j++) {
@@ -387,7 +541,7 @@ public class LandSat {
                                 reflectancia = (float) ((Math.PI * calibracao) / (calibration[k][2] * cosZ * dr));
                                 albedo = albedo + parameterAlbedo[k] * reflectancia;
 
-                                albedo = (albedo - reflectancaAtmosfera) / (transmissividade * transmissividade);
+                                albedo = (albedo - reflectanciaAtmosfera) / (transmissividade * transmissividade);
 
                                 NDVI = (banda4 - banda3) / (banda4 + banda3);
 
@@ -833,7 +987,7 @@ public class LandSat {
                         float ea = (float) ((0.61078f * Math.exp(17.269f * Ta / (237.3f + Ta))) * UR / 100.f);
                         float W = 0.14f * ea * P + 2.1f;
                         float transmissividade = (float) (0.35f + 0.627f * Math.exp((-0.00146f * P / (Kt * cosZ)) - 0.075f * Math.pow((W / cosZ), 0.4f)));
-                        float emissivityAtmosfera = (float) (0.625f * Math.pow((1000.0f * ea / (Ta + Constants.T0)), 0.131f));
+                        float emissivityAtmosfera = (float) (0.625f * Math.pow((1000.0f * ea / (Ta + T0)), 0.131f));
 //                        EXP((-0,00146*P/(KT*COSZ)-0,075*(W/COSZ)^0,4))
 
                         float calibracao;
@@ -857,7 +1011,7 @@ public class LandSat {
                         int k = 0;
 
                         System.out.println("Looking ");
-                        float LWdAtmosfera = (float) (emissivityAtmosfera * StefanBoltzman * (Math.pow(Ta + Constants.T0, 4)));
+                        float LWdAtmosfera = (float) (emissivityAtmosfera * StefanBoltzman * (Math.pow(Ta + T0, 4)));
 
                         int xHot = 0, yHot = 0, xCold = 0, yCold = 0;
                         float tMax, tMin;
@@ -1007,7 +1161,7 @@ public class LandSat {
                                                     RnHot = RnVet;
                                                     SAVI_hot = SAVIVet;
 //                                            System.out.println("LWdVet:" + LWdVet);
-                                                    GHot = (float) (RnHot * (((TsVet - Constants.T0) / albedoVet) * (0.0038f * albedoVet + 0.0074 * albedoVet * albedoVet) * (1.0f - 0.98f * NDVIVet * NDVIVet * NDVIVet * NDVIVet)));
+                                                    GHot = (float) (RnHot * (((TsVet - T0) / albedoVet) * (0.0038f * albedoVet + 0.0074 * albedoVet * albedoVet) * (1.0f - 0.98f * NDVIVet * NDVIVet * NDVIVet * NDVIVet)));
                                                 }
                                             }
                                         }
@@ -1237,7 +1391,7 @@ public class LandSat {
 
         return true;
     }
-    
+
     private boolean hasDiferenceSAVIAround(Raster raster, int i, int j, float calibration[][], float cosZ, float dr, float L, float SAVI) {
         double[] dado = null;
         dado = raster.getPixel(i, j - 1, dado);
@@ -1267,7 +1421,7 @@ public class LandSat {
         }
         return true;
     }
-    
+
     private boolean hasDiferenceSAVI(float calibration[][], float cosZ, float dr, float L, double[] pixels, float SAVI) {
 
         float calibracao;
@@ -1303,7 +1457,7 @@ public class LandSat {
 
         return true;
     }
-    
+
     private boolean hasDiferenceNVDIAround(Raster raster, int i, int j, float calibration[][], float cosZ, float dr, float NVDI) {
         double[] dado = null;
         dado = raster.getPixel(i, j - 1, dado);
@@ -1333,7 +1487,7 @@ public class LandSat {
         }
         return true;
     }
-    
+
     private boolean hasDiferenceNVDI(float calibration[][], float cosZ, float dr, double[] pixels, float NDVI) {
 
         float calibracao;
@@ -1369,7 +1523,7 @@ public class LandSat {
 
         return true;
     }
-    
+
     private boolean hasDiferenceIAFAround(Raster raster, int i, int j, float calibration[][], float cosZ, float dr, float L, float IAF) {
         double[] dado = null;
         dado = raster.getPixel(i, j - 1, dado);
@@ -1399,7 +1553,7 @@ public class LandSat {
         }
         return true;
     }
-    
+
     private boolean hasDiferenceIAF(float calibration[][], float cosZ, float dr, float L, double[] pixels, float IAF) {
 
         float calibracao;
@@ -1444,7 +1598,7 @@ public class LandSat {
 
         return true;
     }
-    
+
     public List<DataFile> preprocessingLandSat5(String path, int julianDay, float Z, float P, float UR, float Ta, float latitude, float Rg_24h, float Uref) {
 
         float[][] calibration = new float[][]{{-1.52f, 193.0f, 1957.0f},
