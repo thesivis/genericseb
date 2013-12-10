@@ -35,3 +35,5 @@ sqrt;sqrt;sqrtf;sqrt;math.sqrt;Return the square root of x.;L;1
 tan;tan;tanf;tan;math.tan;Return the tangent of x radians.;L;1
 tanh;tanh;tanhf;tanh;math.tanh;Return the hyperbolic tangent of x.;L;1
 trunc;trunc;truncf;trunc;math.trunc;Return the Real value x truncated to an Integral (usually a long integer).;L;1
+radians;radians;radians;radians;math.radians;Converts angle x from degrees to radians.;L;1
+degrees;degrees;degrees;degrees;math.degrees;Converts angle x from radians to degrees.;L;1
