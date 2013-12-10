@@ -128,7 +128,7 @@ public class ExpressionParser {
     }
 
     private boolean isVariable(String variable) throws IllegalArgumentException {
-        if (variables.isEmpty()) {
+        if (variables.isEmpty() || variable.equals(",")) {
             return true;
         }
         if (!variables.contains(variable)) {
@@ -235,6 +235,7 @@ public class ExpressionParser {
         if (debug) {
             System.out.println("After:" + str);
         }
+//        System.out.println("After:" + str);
         String[] input = tokenize(str);
         this.output = input;
 
@@ -271,7 +272,7 @@ public class ExpressionParser {
     private String preprocessExpr(String input) {
         String str = new String(input);
         str = str.replaceAll("\\s", "");
-        str = str.replaceAll(",", " ");
+//        str = str.replaceAll(",", " ");
         if (debug) {
             System.out.println(str);
         }

@@ -87,7 +87,6 @@ public class GenericLexerSEB {
         HashMap<String, String> funcs = functions.get(language);
         Structure independent;
 
-
         if (dependent.isVector()) {
             if (dependent.getIndex().equalsIgnoreCase("*")) {
                 equation = "*" + dependent.getToken() + "=";
@@ -105,6 +104,8 @@ public class GenericLexerSEB {
                 terms[i] = "-";
             } else if (!(language.equals(LanguageType.PYTHON)) && terms[i].matches("(-?)[0-9]+[\\.][0-9]+")) {
                 terms[i] = terms[i] + "f";
+            } else if (terms[i].equals("pi") && language.equals(LanguageType.PYTHON)) {
+                terms[i] = "math.pi";
             } else if (variables != null) {
                 independent = variables.get(terms[i]);
                 if (independent != null) {
