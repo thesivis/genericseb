@@ -14,9 +14,9 @@ public enum ParameterEnum {
     B("b.dat"),
     COORDENATES("coordenates.dat"),
     NDVI("NDVI.dat"),
-    LST_K("LST_K.dat"),
+    Ts("LST_K.dat"),
     Uref("UREF.dat"),
-    EmissividadeNB("emissividadeNB.dat"),
+    emissividadeNB("emissividadeNB.dat"),
     SAVI("SAVI.dat"),
     Uref_hot("UREF_HOT.dat"),
     Rn_hot("RN_HOT.dat"),
@@ -24,8 +24,8 @@ public enum ParameterEnum {
     Ts_hot("TS_HOT.dat"),
     Ts_cold("TS_COLD.dat"),
     SAVI_hot("SAVI_HOT.dat"),
-    Albedo("ALBEDO.dat"),
-    Emissivity("EMISSIVITY.dat"),
+    albedo("albedo.dat"),
+    emissivity("EMISSIVITY.dat"),
     SWnet("SWD.dat"),
     LWnet("LWD.dat"),
     Rg_24h("RG_24H.dat"),
@@ -48,7 +48,7 @@ public enum ParameterEnum {
     ET_24h("ET_24H.dat"),
     LE_24h("LE_24H.dat"),
     fc("fc.dat"),
-    LAI("LAI.dat"),
+    IAF("LAI.dat"),
     hc("hc.dat"),
     Zref("Zref.dat"),
     Pref("Pref.dat"),
@@ -73,7 +73,31 @@ public enum ParameterEnum {
     ea("ea.dat"),
     W("W.dat"),
     transmissividade("transmissividade.dat"),
-    emissivityAtmosfera("emissivityAtmosfera.dat");
+    emissivityAtm("emissivityAtm.dat"),
+    SWd("SWd.dat"),
+    LWd("LWd.dat"),
+    LWdAtm("LWdAtm.dat"),
+    reflectancia("reflectancia.dat"),
+    banda1("banda1.dat"),
+    banda2("banda2.dat"),
+    banda3("banda3.dat"),
+    banda4("banda4.dat"),
+    banda5("banda5.dat"),
+    banda6("banda6.dat"),
+    banda7("banda7.dat"),
+    bandaRefletida1("bandaRefletida1.dat"),
+    bandaRefletida2("bandaRefletida2.dat"),
+    bandaRefletida3("bandaRefletida3.dat"),
+    bandaRefletida4("bandaRefletida4.dat"),
+    bandaRefletida5("bandaRefletida5.dat"),
+    bandaRefletida6("bandaRefletida6.dat"),
+    bandaRefletida7("bandaRefletida7.dat"),
+    irrad_espectral("irrad_espectral.dat"),
+    rad_espectral("rad_espectral.dat"),
+    coef_calib_a("coef_calib_a.dat"),
+    coef_calib_b("coef_calib_b.dat"),
+    pixel("pixel.dat"),
+    sumBandas("sumBandas.dat");
 
     private ParameterEnum(String fileName) {
         this.fileName = fileName;
@@ -82,6 +106,10 @@ public enum ParameterEnum {
 
     public String getFileName() {
         return fileName;
+    }
+    
+    public String getName() {
+        return fileName.replace(".dat", "");
     }
 
     public void setFileName(String fileName) {

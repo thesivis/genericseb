@@ -9,7 +9,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -125,11 +124,12 @@ public class GenericLexerSEB {
         return equation;
     }
 
-    public double getResult(String equation, List<Variable> variables) {
+    public double getResult(String equation, Map<String, Variable> variables) {
         PythonInterpreter in = new PythonInterpreter();
         String[] vet = equation.split("=");
 
-        for (Variable variable : variables) {
+
+        for (Variable variable : variables.values()) {
             in.set(variable.getName(), variable.getValue());
         }
 

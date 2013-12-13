@@ -4,6 +4,8 @@
  */
 package br.ufmt.genericlexerseb;
 
+import java.util.Objects;
+
 /**
  *
  * @author raphael
@@ -54,6 +56,13 @@ public class Variable implements Comparable<Variable>{
             return this.name.equals(o.name);
         }
         return false; //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 37 * hash + Objects.hashCode(this.name);
+        return hash;
     }
     
     

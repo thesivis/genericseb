@@ -64,13 +64,13 @@ public class SebalImportFiles {
 
             List<DataStructure> outputs = new ArrayList<DataStructure>();
             outputs.add(new DataStructure(ParameterEnum.NDVI, NDVI));
-            outputs.add(new DataStructure(ParameterEnum.LST_K, LST_K));
+            outputs.add(new DataStructure(ParameterEnum.Ts, LST_K));
             outputs.add(new DataStructure(ParameterEnum.Uref, Uref));
             outputs.add(new DataStructure(ParameterEnum.SAVI, SAVI));
             outputs.add(new DataStructure(ParameterEnum.A, a));
             outputs.add(new DataStructure(ParameterEnum.B, b));
-            outputs.add(new DataStructure(ParameterEnum.Albedo, Albedo));
-            outputs.add(new DataStructure(ParameterEnum.Emissivity, Emissivity));
+            outputs.add(new DataStructure(ParameterEnum.albedo, Albedo));
+            outputs.add(new DataStructure(ParameterEnum.emissivity, Emissivity));
             outputs.add(new DataStructure(ParameterEnum.SWnet, SWd));
             outputs.add(new DataStructure(ParameterEnum.LWnet, LWd));
             outputs.add(new DataStructure(ParameterEnum.Rg_24h, Rg_24h));

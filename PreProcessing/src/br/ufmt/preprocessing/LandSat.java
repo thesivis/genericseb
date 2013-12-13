@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -119,6 +120,25 @@ public class LandSat {
         variables.add("latitude");
         variables.add("Rg_24h");
         variables.add("Uref");
+        variables.add("coef_calib_a");
+        variables.add("coef_calib_b");
+        variables.add("irrad_espectral");
+        variables.add("pixel");
+        variables.add("banda1");
+        variables.add("banda2");
+        variables.add("banda3");
+        variables.add("banda4");
+        variables.add("banda5");
+        variables.add("banda6");
+        variables.add("banda7");
+        variables.add("bandaRefletida1");
+        variables.add("bandaRefletida2");
+        variables.add("bandaRefletida3");
+        variables.add("bandaRefletida4");
+        variables.add("bandaRefletida5");
+        variables.add("bandaRefletida6");
+        variables.add("bandaRefletida7");
+        variables.add("sumBandas");
         return variables;
     }
 
@@ -148,113 +168,49 @@ public class LandSat {
 
                     if (bands == 7) {
 
-                        GenericLexerSEB lexer = new GenericLexerSEB();
-                        Structure structure;
-                        String equation;
-                        List<Variable> variables = Utilities.getVariable();
-                        variables.add(new Variable("julianDay", julianDay));
-                        variables.add(new Variable("Z", Z));
-                        variables.add(new Variable("reflectanciaAtmosfera", reflectanciaAtmosfera));
-                        variables.add(new Variable("P", P));
-                        variables.add(new Variable("UR", UR));
-                        variables.add(new Variable("Ta", Ta));
-                        variables.add(new Variable("Kt", Kt));
-                        variables.add(new Variable("L", L));
-                        variables.add(new Variable("K1", K1));
-                        variables.add(new Variable("K2", K2));
-                        variables.add(new Variable("S", s));
-                        variables.add(new Variable("StefanBoltzman", StefanBoltzman));
-                        variables.add(new Variable("latitude", latitude));
-                        variables.add(new Variable("Rg_24h", Rg_24h));
-                        variables.add(new Variable("Uref", Uref));
+                        Map<String, Variable> variables = Utilities.getVariable();
+                        variables.put("julianDay", new Variable("julianDay", julianDay));
+                        variables.put("Z", new Variable("Z", Z));
+                        variables.put("reflectanciaAtmosfera", new Variable("reflectanciaAtmosfera", reflectanciaAtmosfera));
+                        variables.put("P", new Variable("P", P));
+                        variables.put("UR", new Variable("UR", UR));
+                        variables.put("Ta", new Variable("Ta", Ta));
+                        variables.put("Kt", new Variable("Kt", Kt));
+                        variables.put("L", new Variable("L", L));
+                        variables.put("K1", new Variable("K1", K1));
+                        variables.put("K2", new Variable("K2", K2));
+                        variables.put("S", new Variable("S", S));
+                        variables.put("StefanBoltzman", new Variable("StefanBoltzman", StefanBoltzman));
+                        variables.put("latitude", new Variable("latitude", latitude));
+                        variables.put("Rg_24h", new Variable("Rg_24h", Rg_24h));
+                        variables.put("Uref", new Variable("Uref", Uref));
 
-                        float dr;
-                        structure = new Structure();
-                        structure.setToken("dr");
-                        equation = lexer.analyse(equations.get(ParameterEnum.dr), structure, null, LanguageType.PYTHON);
-                        dr = (float) lexer.getResult(equation, variables);
-                        variables.add(new Variable("dr", dr));
+                        Utilities.executeMath(ParameterEnum.dr, equations, variables);
 
+                        Utilities.executeMath(ParameterEnum.cosZ, equations, variables);
 
-                        float cosZ;
-                        structure = new Structure();
-                        structure.setToken("cosZ");
-                        equation = lexer.analyse(equations.get(ParameterEnum.cosZ), structure, null, LanguageType.PYTHON);
-                        cosZ = (float) lexer.getResult(equation, variables);
-                        variables.add(new Variable("cosZ", cosZ));
+                        Utilities.executeMath(ParameterEnum.declinacaoSolar, equations, variables);
 
+                        Utilities.executeMath(ParameterEnum.anguloHorarioNascerSol, equations, variables);
 
-                        float declinacaoSolar;
-                        structure = new Structure();
-                        structure.setToken("declinacaoSolar");
-                        equation = lexer.analyse(equations.get(ParameterEnum.declinacaoSolar), structure, null, LanguageType.PYTHON);
-                        declinacaoSolar = (float) lexer.getResult(equation, variables);
-                        variables.add(new Variable("declinacaoSolar", declinacaoSolar));
+                        Utilities.executeMath(ParameterEnum.rad_solar_toa, equations, variables);
 
-                        float anguloHorarioNascerSol;
-                        structure = new Structure();
-                        structure.setToken("anguloHorarioNascerSol");
-                        equation = lexer.analyse(equations.get(ParameterEnum.anguloHorarioNascerSol), structure, null, LanguageType.PYTHON);
-                        anguloHorarioNascerSol = (float) lexer.getResult(equation, variables);
-                        variables.add(new Variable("anguloHorarioNascerSol", anguloHorarioNascerSol));
+                        Utilities.executeMath(ParameterEnum.Rg_24h_mj, equations, variables);
 
+                        Utilities.executeMath(ParameterEnum.transmissividade24h, equations, variables);
 
-                        float rad_solar_toa;
-                        structure = new Structure();
-                        structure.setToken("rad_solar_toa");
-                        equation = lexer.analyse(equations.get(ParameterEnum.rad_solar_toa), structure, null, LanguageType.PYTHON);
-                        rad_solar_toa = (float) lexer.getResult(equation, variables);
-                        variables.add(new Variable("rad_solar_toa", rad_solar_toa));
+                        Utilities.executeMath(ParameterEnum.ea, equations, variables);
 
-                        float Rg_24h_mj;
-                        structure = new Structure();
-                        structure.setToken("Rg_24h_mj");
-                        equation = lexer.analyse(equations.get(ParameterEnum.Rg_24h_mj), structure, null, LanguageType.PYTHON);
-                        Rg_24h_mj = (float) lexer.getResult(equation, variables);
-                        variables.add(new Variable("Rg_24h_mj", Rg_24h_mj));
+                        Utilities.executeMath(ParameterEnum.W, equations, variables);
 
-                        float transmissividade24h;
-                        structure = new Structure();
-                        structure.setToken("transmissividade24h");
-                        equation = lexer.analyse(equations.get(ParameterEnum.transmissividade24h), structure, null, LanguageType.PYTHON);
-                        transmissividade24h = (float) lexer.getResult(equation, variables);
-                        variables.add(new Variable("transmissividade24h", transmissividade24h));
+                        Utilities.executeMath(ParameterEnum.transmissividade, equations, variables);
 
-//                        float transmissividade = (float) (0.75f + 2 * Math.pow(10, -5) * altura);
-                        float ea;
-                        structure = new Structure();
-                        structure.setToken("ea");
-                        equation = lexer.analyse(equations.get(ParameterEnum.ea), structure, null, LanguageType.PYTHON);
-                        ea = (float) lexer.getResult(equation, variables);
-                        variables.add(new Variable("ea", ea));
+                        Utilities.executeMath(ParameterEnum.emissivityAtm, equations, variables);
 
-                        float W;
-                        structure = new Structure();
-                        structure.setToken("W");
-                        equation = lexer.analyse(equations.get(ParameterEnum.W), structure, null, LanguageType.PYTHON);
-                        W = (float) lexer.getResult(equation, variables);
-                        variables.add(new Variable("W", W));
+                        Utilities.executeMath(ParameterEnum.SWd, equations, variables);
 
-                        float transmissividade;
-                        structure = new Structure();
-                        structure.setToken("transmissividade");
-                        equation = lexer.analyse(equations.get(ParameterEnum.transmissividade), structure, null, LanguageType.PYTHON);
-                        transmissividade = (float) lexer.getResult(equation, variables);
-                        variables.add(new Variable("transmissividade", transmissividade));
+                        Utilities.executeMath(ParameterEnum.LWdAtm, equations, variables);
 
-                        float emissivityAtmosfera;
-                        structure = new Structure();
-                        structure.setToken("emissivityAtmosfera");
-                        equation = lexer.analyse(equations.get(ParameterEnum.emissivityAtmosfera), structure, null, LanguageType.PYTHON);
-                        emissivityAtmosfera = (float) lexer.getResult(equation, variables);
-                        variables.add(new Variable("emissivityAtmosfera", emissivityAtmosfera));
-
-//                        EXP((-0,00146*P/(KT*COSZ)-0,075*(W/COSZ)^0,4))
-
-                        float SWdVet = (S * cosZ * cosZ) / (1.085f * cosZ + 10.0f * ea * (2.7f + cosZ) * 0.001f + 0.2f);
-                        float LWdAtmosfera = (float) (emissivityAtmosfera * StefanBoltzman * (Math.pow(Ta + T0, 4)));
-
-                        System.exit(1);
 //                        System.out.println("transmissividade:" + transmissividade);
 //                        System.out.println("w:" + W);
 //                        System.out.println("ea:" + ea);
@@ -264,10 +220,7 @@ public class LandSat {
 
 //                        System.exit(1);
 
-                        float calibracao;
                         float reflectancia;
-
-
 
                         int size = QUANTITY;
                         if (tam < size) {
@@ -283,7 +236,6 @@ public class LandSat {
                         float[] IAFVet = null;
                         float[] emissividadeNBVet = null;
                         float[] LWdVet = null;
-
 
                         float albedo;
                         float somaBandas;
@@ -302,17 +254,17 @@ public class LandSat {
 
                         String name = "Datas.dat";
                         List<ParameterEnum> parameters = new ArrayList<>();
-                        parameters.add(ParameterEnum.Albedo);
+                        parameters.add(ParameterEnum.albedo);
                         parameters.add(ParameterEnum.NDVI);
                         parameters.add(ParameterEnum.SAVI);
-                        parameters.add(ParameterEnum.LST_K);
-                        parameters.add(ParameterEnum.Emissivity);
-                        parameters.add(ParameterEnum.LAI);
-                        parameters.add(ParameterEnum.EmissividadeNB);
+                        parameters.add(ParameterEnum.Ts);
+                        parameters.add(ParameterEnum.emissivity);
+                        parameters.add(ParameterEnum.IAF);
+                        parameters.add(ParameterEnum.emissividadeNB);
                         parameters.add(ParameterEnum.LWnet);
-                        parameters.add(ParameterEnum.SWnet);
+//                        parameters.add(ParameterEnum.SWnet);
                         parameters.add(ParameterEnum.Rn);
-                        parameters.add(ParameterEnum.Tao_24h);
+//                        parameters.add(ParameterEnum.Tao_24h);
                         parameters.add(ParameterEnum.Rg_24h);
                         parameters.add(ParameterEnum.Uref);
 
@@ -336,9 +288,9 @@ public class LandSat {
                         FileOutputStream fosLAI = null;
                         FileOutputStream fosEmissividadeNB = null;
                         FileOutputStream fosLWd = null;
-                        FileOutputStream fosSWd = null;
+//                        FileOutputStream fosSWd = null;
                         FileOutputStream fosRn = null;
-                        FileOutputStream fosTao24 = null;
+//                        FileOutputStream fosTao24 = null;
                         FileOutputStream fosRg24 = null;
                         FileOutputStream fosUref = null;
 
@@ -350,9 +302,9 @@ public class LandSat {
                         WritableRaster rasterLAI = null;
                         WritableRaster rasterEmissividadeNB = null;
                         WritableRaster rasterLWd = null;
-                        WritableRaster rasterSWd = null;
+//                        WritableRaster rasterSWd = null;
                         WritableRaster rasterRn = null;
-                        WritableRaster rasterTao24 = null;
+//                        WritableRaster rasterTao24 = null;
                         WritableRaster rasterRg24 = null;
                         WritableRaster rasterUref = null;
 
@@ -381,20 +333,21 @@ public class LandSat {
                             mppsm = new BandedSampleModel(DataBuffer.TYPE_FLOAT, raster.getWidth(), raster.getHeight(), 1);
                             dataBuffer = new DataBufferFloat(raster.getWidth() * raster.getHeight());
                             rasterEmissividadeNB = new SunWritableRaster(mppsm, dataBuffer, new Point(0, 0));
+
                             mppsm = new BandedSampleModel(DataBuffer.TYPE_FLOAT, raster.getWidth(), raster.getHeight(), 1);
                             dataBuffer = new DataBufferFloat(raster.getWidth() * raster.getHeight());
                             rasterLWd = new SunWritableRaster(mppsm, dataBuffer, new Point(0, 0));
-                            mppsm = new BandedSampleModel(DataBuffer.TYPE_FLOAT, raster.getWidth(), raster.getHeight(), 1);
-                            dataBuffer = new DataBufferFloat(raster.getWidth() * raster.getHeight());
-                            rasterSWd = new SunWritableRaster(mppsm, dataBuffer, new Point(0, 0));
+//                            mppsm = new BandedSampleModel(DataBuffer.TYPE_FLOAT, raster.getWidth(), raster.getHeight(), 1);
+//                            dataBuffer = new DataBufferFloat(raster.getWidth() * raster.getHeight());
+//                            rasterSWd = new SunWritableRaster(mppsm, dataBuffer, new Point(0, 0));
 
                             mppsm = new BandedSampleModel(DataBuffer.TYPE_FLOAT, raster.getWidth(), raster.getHeight(), 1);
                             dataBuffer = new DataBufferFloat(raster.getWidth() * raster.getHeight());
                             rasterRn = new SunWritableRaster(mppsm, dataBuffer, new Point(0, 0));
 
-                            mppsm = new BandedSampleModel(DataBuffer.TYPE_FLOAT, raster.getWidth(), raster.getHeight(), 1);
-                            dataBuffer = new DataBufferFloat(raster.getWidth() * raster.getHeight());
-                            rasterTao24 = new SunWritableRaster(mppsm, dataBuffer, new Point(0, 0));
+//                            mppsm = new BandedSampleModel(DataBuffer.TYPE_FLOAT, raster.getWidth(), raster.getHeight(), 1);
+//                            dataBuffer = new DataBufferFloat(raster.getWidth() * raster.getHeight());
+//                            rasterTao24 = new SunWritableRaster(mppsm, dataBuffer, new Point(0, 0));
 
                             mppsm = new BandedSampleModel(DataBuffer.TYPE_FLOAT, raster.getWidth(), raster.getHeight(), 1);
                             dataBuffer = new DataBufferFloat(raster.getWidth() * raster.getHeight());
@@ -404,7 +357,7 @@ public class LandSat {
                             dataBuffer = new DataBufferFloat(raster.getWidth() * raster.getHeight());
                             rasterUref = new SunWritableRaster(mppsm, dataBuffer, new Point(0, 0));
 
-                            pathTiff = parent + ParameterEnum.Albedo.getFileName();
+                            pathTiff = parent + ParameterEnum.albedo.getFileName();
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             fosAlbedo = new FileOutputStream(pathTiff);
 
@@ -416,19 +369,19 @@ public class LandSat {
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             fosSAVI = new FileOutputStream(pathTiff);
 
-                            pathTiff = parent + ParameterEnum.LST_K.getFileName();
+                            pathTiff = parent + ParameterEnum.Ts.getFileName();
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             fosTs = new FileOutputStream(pathTiff);
 
-                            pathTiff = parent + ParameterEnum.Emissivity.getFileName();
+                            pathTiff = parent + ParameterEnum.emissivity.getFileName();
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             fosEmissivity = new FileOutputStream(pathTiff);
 
-                            pathTiff = parent + ParameterEnum.LAI.getFileName();
+                            pathTiff = parent + ParameterEnum.IAF.getFileName();
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             fosLAI = new FileOutputStream(pathTiff);
 
-                            pathTiff = parent + ParameterEnum.EmissividadeNB.getFileName();
+                            pathTiff = parent + ParameterEnum.emissividadeNB.getFileName();
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             fosEmissividadeNB = new FileOutputStream(pathTiff);
 
@@ -436,17 +389,17 @@ public class LandSat {
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             fosLWd = new FileOutputStream(pathTiff);
 
-                            pathTiff = parent + ParameterEnum.SWnet.getFileName();
-                            pathTiff = pathTiff.replace(".dat", ".tif");
-                            fosSWd = new FileOutputStream(pathTiff);
+//                            pathTiff = parent + ParameterEnum.SWnet.getFileName();
+//                            pathTiff = pathTiff.replace(".dat", ".tif");
+//                            fosSWd = new FileOutputStream(pathTiff);
 
                             pathTiff = parent + ParameterEnum.Rn.getFileName();
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             fosRn = new FileOutputStream(pathTiff);
 
-                            pathTiff = parent + ParameterEnum.Tao_24h.getFileName();
-                            pathTiff = pathTiff.replace(".dat", ".tif");
-                            fosTao24 = new FileOutputStream(pathTiff);
+//                            pathTiff = parent + ParameterEnum.Tao_24h.getFileName();
+//                            pathTiff = pathTiff.replace(".dat", ".tif");
+//                            fosTao24 = new FileOutputStream(pathTiff);
 
                             pathTiff = parent + ParameterEnum.Rg_24h.getFileName();
                             pathTiff = pathTiff.replace(".dat", ".tif");
@@ -502,112 +455,127 @@ public class LandSat {
 
                         System.out.println("Calculating " + quant);
 
+                        variables.put(ParameterEnum.irrad_espectral.getName(), new Variable(ParameterEnum.irrad_espectral.getName(), calibration[k][2]));
+                        variables.put(ParameterEnum.coef_calib_b.getName(), new Variable(ParameterEnum.coef_calib_b.getName(), calibration[k][1]));
+                        variables.put(ParameterEnum.coef_calib_a.getName(), new Variable(ParameterEnum.coef_calib_a.getName(), calibration[k][0]));
+
+                        float cosZ, dr, transmissividade;
+                        cosZ = ((Double) variables.get(ParameterEnum.cosZ.getName()).getValue()).floatValue();
+                        dr = ((Double) variables.get(ParameterEnum.dr.getName()).getValue()).floatValue();
+                        transmissividade = ((Double) variables.get(ParameterEnum.transmissividade.getName()).getValue()).floatValue();
+
                         for (int i = 0; i < height; i++) {
                             for (int j = 0; j < width; j++) {
                                 valor = raster.getPixel(j, i, valor);
 
 //                                if (calcule(valor)) {
-                                k = 0;
-                                calibracao = (float) (calibration[k][0] + ((calibration[k][1] - calibration[k][0]) / 255.f) * valor[k]);
-                                reflectancia = (float) ((Math.PI * calibracao) / (calibration[k][2] * cosZ * dr));
-                                bandaRefletida1 = reflectancia;
-                                banda1 = calibracao;
-                                somaBandas = parameterAlbedo[k] * reflectancia;
+                                    k = 0;
+                                    variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
+                                    banda1 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
+                                    variables.put(ParameterEnum.banda1.getName(), new Variable(ParameterEnum.banda1.getName(), banda1));
+                                    reflectancia = Utilities.executeMath(ParameterEnum.reflectancia, equations, variables);
+                                    bandaRefletida1 = reflectancia;
+                                    somaBandas = parameterAlbedo[k] * reflectancia;
+//
+                                    k = 1;
+                                    variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
+                                    banda2 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
+                                    variables.put(ParameterEnum.banda2.getName(), new Variable(ParameterEnum.banda2.getName(), banda2));
+                                    reflectancia = Utilities.executeMath(ParameterEnum.reflectancia, equations, variables);
+                                    bandaRefletida2 = reflectancia;
+                                    somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
+//
+                                    k = 2;
+                                    variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
+                                    banda3 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
+                                    variables.put(ParameterEnum.banda3.getName(), new Variable(ParameterEnum.banda3.getName(), banda3));
+                                    reflectancia = Utilities.executeMath(ParameterEnum.reflectancia, equations, variables);
+                                    somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
+                                    bandaRefletida3 = reflectancia;
 
-                                k = 1;
-                                calibracao = (float) (calibration[k][0] + ((calibration[k][1] - calibration[k][0]) / 255.f) * valor[k]);
-                                reflectancia = (float) ((Math.PI * calibracao) / (calibration[k][2] * cosZ * dr));
-                                bandaRefletida2 = reflectancia;
-                                banda2 = calibracao;
-                                somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
+                                    k = 3;
+                                    variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
+                                    banda4 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
+                                    variables.put(ParameterEnum.banda4.getName(), new Variable(ParameterEnum.banda4.getName(), banda4));
+                                    reflectancia = Utilities.executeMath(ParameterEnum.reflectancia, equations, variables);
+                                    somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
+                                    bandaRefletida4 = reflectancia;
 
-                                k = 2;
+                                    k = 4;
+                                    variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
+                                    banda5 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
+                                    variables.put(ParameterEnum.banda5.getName(), new Variable(ParameterEnum.banda5.getName(), banda5));
+                                    reflectancia = Utilities.executeMath(ParameterEnum.reflectancia, equations, variables);
+                                    somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
+                                    bandaRefletida5 = reflectancia;
 
-                                calibracao = (float) (calibration[k][0] + ((calibration[k][1] - calibration[k][0]) / 255.f) * valor[k]);
-                                reflectancia = (float) ((Math.PI * calibracao) / (calibration[k][2] * cosZ * dr));
-                                somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
-                                bandaRefletida3 = reflectancia;
-                                banda3 = calibracao;
+                                    k = 6;
+                                    variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
+                                    banda7 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
+                                    variables.put(ParameterEnum.banda7.getName(), new Variable(ParameterEnum.banda7.getName(), banda7));
+                                    reflectancia = Utilities.executeMath(ParameterEnum.reflectancia, equations, variables);
+                                    somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
+                                    bandaRefletida7 = reflectancia;
 
-                                k = 3;
+                                    variables.put(ParameterEnum.sumBandas.getName(), new Variable(ParameterEnum.sumBandas.getName(), somaBandas));
 
-                                calibracao = (float) (calibration[k][0] + ((calibration[k][1] - calibration[k][0]) / 255.f) * valor[k]);
-                                reflectancia = (float) ((Math.PI * calibracao) / (calibration[k][2] * cosZ * dr));
-                                somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
-                                bandaRefletida4 = reflectancia;
-                                banda4 = calibracao;
+                                    albedo = Utilities.executeMath(ParameterEnum.albedo, equations, variables);
 
-                                k = 4;
-                                calibracao = (float) (calibration[k][0] + ((calibration[k][1] - calibration[k][0]) / 255.f) * valor[k]);
-                                reflectancia = (float) ((Math.PI * calibracao) / (calibration[k][2] * cosZ * dr));
-                                bandaRefletida5 = reflectancia;
-                                banda5 = calibracao;
-                                somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
+                                    NDVI = Utilities.executeMath(ParameterEnum.NDVI, equations, variables);
 
-                                k = 6;
-                                calibracao = (float) (calibration[k][0] + ((calibration[k][1] - calibration[k][0]) / 255.f) * valor[k]);
-                                reflectancia = (float) ((Math.PI * calibracao) / (calibration[k][2] * cosZ * dr));
-                                bandaRefletida7 = reflectancia;
-                                banda7 = calibracao;
-                                somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
+                                    SAVI = Utilities.executeMath(ParameterEnum.SAVI, equations, variables);
 
-                                albedo = (somaBandas - reflectanciaAtmosfera) / (transmissividade * transmissividade);
+                                    if (SAVI <= 0.1f) {
+                                        IAF = 0.0f;
+                                    } else if (SAVI >= 0.687f) {
+                                        IAF = 6.0f;
+                                    } else {
+                                        IAF = Utilities.executeMath(ParameterEnum.IAF, equations, variables);
+                                    }
 
-                                NDVI = (bandaRefletida4 - bandaRefletida3) / (bandaRefletida4 + bandaRefletida3);
+                                    if (IAF >= 3) {
+                                        emissividadeNB = 0.98f;
+                                        emissivity = 0.98f;
+                                    } else if (NDVI <= 0) {
+                                        emissividadeNB = 0.99f;
+                                        emissivity = 0.985f;
+                                    } else {
+                                        emissividadeNB = Utilities.executeMath(ParameterEnum.emissividadeNB, equations, variables);
+                                        emissivity = Utilities.executeMath(ParameterEnum.emissivity, equations, variables);
+                                    }
 
-                                SAVI = ((1.0f + L) * (bandaRefletida4 - bandaRefletida3)) / (L + bandaRefletida4 + bandaRefletida3);
+                                    k = 5;
+                                    variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
+                                    banda6 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
+                                    variables.put(ParameterEnum.banda6.getName(), new Variable(ParameterEnum.banda6.getName(), banda6));
 
-                                if (SAVI <= 0.1f) {
-                                    IAF = 0.0f;
-                                } else if (SAVI >= 0.687f) {
-                                    IAF = 6.0f;
-                                } else {
-                                    IAF = (float) (-Math.log((0.69f - SAVI) / 0.59f) / 0.91f);
-                                }
+                                    Ts = Utilities.executeMath(ParameterEnum.Ts, equations, variables);
 
-                                if (IAF >= 3) {
-                                    emissividadeNB = 0.98f;
-                                    emissivity = 0.98f;
-                                } else if (NDVI <= 0) {
-                                    emissividadeNB = 0.99f;
-                                    emissivity = 0.985f;
-                                } else {
-                                    emissividadeNB = 0.97f + 0.0033f * IAF;
-                                    emissivity = 0.95f + 0.01f * IAF;
-                                }
-
-                                k = 5;
-                                calibracao = (float) (calibration[k][0] + ((calibration[k][1] - calibration[k][0]) / 255.0f) * valor[k]);
-                                banda6 = calibracao;
-                                Ts = (float) (K2 / (Math.log((emissividadeNB * K1 / calibracao) + 1.0f)));
-
-                                LWd = (float) (emissivity * StefanBoltzman * (Math.pow(Ts, 4)));
+                                    LWd = Utilities.executeMath(ParameterEnum.LWd, equations, variables);
 //                                    SWdVet[idx] = S * cosZ * dr * transmissividade;
-
-//                                    LWdVet[idx] = 391.5f;
-//                                    SWdVet[idx] = 736.6f;
-//                                    if (idx == 653) {
-//                                        System.out.println("albedoVet2:" + albedoVet[idx]);
-//                                    }
-//                                    albedoVet[idx] = 0.172f;
-
-                                Rn = (float) (((1.0f - albedo) * SWdVet) + (emissivity * (LWdAtmosfera) - LWd));
-
-//                                    if (idx == 653) {
-//                                        System.out.println("LWdAtmosfera:" + LWdAtmosfera);
-//                                        System.out.println("Sfetan:" + StefanBoltzman);
-//                                        System.out.println("albedoVet:" + albedoVet[idx]);
-//                                        System.out.println("NDVIVet:" + NDVIVet[idx]);
-//                                        System.out.println("SAVIVet:" + SAVIVet[idx]);
-//                                        System.out.println("IAFVet:" + IAFVet[idx]);
-//                                        System.out.println("emissividadeNBVet:" + emissividadeNBVet[idx]);
-//                                        System.out.println("emissivityVet:" + emissivityVet[idx]);
-//                                        System.out.println("TsVet:" + TsVet[idx]);
-//                                        System.out.println("LWdVet:" + LWdVet[idx]);
-//                                        System.out.println("SWdVet:" + SWdVet[idx]);
-//                                        System.out.println("RnVet:" + RnVet[idx]);
-//                                        System.exit(1);
-//                                    }
+//
+////                                    LWdVet[idx] = 391.5f;
+////                                    SWdVet[idx] = 736.6f;
+////                                    if (idx == 653) {
+////                                        System.out.println("albedoVet2:" + albedoVet[idx]);
+////                                    }
+////                                    albedoVet[idx] = 0.172f;
+                                    Rn = Utilities.executeMath(ParameterEnum.Rn, equations, variables);
+////                                    if (idx == 653) {
+////                                        System.out.println("LWdAtmosfera:" + LWdAtmosfera);
+////                                        System.out.println("Sfetan:" + StefanBoltzman);
+////                                        System.out.println("albedoVet:" + albedoVet[idx]);
+////                                        System.out.println("NDVIVet:" + NDVIVet[idx]);
+////                                        System.out.println("SAVIVet:" + SAVIVet[idx]);
+////                                        System.out.println("IAFVet:" + IAFVet[idx]);
+////                                        System.out.println("emissividadeNBVet:" + emissividadeNBVet[idx]);
+////                                        System.out.println("emissivityVet:" + emissivityVet[idx]);
+////                                        System.out.println("TsVet:" + TsVet[idx]);
+////                                        System.out.println("LWdVet:" + LWdVet[idx]);
+////                                        System.out.println("SWdVet:" + SWdVet[idx]);
+////                                        System.out.println("RnVet:" + RnVet[idx]);
+////                                        System.exit(1);
+////                                    }
 
                                 if (create) {
                                     dado = new float[]{albedo};
@@ -634,14 +602,14 @@ public class LandSat {
                                     dado = new float[]{LWd};
                                     rasterLWd.setPixel(j, i, dado);
 
-                                    dado = new float[]{SWdVet};
-                                    rasterSWd.setPixel(j, i, dado);
+//                                    dado = new float[]{SWd};
+//                                    rasterSWd.setPixel(j, i, dado);
 
                                     dado = new float[]{Rn};
                                     rasterRn.setPixel(j, i, dado);
 
-                                    dado = new float[]{transmissividade24h};
-                                    rasterTao24.setPixel(j, i, dado);
+//                                    dado = new float[]{transmissividade24h};
+//                                    rasterTao24.setPixel(j, i, dado);
 
                                     dado = new float[]{Rg_24h};
                                     rasterRg24.setPixel(j, i, dado);
@@ -649,7 +617,7 @@ public class LandSat {
                                     dado = new float[]{Uref};
                                     rasterUref.setPixel(j, i, dado);
                                 } else {
-//                                }
+////                                }
                                     albedoVet[idx] = albedo;
                                     NDVIVet[idx] = NDVI;
                                     RnVet[idx] = Rn;
@@ -679,9 +647,9 @@ public class LandSat {
                                             line.append(IAFVet[j] + ";");
                                             line.append(emissividadeNBVet[j] + ";");
                                             line.append(LWdVet[j] + ";");
-                                            line.append(SWdVet + ";");
+//                                            line.append(SWd + ";");
                                             line.append(RnVet[j] + ";");
-                                            line.append(transmissividade24h + ";");
+//                                            line.append(transmissividade24h + ";");
                                             line.append(Rg_24h + ";");
                                             line.append(Uref + ";");
 //                                        line.append("\n");
@@ -732,9 +700,9 @@ public class LandSat {
                                 line.append(IAFVet[j] + ";");
                                 line.append(emissividadeNBVet[j] + ";");
                                 line.append(LWdVet[j] + ";");
-                                line.append(SWdVet + ";");
+//                                line.append(SWd + ";");
                                 line.append(RnVet[j] + ";");
-                                line.append(transmissividade24h + ";");
+//                                line.append(transmissividade24h + ";");
                                 line.append(Rg_24h + ";");
                                 line.append(Uref + ";");
 
@@ -784,13 +752,13 @@ public class LandSat {
                             enc.encode(rasterEmissividadeNB, model);
                             enc = ImageCodec.createImageEncoder("tiff", fosLWd, encParam);
                             enc.encode(rasterLWd, model);
-                            enc = ImageCodec.createImageEncoder("tiff", fosSWd, encParam);
-                            enc.encode(rasterSWd, model);
+//                            enc = ImageCodec.createImageEncoder("tiff", fosSWd, encParam);
+//                            enc.encode(rasterSWd, model);
                             enc = ImageCodec.createImageEncoder("tiff", fosRn, encParam);
                             enc.encode(rasterRn, model);
 
-                            enc = ImageCodec.createImageEncoder("tiff", fosTao24, encParam);
-                            enc.encode(rasterTao24, model);
+//                            enc = ImageCodec.createImageEncoder("tiff", fosTao24, encParam);
+//                            enc.encode(rasterTao24, model);
                             enc = ImageCodec.createImageEncoder("tiff", fosRg24, encParam);
                             enc.encode(rasterRg24, model);
                             enc = ImageCodec.createImageEncoder("tiff", fosUref, encParam);
@@ -804,13 +772,13 @@ public class LandSat {
                             fosLAI.close();
                             fosEmissividadeNB.close();
                             fosLWd.close();
-                            fosSWd.close();
+//                            fosSWd.close();
                             fosRn.close();
-                            fosTao24.close();
+//                            fosTao24.close();
                             fosRg24.close();
                             fosUref.close();
 
-                            pathTiff = parent + ParameterEnum.Albedo.getFileName();
+                            pathTiff = parent + ParameterEnum.albedo.getFileName();
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterAlbedo);
 
@@ -822,19 +790,19 @@ public class LandSat {
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterSAVI);
 
-                            pathTiff = parent + ParameterEnum.LST_K.getFileName();
+                            pathTiff = parent + ParameterEnum.Ts.getFileName();
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterTs);
 
-                            pathTiff = parent + ParameterEnum.Emissivity.getFileName();
+                            pathTiff = parent + ParameterEnum.emissivity.getFileName();
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterEmissivity);
 
-                            pathTiff = parent + ParameterEnum.LAI.getFileName();
+                            pathTiff = parent + ParameterEnum.IAF.getFileName();
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterLAI);
 
-                            pathTiff = parent + ParameterEnum.EmissividadeNB.getFileName();
+                            pathTiff = parent + ParameterEnum.emissividadeNB.getFileName();
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterEmissividadeNB);
 
@@ -842,17 +810,17 @@ public class LandSat {
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterLWd);
 
-                            pathTiff = parent + ParameterEnum.SWnet.getFileName();
-                            pathTiff = pathTiff.replace(".dat", ".tif");
-                            Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterSWd);
+//                            pathTiff = parent + ParameterEnum.SWnet.getFileName();
+//                            pathTiff = pathTiff.replace(".dat", ".tif");
+//                            Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterSWd);
 
                             pathTiff = parent + ParameterEnum.Rn.getFileName();
                             pathTiff = pathTiff.replace(".dat", ".tif");
                             Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterRn);
 
-                            pathTiff = parent + ParameterEnum.Tao_24h.getFileName();
-                            pathTiff = pathTiff.replace(".dat", ".tif");
-                            Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterTao24);
+//                            pathTiff = parent + ParameterEnum.Tao_24h.getFileName();
+//                            pathTiff = pathTiff.replace(".dat", ".tif");
+//                            Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterTao24);
 
                             pathTiff = parent + ParameterEnum.Rg_24h.getFileName();
                             pathTiff = pathTiff.replace(".dat", ".tif");
