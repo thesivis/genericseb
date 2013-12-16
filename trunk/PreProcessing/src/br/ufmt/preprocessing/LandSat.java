@@ -62,6 +62,7 @@ public class LandSat {
     private static int QUANTITY = 40000000;
 //    private static int QUANTITY_LINES = 1000;
     public static HashMap<ParameterEnum, String> equations = new HashMap<>();
+    private static ExecuteEquation executeEquation;
 
     static {
         verifyEquations();
@@ -77,20 +78,99 @@ public class LandSat {
             List<String> variables = getVariables();
             ExpressionParser ex = new ExpressionParser();
             String vet[];
+            boolean codigo = false;
+
+            StringBuilder source = new StringBuilder();
+            source.append("import br.ufmt.preprocessing.ExecuteEquation;\n");
+            source.append("import static br.ufmt.preprocessing.utils.Constants.*;\n\n");
+
+            source.append("public class Equation extends ExecuteEquation {\n");
+
+            source.append("    public void execute(double[] pixel, int idx){\n");
+            source.append("        float sumBandas = 0.0f,albedo,NDVI,SAVI,IAF,emissividadeNB,emissivity,Ts,LWd,Rn;\n");
+            source.append("        int k;\n");
+
+            GenericLexerSEB lexer = new GenericLexerSEB();
+            Structure structure;
             while (line != null) {
 //                System.out.println(line);
                 line = line.replaceAll("[ ]+", "");
                 vet = line.split("=");
-                variables.add(vet[0]);
-                try {
-                    ex.evaluateExpr(line, variables);
-                    equations.put(ParameterEnum.valueOf(vet[0]), line);
-                } catch (IllegalArgumentException e) {
+                if (!vet[0].equals("reflectancia")) {
+                    variables.add(vet[0]);
+                    try {
+//                    System.out.println("line:"+line);
+                        ex.evaluateExpr(line, variables);
+                        equations.put(ParameterEnum.valueOf(vet[0]), line);
+
+
+                        structure = new Structure();
+                        structure.setToken(vet[0]);
+                        String equation = lexer.analyse(equations.get(ParameterEnum.valueOf(vet[0])), structure, null, LanguageType.JAVA);
+                        equation = equation.replace("coef_calib_a", "calibration[k][0]");
+                        equation = equation.replace("coef_calib_b", "calibration[k][1]");
+                        equation = equation.replace("pixel", "pixel[k]");
+                        equation = equation.replace("irrad_espectral", "calibration[k][2]");
+
+
+                        if (vet[0].equals("rad_espectral")) {
+                            line = bur.readLine();
+                            line = line.replaceAll("[ ]+", "");
+                            String[] vet2 = line.split("=");
+                            variables.add(vet2[0]);
+                            ex.evaluateExpr(line, variables);
+                            equations.put(ParameterEnum.valueOf(vet2[0]), line);
+
+                            structure = new Structure();
+                            structure.setToken(vet2[0]);
+                            String equation2 = lexer.analyse(equations.get(ParameterEnum.valueOf(vet2[0])), structure, null, LanguageType.JAVA);
+                            equation2 = equation2.replace("coef_calib_a", "calibration[k][0]");
+                            equation2 = equation2.replace("coef_calib_b", "calibration[k][1]");
+                            equation2 = equation2.replace("pixel", "pixel[k]");
+                            equation2 = equation2.replace("irrad_espectral", "calibration[k][2]");
+
+                            codigo = true;
+                            for (int i = 1; i < 8; i++) {
+
+                                source.append("        k = " + (i - 1) + ";\n");
+                                source.append("        " + equation.replace("rad_espectral", "banda" + i) + ";\n");
+                                if (i != 6) {
+                                    source.append("        " + equation2.replace("rad_espectral", "banda" + i).replace("reflectancia", "bandaRefletida" + i) + ";\n");
+                                    source.append("        sumBandas += sumBandas * bandaRefletida" + i + ";\n\n");
+                                }
+                            }
+                        } else if (vet[0].equals("reflectancia")) {
+                        } else if (codigo) {
+                            source.append("        " + equation + ";\n");
+                        }
+
+
+                    } catch (IllegalArgumentException e) {
 //                    System.out.println("Equation is wrong: " + line);
-                    System.out.println(e.getMessage());
+                        System.out.println(e.getMessage());
+                    }
                 }
                 line = bur.readLine();
             }
+
+            source.append("        this.albedo[idx] = albedo;\n");
+            source.append("        this.NDVI[idx] = NDVI;\n");
+            source.append("        this.SAVI[idx] = SAVI;\n");
+            source.append("        this.IAF[idx] = IAF;\n");
+            source.append("        this.emissividadeNB[idx] = IAF;\n");
+            source.append("        this.emissivity[idx] = emissivity;\n");
+            source.append("        this.Ts[idx] = Ts;\n");
+            source.append("        this.LWd[idx] = LWd;\n");
+            source.append("        this.Rn[idx] = Rn;\n");
+
+            source.append("    }\n");
+
+            source.append("}\n");
+
+            executeEquation = (ExecuteEquation) Utilities.compile(source.toString(), "Equation");
+
+//            System.out.println(source.toString());
+            System.exit(1);
         } catch (Exception ex) {
             Logger.getLogger(LandSat.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
@@ -455,103 +535,134 @@ public class LandSat {
 
                         System.out.println("Calculating " + quant);
 
-                        variables.put(ParameterEnum.irrad_espectral.getName(), new Variable(ParameterEnum.irrad_espectral.getName(), calibration[k][2]));
-                        variables.put(ParameterEnum.coef_calib_b.getName(), new Variable(ParameterEnum.coef_calib_b.getName(), calibration[k][1]));
-                        variables.put(ParameterEnum.coef_calib_a.getName(), new Variable(ParameterEnum.coef_calib_a.getName(), calibration[k][0]));
-
-                        float cosZ, dr, transmissividade;
-                        cosZ = ((Double) variables.get(ParameterEnum.cosZ.getName()).getValue()).floatValue();
-                        dr = ((Double) variables.get(ParameterEnum.dr.getName()).getValue()).floatValue();
-                        transmissividade = ((Double) variables.get(ParameterEnum.transmissividade.getName()).getValue()).floatValue();
-
+                        executeEquation.setParameters(albedoVet, NDVIVet, RnVet, SAVIVet, TsVet, emissivityVet, IAFVet, emissividadeNBVet, dado, calibration, Ts, Ts, reflectancia, MaxAllowedError, somaBandas, Rg_24h, emissividadeNB, Ta, S, emissividadeNB, emissivity, julianDay, Z, reflectanciaAtmosfera, P, UR, Ta, Kt, L, K1, K2, S, StefanBoltzman, latitude, Rg_24h, Uref, LWd, LWd);
+                        
                         for (int i = 0; i < height; i++) {
+                            System.out.println("I:" + i + " H:" + height);
                             for (int j = 0; j < width; j++) {
                                 valor = raster.getPixel(j, i, valor);
 
 //                                if (calcule(valor)) {
-                                    k = 0;
-                                    variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
-                                    banda1 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
-                                    variables.put(ParameterEnum.banda1.getName(), new Variable(ParameterEnum.banda1.getName(), banda1));
-                                    reflectancia = Utilities.executeMath(ParameterEnum.reflectancia, equations, variables);
-                                    bandaRefletida1 = reflectancia;
-                                    somaBandas = parameterAlbedo[k] * reflectancia;
+                                k = 0;
+                                variables.put(ParameterEnum.irrad_espectral.getName(), new Variable(ParameterEnum.irrad_espectral.getName(), calibration[k][2]));
+                                variables.put(ParameterEnum.coef_calib_b.getName(), new Variable(ParameterEnum.coef_calib_b.getName(), calibration[k][1]));
+                                variables.put(ParameterEnum.coef_calib_a.getName(), new Variable(ParameterEnum.coef_calib_a.getName(), calibration[k][0]));
+                                variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
+                                banda1 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
+                                variables.put(ParameterEnum.banda1.getName(), new Variable(ParameterEnum.banda1.getName(), banda1));
+                                reflectancia = Utilities.executeMath(ParameterEnum.reflectancia, equations, variables);
+                                bandaRefletida1 = reflectancia;
+                                somaBandas = parameterAlbedo[k] * reflectancia;
+                                variables.put(ParameterEnum.bandaRefletida1.getName(), new Variable(ParameterEnum.bandaRefletida1.getName(), bandaRefletida1));
 //
-                                    k = 1;
-                                    variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
-                                    banda2 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
-                                    variables.put(ParameterEnum.banda2.getName(), new Variable(ParameterEnum.banda2.getName(), banda2));
-                                    reflectancia = Utilities.executeMath(ParameterEnum.reflectancia, equations, variables);
-                                    bandaRefletida2 = reflectancia;
-                                    somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
+                                k = 1;
+                                variables.put(ParameterEnum.irrad_espectral.getName(), new Variable(ParameterEnum.irrad_espectral.getName(), calibration[k][2]));
+                                variables.put(ParameterEnum.coef_calib_b.getName(), new Variable(ParameterEnum.coef_calib_b.getName(), calibration[k][1]));
+                                variables.put(ParameterEnum.coef_calib_a.getName(), new Variable(ParameterEnum.coef_calib_a.getName(), calibration[k][0]));
+                                variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
+                                banda2 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
+                                variables.put(ParameterEnum.banda2.getName(), new Variable(ParameterEnum.banda2.getName(), banda2));
+                                reflectancia = Utilities.executeMath(ParameterEnum.reflectancia, equations, variables);
+                                bandaRefletida2 = reflectancia;
+                                somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
+                                variables.put(ParameterEnum.bandaRefletida2.getName(), new Variable(ParameterEnum.bandaRefletida2.getName(), bandaRefletida2));
 //
-                                    k = 2;
-                                    variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
-                                    banda3 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
-                                    variables.put(ParameterEnum.banda3.getName(), new Variable(ParameterEnum.banda3.getName(), banda3));
-                                    reflectancia = Utilities.executeMath(ParameterEnum.reflectancia, equations, variables);
-                                    somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
-                                    bandaRefletida3 = reflectancia;
+                                k = 2;
+                                variables.put(ParameterEnum.irrad_espectral.getName(), new Variable(ParameterEnum.irrad_espectral.getName(), calibration[k][2]));
+                                variables.put(ParameterEnum.coef_calib_b.getName(), new Variable(ParameterEnum.coef_calib_b.getName(), calibration[k][1]));
+                                variables.put(ParameterEnum.coef_calib_a.getName(), new Variable(ParameterEnum.coef_calib_a.getName(), calibration[k][0]));
+                                variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
+                                banda3 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
+                                variables.put(ParameterEnum.banda3.getName(), new Variable(ParameterEnum.banda3.getName(), banda3));
+                                reflectancia = Utilities.executeMath(ParameterEnum.reflectancia, equations, variables);
+                                somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
+                                bandaRefletida3 = reflectancia;
+                                variables.put(ParameterEnum.bandaRefletida3.getName(), new Variable(ParameterEnum.bandaRefletida3.getName(), bandaRefletida3));
 
-                                    k = 3;
-                                    variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
-                                    banda4 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
-                                    variables.put(ParameterEnum.banda4.getName(), new Variable(ParameterEnum.banda4.getName(), banda4));
-                                    reflectancia = Utilities.executeMath(ParameterEnum.reflectancia, equations, variables);
-                                    somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
-                                    bandaRefletida4 = reflectancia;
+                                k = 3;
+                                variables.put(ParameterEnum.irrad_espectral.getName(), new Variable(ParameterEnum.irrad_espectral.getName(), calibration[k][2]));
+                                variables.put(ParameterEnum.coef_calib_b.getName(), new Variable(ParameterEnum.coef_calib_b.getName(), calibration[k][1]));
+                                variables.put(ParameterEnum.coef_calib_a.getName(), new Variable(ParameterEnum.coef_calib_a.getName(), calibration[k][0]));
+                                variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
+                                banda4 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
+                                variables.put(ParameterEnum.banda4.getName(), new Variable(ParameterEnum.banda4.getName(), banda4));
+                                reflectancia = Utilities.executeMath(ParameterEnum.reflectancia, equations, variables);
+                                somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
+                                bandaRefletida4 = reflectancia;
+                                variables.put(ParameterEnum.bandaRefletida4.getName(), new Variable(ParameterEnum.bandaRefletida4.getName(), bandaRefletida4));
 
-                                    k = 4;
-                                    variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
-                                    banda5 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
-                                    variables.put(ParameterEnum.banda5.getName(), new Variable(ParameterEnum.banda5.getName(), banda5));
-                                    reflectancia = Utilities.executeMath(ParameterEnum.reflectancia, equations, variables);
-                                    somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
-                                    bandaRefletida5 = reflectancia;
+                                k = 4;
+                                variables.put(ParameterEnum.irrad_espectral.getName(), new Variable(ParameterEnum.irrad_espectral.getName(), calibration[k][2]));
+                                variables.put(ParameterEnum.coef_calib_b.getName(), new Variable(ParameterEnum.coef_calib_b.getName(), calibration[k][1]));
+                                variables.put(ParameterEnum.coef_calib_a.getName(), new Variable(ParameterEnum.coef_calib_a.getName(), calibration[k][0]));
+                                variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
+                                banda5 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
+                                variables.put(ParameterEnum.banda5.getName(), new Variable(ParameterEnum.banda5.getName(), banda5));
+                                reflectancia = Utilities.executeMath(ParameterEnum.reflectancia, equations, variables);
+                                somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
+                                bandaRefletida5 = reflectancia;
+                                variables.put(ParameterEnum.bandaRefletida5.getName(), new Variable(ParameterEnum.bandaRefletida5.getName(), bandaRefletida5));
 
-                                    k = 6;
-                                    variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
-                                    banda7 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
-                                    variables.put(ParameterEnum.banda7.getName(), new Variable(ParameterEnum.banda7.getName(), banda7));
-                                    reflectancia = Utilities.executeMath(ParameterEnum.reflectancia, equations, variables);
-                                    somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
-                                    bandaRefletida7 = reflectancia;
+                                k = 6;
+                                variables.put(ParameterEnum.irrad_espectral.getName(), new Variable(ParameterEnum.irrad_espectral.getName(), calibration[k][2]));
+                                variables.put(ParameterEnum.coef_calib_b.getName(), new Variable(ParameterEnum.coef_calib_b.getName(), calibration[k][1]));
+                                variables.put(ParameterEnum.coef_calib_a.getName(), new Variable(ParameterEnum.coef_calib_a.getName(), calibration[k][0]));
+                                variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
+                                banda7 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
+                                variables.put(ParameterEnum.banda7.getName(), new Variable(ParameterEnum.banda7.getName(), banda7));
+                                reflectancia = Utilities.executeMath(ParameterEnum.reflectancia, equations, variables);
+                                somaBandas = somaBandas + parameterAlbedo[k] * reflectancia;
+                                bandaRefletida7 = reflectancia;
+                                variables.put(ParameterEnum.bandaRefletida7.getName(), new Variable(ParameterEnum.bandaRefletida7.getName(), bandaRefletida7));
 
-                                    variables.put(ParameterEnum.sumBandas.getName(), new Variable(ParameterEnum.sumBandas.getName(), somaBandas));
+                                variables.put(ParameterEnum.sumBandas.getName(), new Variable(ParameterEnum.sumBandas.getName(), somaBandas));
 
-                                    albedo = Utilities.executeMath(ParameterEnum.albedo, equations, variables);
+                                albedo = Utilities.executeMath(ParameterEnum.albedo, equations, variables);
 
-                                    NDVI = Utilities.executeMath(ParameterEnum.NDVI, equations, variables);
+                                NDVI = Utilities.executeMath(ParameterEnum.NDVI, equations, variables);
 
-                                    SAVI = Utilities.executeMath(ParameterEnum.SAVI, equations, variables);
+                                SAVI = Utilities.executeMath(ParameterEnum.SAVI, equations, variables);
 
-                                    if (SAVI <= 0.1f) {
-                                        IAF = 0.0f;
-                                    } else if (SAVI >= 0.687f) {
-                                        IAF = 6.0f;
-                                    } else {
-                                        IAF = Utilities.executeMath(ParameterEnum.IAF, equations, variables);
-                                    }
+                                if (SAVI <= 0.1f) {
+                                    IAF = 0.0f;
+                                } else if (SAVI >= 0.687f) {
+                                    IAF = 6.0f;
+                                } else {
+                                    IAF = Utilities.executeMath(ParameterEnum.IAF, equations, variables);
+                                }
+                                variables.put(ParameterEnum.IAF.getName(), new Variable(ParameterEnum.IAF.getName(), IAF));
+//                                    System.out.println(variables.get(ParameterEnum.IAF.getName()));
 
-                                    if (IAF >= 3) {
-                                        emissividadeNB = 0.98f;
-                                        emissivity = 0.98f;
-                                    } else if (NDVI <= 0) {
-                                        emissividadeNB = 0.99f;
-                                        emissivity = 0.985f;
-                                    } else {
-                                        emissividadeNB = Utilities.executeMath(ParameterEnum.emissividadeNB, equations, variables);
-                                        emissivity = Utilities.executeMath(ParameterEnum.emissivity, equations, variables);
-                                    }
+                                if (IAF >= 3) {
+                                    emissividadeNB = 0.98f;
+                                    emissivity = 0.98f;
+                                } else if (NDVI <= 0) {
+                                    emissividadeNB = 0.99f;
+                                    emissivity = 0.985f;
+                                } else {
+                                    emissividadeNB = Utilities.executeMath(ParameterEnum.emissividadeNB, equations, variables);
+                                    emissivity = Utilities.executeMath(ParameterEnum.emissivity, equations, variables);
+                                }
+                                variables.put(ParameterEnum.emissividadeNB.getName(), new Variable(ParameterEnum.emissividadeNB.getName(), emissividadeNB));
+                                variables.put(ParameterEnum.emissivity.getName(), new Variable(ParameterEnum.emissivity.getName(), emissivity));
 
-                                    k = 5;
-                                    variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
-                                    banda6 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
-                                    variables.put(ParameterEnum.banda6.getName(), new Variable(ParameterEnum.banda6.getName(), banda6));
+                                k = 5;
+                                variables.put(ParameterEnum.irrad_espectral.getName(), new Variable(ParameterEnum.irrad_espectral.getName(), calibration[k][2]));
+                                variables.put(ParameterEnum.coef_calib_b.getName(), new Variable(ParameterEnum.coef_calib_b.getName(), calibration[k][1]));
+                                variables.put(ParameterEnum.coef_calib_a.getName(), new Variable(ParameterEnum.coef_calib_a.getName(), calibration[k][0]));
+                                variables.put(ParameterEnum.pixel.getName(), new Variable(ParameterEnum.pixel.getName(), valor[k]));
+                                banda6 = Utilities.executeMath(ParameterEnum.rad_espectral, equations, variables);
+                                variables.put(ParameterEnum.banda6.getName(), new Variable(ParameterEnum.banda6.getName(), banda6));
 
-                                    Ts = Utilities.executeMath(ParameterEnum.Ts, equations, variables);
+//                                    for (Variable variable : variables.values()) {
+//                                        System.out.println("Var:"+variable.getName());
+//                                    }
 
-                                    LWd = Utilities.executeMath(ParameterEnum.LWd, equations, variables);
+                                Ts = Utilities.executeMath(ParameterEnum.Ts, equations, variables);
+
+
+
+                                LWd = Utilities.executeMath(ParameterEnum.LWd, equations, variables);
 //                                    SWdVet[idx] = S * cosZ * dr * transmissividade;
 //
 ////                                    LWdVet[idx] = 391.5f;
@@ -560,7 +671,7 @@ public class LandSat {
 ////                                        System.out.println("albedoVet2:" + albedoVet[idx]);
 ////                                    }
 ////                                    albedoVet[idx] = 0.172f;
-                                    Rn = Utilities.executeMath(ParameterEnum.Rn, equations, variables);
+                                Rn = Utilities.executeMath(ParameterEnum.Rn, equations, variables);
 ////                                    if (idx == 653) {
 ////                                        System.out.println("LWdAtmosfera:" + LWdAtmosfera);
 ////                                        System.out.println("Sfetan:" + StefanBoltzman);

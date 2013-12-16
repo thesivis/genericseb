@@ -119,7 +119,7 @@ public class SebalImpl extends Sebal {
         GenericLexerSEB lexer = new GenericLexerSEB();
         Structure structure = new Structure();
         structure.setToken("z0m");
-        String equation = lexer.analyse(equations.get(ParameterEnum.z0m), structure, null, LanguageType.PYTHON);
+        String equation = lexer.analyse(equations.get(ParameterEnum.z0m), structure, null, LanguageType.JAVA);
         Map<String,Variable> variables = Utilities.getVariable();
         variables.put("SWd",new Variable("SWd", SWd));
         variables.put("LWd",new Variable("LWd", LWd));
@@ -150,7 +150,7 @@ public class SebalImpl extends Sebal {
         //SWnet
         structure = new Structure();
         structure.setToken("SWnet");
-        equation = lexer.analyse(equations.get(ParameterEnum.SWnet), structure, null, LanguageType.PYTHON);
+        equation = lexer.analyse(equations.get(ParameterEnum.SWnet), structure, null, LanguageType.JAVA);
 
         float SWnet = (float) lexer.getResult(equation, variables);  /* Shortwave Net Radiation [W/m2] */
         variables.put("SWnet",new Variable("SWnet", SWnet));
@@ -158,7 +158,7 @@ public class SebalImpl extends Sebal {
         //LWnet
         structure = new Structure();
         structure.setToken("LWnet");
-        equation = lexer.analyse(equations.get(ParameterEnum.LWnet), structure, null, LanguageType.PYTHON);
+        equation = lexer.analyse(equations.get(ParameterEnum.LWnet), structure, null, LanguageType.JAVA);
 
         float LWnet = (float) lexer.getResult(equation, variables);  /* Longwave Net Radiation [W/m2] */
         variables.put("LWnet",new Variable("LWnet", LWnet));
@@ -166,7 +166,7 @@ public class SebalImpl extends Sebal {
         //Rn
         structure = new Structure();
         structure.setToken("Rn");
-        equation = lexer.analyse(equations.get(ParameterEnum.Rn), structure, null, LanguageType.PYTHON);
+        equation = lexer.analyse(equations.get(ParameterEnum.Rn), structure, null, LanguageType.JAVA);
 
         Rn[idx] = (float) lexer.getResult(equation, variables); /* Total Net Radiation [W/m2] */
         variables.put("Rn",new Variable("Rn", Rn[idx]));
@@ -179,7 +179,7 @@ public class SebalImpl extends Sebal {
         //G0
         structure = new Structure();
         structure.setToken("G0");
-        equation = lexer.analyse(equations.get(ParameterEnum.G0), structure, null, LanguageType.PYTHON);
+        equation = lexer.analyse(equations.get(ParameterEnum.G0), structure, null, LanguageType.JAVA);
 
         G0[idx] = (float) lexer.getResult(equation, variables); /* Total Net Radiation [W/m2] */
         variables.put("G0",new Variable("G0", G0[idx]));
@@ -187,7 +187,7 @@ public class SebalImpl extends Sebal {
         if (I_water || I_snow) {
             structure = new Structure();
             structure.setToken("G0");
-            equation = lexer.analyse(equations.get(ParameterEnum.G02), structure, null, LanguageType.PYTHON);
+            equation = lexer.analyse(equations.get(ParameterEnum.G02), structure, null, LanguageType.JAVA);
 
             G0[idx] = (float) lexer.getResult(equation, variables); /* Total Net Radiation [W/m2] */
             variables.put("G0",new Variable("G0", G0[idx]));
@@ -195,7 +195,7 @@ public class SebalImpl extends Sebal {
         //U_star
         structure = new Structure();
         structure.setToken("U_star");
-        equation = lexer.analyse(equations.get(ParameterEnum.U_star), structure, null, LanguageType.PYTHON);
+        equation = lexer.analyse(equations.get(ParameterEnum.U_star), structure, null, LanguageType.JAVA);
 
         U_star[idx] = (float) lexer.getResult(equation, variables);
         variables.put("U_star",new Variable("U_star", U_star[idx]));
@@ -203,7 +203,7 @@ public class SebalImpl extends Sebal {
         //r_ah
         structure = new Structure();
         structure.setToken("r_ah");
-        equation = lexer.analyse(equations.get(ParameterEnum.r_ah), structure, null, LanguageType.PYTHON);
+        equation = lexer.analyse(equations.get(ParameterEnum.r_ah), structure, null, LanguageType.JAVA);
 
         r_ah[idx] = (float) lexer.getResult(equation, variables);
         variables.put("r_ah",new Variable("r_ah", r_ah[idx]));
@@ -211,7 +211,7 @@ public class SebalImpl extends Sebal {
         //H
         structure = new Structure();
         structure.setToken("H");
-        equation = lexer.analyse(equations.get(ParameterEnum.H), structure, null, LanguageType.PYTHON);
+        equation = lexer.analyse(equations.get(ParameterEnum.H), structure, null, LanguageType.JAVA);
 
         H[idx] = (float) lexer.getResult(equation, variables);
         variables.put("H",new Variable("H", H[idx]));
@@ -219,7 +219,7 @@ public class SebalImpl extends Sebal {
         //LE
         structure = new Structure();
         structure.setToken("LE");
-        equation = lexer.analyse(equations.get(ParameterEnum.LE), structure, null, LanguageType.PYTHON);
+        equation = lexer.analyse(equations.get(ParameterEnum.LE), structure, null, LanguageType.JAVA);
 
         LE[idx] = (float) lexer.getResult(equation, variables);
         variables.put("LE",new Variable("LE", LE[idx]));
@@ -230,7 +230,7 @@ public class SebalImpl extends Sebal {
             //evap_fr
             structure = new Structure();
             structure.setToken("evap_fr");
-            equation = lexer.analyse(equations.get(ParameterEnum.evap_fr), structure, null, LanguageType.PYTHON);/* evaporative fraction [] */
+            equation = lexer.analyse(equations.get(ParameterEnum.evap_fr), structure, null, LanguageType.JAVA);/* evaporative fraction [] */
 
             evap_fr[idx] = (float) lexer.getResult(equation, variables);
             variables.put("evap_fr",new Variable("evap_fr", evap_fr[idx]));
@@ -243,7 +243,7 @@ public class SebalImpl extends Sebal {
         //Rn_24h
         structure = new Structure();
         structure.setToken("Rn_24h");
-        equation = lexer.analyse(equations.get(ParameterEnum.Rn_24h), structure, null, LanguageType.PYTHON);/* evaporative fraction [] */
+        equation = lexer.analyse(equations.get(ParameterEnum.Rn_24h), structure, null, LanguageType.JAVA);/* evaporative fraction [] */
 
         Rn_24h[idx] = (float) lexer.getResult(equation, variables);
         variables.put("Rn_24h",new Variable("Rn_24h", Rn_24h[idx]));
@@ -252,7 +252,7 @@ public class SebalImpl extends Sebal {
         //LE_24h
         structure = new Structure();
         structure.setToken("LE_24h");
-        equation = lexer.analyse(equations.get(ParameterEnum.LE_24h), structure, null, LanguageType.PYTHON);/* evaporative fraction [] */
+        equation = lexer.analyse(equations.get(ParameterEnum.LE_24h), structure, null, LanguageType.JAVA);/* evaporative fraction [] */
 
         LE_24h[idx] = (float) lexer.getResult(equation, variables);
         variables.put("LE_24h",new Variable("LE_24h", LE_24h[idx]));
@@ -260,7 +260,7 @@ public class SebalImpl extends Sebal {
         //ET_24h
         structure = new Structure();
         structure.setToken("ET_24h");
-        equation = lexer.analyse(equations.get(ParameterEnum.ET_24h), structure, null, LanguageType.PYTHON);/* evaporative fraction [] */
+        equation = lexer.analyse(equations.get(ParameterEnum.ET_24h), structure, null, LanguageType.JAVA);/* evaporative fraction [] */
 
         ET_24h[idx] = (float) lexer.getResult(equation, variables);
         variables.put("ET_24h",new Variable("ET_24h", ET_24h[idx]));
