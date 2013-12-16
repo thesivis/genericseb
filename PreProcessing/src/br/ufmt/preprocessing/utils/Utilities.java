@@ -55,6 +55,11 @@ import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 
 import static br.ufmt.preprocessing.utils.Constants.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,57 +69,57 @@ import java.util.Map;
  */
 public class Utilities {
 
-    private static Map<String,br.ufmt.genericlexerseb.Variable> variables = new HashMap<>();
+    private static Map<String, br.ufmt.genericlexerseb.Variable> variables = new HashMap<>();
     private static GenericLexerSEB lexer = new GenericLexerSEB();
 
     static {
-        variables.put("pi",new br.ufmt.genericlexerseb.Variable("pi", pi));
-        variables.put("deg2rad",new br.ufmt.genericlexerseb.Variable("deg2rad", deg2rad));
-        variables.put("kel2deg",new br.ufmt.genericlexerseb.Variable("kel2deg", kel2deg));
-        variables.put("k",new br.ufmt.genericlexerseb.Variable("k", k));
-        variables.put("Sigma_SB",new br.ufmt.genericlexerseb.Variable("Sigma_SB", Sigma_SB));
-        variables.put("T0",new br.ufmt.genericlexerseb.Variable("T0", T0));
-        variables.put("Rso",new br.ufmt.genericlexerseb.Variable("Rso", Rso));
-        variables.put("g",new br.ufmt.genericlexerseb.Variable("g", g));
-        variables.put("Rmax",new br.ufmt.genericlexerseb.Variable("Rmax", Rmax));
-        variables.put("Rmin",new br.ufmt.genericlexerseb.Variable("Rmin", Rmin));
-        variables.put("Rd",new br.ufmt.genericlexerseb.Variable("Rd", Rd));
-        variables.put("Rv",new br.ufmt.genericlexerseb.Variable("Rv", Rv));
-        variables.put("Cpw",new br.ufmt.genericlexerseb.Variable("Cpw", Cpw));
-        variables.put("Cpd",new br.ufmt.genericlexerseb.Variable("Cpd", Cpd));
-        variables.put("Cd",new br.ufmt.genericlexerseb.Variable("Cd", Cd));
-        variables.put("Ct",new br.ufmt.genericlexerseb.Variable("Ct", Ct));
-        variables.put("gammaConst",new br.ufmt.genericlexerseb.Variable("gammaConst", gammaConst));
-        variables.put("Pr",new br.ufmt.genericlexerseb.Variable("Pr", Pr));
-        variables.put("Pr_u",new br.ufmt.genericlexerseb.Variable("Pr_u", Pr_u));
-        variables.put("Pr_s",new br.ufmt.genericlexerseb.Variable("Pr_s", Pr_s));
-        variables.put("ri_i",new br.ufmt.genericlexerseb.Variable("ri_i", ri_i));
-        variables.put("L_e",new br.ufmt.genericlexerseb.Variable("L_e", L_e));
-        variables.put("rho_w",new br.ufmt.genericlexerseb.Variable("rho_w", rho_w));
-        variables.put("PSI0",new br.ufmt.genericlexerseb.Variable("PSI0", PSI0));
-        variables.put("DT",new br.ufmt.genericlexerseb.Variable("DT", DT));
-        variables.put("MaxAllowedError",new br.ufmt.genericlexerseb.Variable("MaxAllowedError", MaxAllowedError));
-        variables.put("dimx",new br.ufmt.genericlexerseb.Variable("dimx", dimx));
-        variables.put("dimy",new br.ufmt.genericlexerseb.Variable("dimy", dimy));
-        variables.put("SelectedDevice",new br.ufmt.genericlexerseb.Variable("SelectedDevice", SelectedDevice));
-        variables.put("nThreadsPerBlock",new br.ufmt.genericlexerseb.Variable("nThreadsPerBlock", nThreadsPerBlock));
-        variables.put("z200",new br.ufmt.genericlexerseb.Variable("z200", z200));
-        variables.put("z2",new br.ufmt.genericlexerseb.Variable("z2", z2));
-        variables.put("z1",new br.ufmt.genericlexerseb.Variable("z1", z1));
-        variables.put("p",new br.ufmt.genericlexerseb.Variable("p", p));
-        variables.put("cp",new br.ufmt.genericlexerseb.Variable("cp", cp));
+        variables.put("pi", new br.ufmt.genericlexerseb.Variable("pi", pi));
+        variables.put("deg2rad", new br.ufmt.genericlexerseb.Variable("deg2rad", deg2rad));
+        variables.put("kel2deg", new br.ufmt.genericlexerseb.Variable("kel2deg", kel2deg));
+        variables.put("k", new br.ufmt.genericlexerseb.Variable("k", k));
+        variables.put("Sigma_SB", new br.ufmt.genericlexerseb.Variable("Sigma_SB", Sigma_SB));
+        variables.put("T0", new br.ufmt.genericlexerseb.Variable("T0", T0));
+        variables.put("Rso", new br.ufmt.genericlexerseb.Variable("Rso", Rso));
+        variables.put("g", new br.ufmt.genericlexerseb.Variable("g", g));
+        variables.put("Rmax", new br.ufmt.genericlexerseb.Variable("Rmax", Rmax));
+        variables.put("Rmin", new br.ufmt.genericlexerseb.Variable("Rmin", Rmin));
+        variables.put("Rd", new br.ufmt.genericlexerseb.Variable("Rd", Rd));
+        variables.put("Rv", new br.ufmt.genericlexerseb.Variable("Rv", Rv));
+        variables.put("Cpw", new br.ufmt.genericlexerseb.Variable("Cpw", Cpw));
+        variables.put("Cpd", new br.ufmt.genericlexerseb.Variable("Cpd", Cpd));
+        variables.put("Cd", new br.ufmt.genericlexerseb.Variable("Cd", Cd));
+        variables.put("Ct", new br.ufmt.genericlexerseb.Variable("Ct", Ct));
+        variables.put("gammaConst", new br.ufmt.genericlexerseb.Variable("gammaConst", gammaConst));
+        variables.put("Pr", new br.ufmt.genericlexerseb.Variable("Pr", Pr));
+        variables.put("Pr_u", new br.ufmt.genericlexerseb.Variable("Pr_u", Pr_u));
+        variables.put("Pr_s", new br.ufmt.genericlexerseb.Variable("Pr_s", Pr_s));
+        variables.put("ri_i", new br.ufmt.genericlexerseb.Variable("ri_i", ri_i));
+        variables.put("L_e", new br.ufmt.genericlexerseb.Variable("L_e", L_e));
+        variables.put("rho_w", new br.ufmt.genericlexerseb.Variable("rho_w", rho_w));
+        variables.put("PSI0", new br.ufmt.genericlexerseb.Variable("PSI0", PSI0));
+        variables.put("DT", new br.ufmt.genericlexerseb.Variable("DT", DT));
+        variables.put("MaxAllowedError", new br.ufmt.genericlexerseb.Variable("MaxAllowedError", MaxAllowedError));
+        variables.put("dimx", new br.ufmt.genericlexerseb.Variable("dimx", dimx));
+        variables.put("dimy", new br.ufmt.genericlexerseb.Variable("dimy", dimy));
+        variables.put("SelectedDevice", new br.ufmt.genericlexerseb.Variable("SelectedDevice", SelectedDevice));
+        variables.put("nThreadsPerBlock", new br.ufmt.genericlexerseb.Variable("nThreadsPerBlock", nThreadsPerBlock));
+        variables.put("z200", new br.ufmt.genericlexerseb.Variable("z200", z200));
+        variables.put("z2", new br.ufmt.genericlexerseb.Variable("z2", z2));
+        variables.put("z1", new br.ufmt.genericlexerseb.Variable("z1", z1));
+        variables.put("p", new br.ufmt.genericlexerseb.Variable("p", p));
+        variables.put("cp", new br.ufmt.genericlexerseb.Variable("cp", cp));
     }
 
-    public static float executeMath(ParameterEnum parameter,HashMap<ParameterEnum, String> equations, Map<String, br.ufmt.genericlexerseb.Variable> variables) {
+    public static float executeMath(ParameterEnum parameter, HashMap<ParameterEnum, String> equations, Map<String, br.ufmt.genericlexerseb.Variable> variables) {
         String name = parameter.getName();
         Structure structure = new Structure();
         structure.setToken(name);
-        String equation = lexer.analyse(equations.get(parameter), structure, null, LanguageType.PYTHON);
+        String equation = lexer.analyse(equations.get(parameter), structure, null, LanguageType.JAVA);
         float value = (float) lexer.getResult(equation, variables);
         variables.put(name, new br.ufmt.genericlexerseb.Variable(name, value));
         return value;
     }
-    
+
     public static float[] getData(List<DataStructure> datas, ParameterEnum parameter) {
         for (DataStructure dataStructure : datas) {
             if (dataStructure.getParameter().equals(parameter)) {
@@ -587,7 +592,42 @@ public class Utilities {
         return variables;
     }
 
-    public static Map<String,br.ufmt.genericlexerseb.Variable> getVariable() {
+    public static Map<String, br.ufmt.genericlexerseb.Variable> getVariable() {
         return variables;
+    }
+
+    public static Object compile(String source, String className) {
+        try {
+            PrintWriter fonte = new PrintWriter(className + ".java");
+            fonte.println(source);
+            fonte.close();
+
+            int compilar = com.sun.tools.javac.Main.compile(new String[]{className + ".java"});
+            File arq = new File(className + ".java");
+            arq.delete();
+            if (compilar == 0) {
+                URL url = new URL("file:" + System.getProperty("user.dir") + "/");
+                URLClassLoader ucl = URLClassLoader.newInstance(new URL[]{url});
+                Class classe = ucl.loadClass(className);
+                Object instancia = classe.newInstance();
+                return instancia;
+            }
+
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SecurityException ex) {
+            Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IllegalArgumentException ex) {
+            Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 }

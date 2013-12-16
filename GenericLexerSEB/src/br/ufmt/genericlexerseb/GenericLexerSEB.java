@@ -57,10 +57,10 @@ public class GenericLexerSEB {
                 }
                 funcs.put(vet[0], vet[3]);
 
-                funcs = functions.get(LanguageType.PYTHON);
+                funcs = functions.get(LanguageType.JAVA);
                 if (funcs == null) {
                     funcs = new HashMap<>();
-                    functions.put(LanguageType.PYTHON, funcs);
+                    functions.put(LanguageType.JAVA, funcs);
                 }
                 funcs.put(vet[0], vet[4]);
 
@@ -95,16 +95,19 @@ public class GenericLexerSEB {
         } else {
             equation = dependent.getToken() + "=";
         }
+        if(language.equals(LanguageType.JAVA)){
+            equation += "(float) (";
+        }
         for (int i = 0; i < terms.length; i++) {
             function = funcs.get(terms[i]);
             if (function != null) {
                 terms[i] = function;
             } else if (terms[i].equals("~")) {
                 terms[i] = "-";
-            } else if (!(language.equals(LanguageType.PYTHON)) && terms[i].matches("(-?)[0-9]+[\\.][0-9]+")) {
+            } else if (terms[i].matches("(-?)[0-9]+[\\.][0-9]+")) {
                 terms[i] = terms[i] + "f";
-            } else if (terms[i].equals("pi") && language.equals(LanguageType.PYTHON)) {
-                terms[i] = "math.pi";
+            } else if (terms[i].equals("pi") && language.equals(LanguageType.JAVA)) {
+                terms[i] = "Math.PI";
             } else if (variables != null) {
                 independent = variables.get(terms[i]);
                 if (independent != null) {
@@ -119,8 +122,11 @@ public class GenericLexerSEB {
             }
             equation += terms[i];
         }
+        if(language.equals(LanguageType.JAVA)){
+            equation += ")";
+        }
 
-        System.out.println(equation);
+//        System.out.println(equation);
         return equation;
     }
 

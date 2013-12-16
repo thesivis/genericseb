@@ -22,12 +22,14 @@ public class Main {
     public static void main(String[] args) {
         // TODO code application logic here
 
-        String eq = "z0m_2=exp(-5.809+5.62*SAVI*SIGMA_T)";
+        String eq = "Ts=K2/ln((emissividadeNB*K1/banda6)+1.0)";
         
         List<String> variables = new ArrayList<>();
-        variables.add("z0m_2");
-        variables.add("SAVI");
-        variables.add("SIGMA_T");
+        variables.add("Ts");
+        variables.add("emissividadeNB");
+        variables.add("banda6");
+        variables.add("K2");
+        variables.add("K1");
 
 //        eq = "4*x+5.2024-(logb(x,y)^-z)-300.12";
 //        eq = "(-1.0 + 2.123)*(2*a/b)-sqrt(5.0+6)";
