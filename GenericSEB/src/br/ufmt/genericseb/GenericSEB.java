@@ -14,6 +14,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -32,42 +34,35 @@ import javax.swing.text.Utilities;
  */
 public class GenericSEB {
 
-    public static HashMap<String, String> equations = new HashMap<>();
+    public boolean verifyEquations(String forms, List<String> variables) {
 
-    public boolean verifyEquations() {
-        BufferedReader bur = null;
-        try {
-            String path = System.getProperty("user.dir") + "/source/landsat.prop";
-            bur = new BufferedReader(new FileReader(path));
-            String line = bur.readLine();
-            List<String> variables = getVariables();
+        ExpressionParser ex = new ExpressionParser();
+        String vet[];
+        String vets[] = forms.split("\n");
 
-            ExpressionParser ex = new ExpressionParser();
-            String vet[];
+        String line;
+        for (int i = 0; i < vets.length; i++) {
+            line = vets[i];
 
-            while (line != null) {
-                line = line.replaceAll("[ ]+", "");
-                vet = line.split("=");
-                try {
-                    ex.evaluateExpr(line, variables);
-                    equations.put(vet[0], line);
-                } catch (IllegalArgumentException e) {
-//                    System.out.println("Equation is wrong: " + line);
-                    System.out.println(e.getMessage());
-                }
-
-                line = bur.readLine();
+//            System.out.println("Line:" + line);
+            line = line.replaceAll("[ ]+", "");
+            vet = line.split("=");
+            if (vet[0].startsWith("O_")) {
+                vet[0] = vet[0].substring(2);
+                line = vet[0] + "=" + vet[1];
             }
-
-        } catch (Exception ex) {
-            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
+            variables.add(vet[0]);
             try {
-                bur.close();
-            } catch (IOException ex) {
-                Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
+                ex.evaluateExpr(line, variables);
+
+            } catch (IllegalArgumentException e) {
+//                    System.out.println("Equation is wrong: " + line);
+                e.printStackTrace();
+                System.exit(1);
             }
+
         }
+
         return false;
     }
 
@@ -127,15 +122,20 @@ public class GenericSEB {
         source.append("import static br.ufmt.genericseb.Constants.*;\n");
         source.append("import java.util.HashMap;\n");
         source.append("import java.util.Map;\n");
+        source.append("import br.ufmt.genericseb.ResultEquation;\n");
         source.append("import java.util.List;\n\n");
 
-        source.append("public class Equation{\n");
+        source.append("public class Equation extends ResultEquation{\n");
 
-        source.append("    public Map<String, double[]> execute(");
+        source.append("    public void execute(");
         int size = 0;
         String vet1 = null;
+        Object[] pars = new Object[parameters.size()];
+        Class[] classes = new Class[parameters.size()];
         for (String string : parameters.keySet()) {
             vet1 = string;
+            pars[size] = parameters.get(string);
+            classes[size] = parameters.get(string).getClass();
             source.append("double[] ").append(string);
             size++;
             if (size < parameters.size()) {
@@ -144,7 +144,7 @@ public class GenericSEB {
         }
         source.append("){\n\n");
 
-        source.append("        Map<String, double[]> ret = new HashMap<>();\n\n");
+        source.append("        ret = new HashMap<>();\n\n");
 
         for (String string : constants.keySet()) {
             source.append("        double ").append(string).append(" = ").append(constants.get(string)).append("f;\n");
@@ -209,102 +209,182 @@ public class GenericSEB {
         for (int i = 0; i < vet.length; i++) {
             terms = vet[i].split("=");
             terms[0] = terms[0].replace(" ", "");
-            if (terms[0].equals("rad_espectral")) {
-                if (albedo) {
-                    source.append("        double sumBandas = 0.0;\n");
-                }
-                for (int j = 1; j < 8; j++) {
-                    source.append("        double[] banda").append(j).append(" = new double[").append(vet1).append(".length];\n");
-                    source.append("        ret.put(\"banda").append(j).append("\",banda").append(j).append(");\n\n");
-                }
-            } else if (terms[0].equals("reflectancia")) {
-                for (int j = 1; j < 8; j++) {
-                    source.append("        double[] bandaRefletida").append(j).append(" = new double[").append(vet1).append(".length];\n");
-                    source.append("        ret.put(\"bandaRefletida").append(j).append("\",bandaRefletida").append(j).append(");\n\n");
-                }
-            } else {
-                source.append("        double[] ").append(terms[0]).append(" = new double[").append(vet1).append(".length];\n");
-                source.append("        ret.put(\"").append(terms[0]).append("\",").append(terms[0]).append(");\n\n");
+            switch (terms[0]) {
+                case "rad_espectral":
+                case "O_rad_espectral":
+                    variables.add("pixel");
+                    if (albedo) {
+                        source.append("        double sumBandas = 0.0;\n");
+                        variables.add("sumBandas");
+                    }
+                    if (terms[0].startsWith("O_")) {
+                        for (int j = 1; j < 8; j++) {
+                            source.append("        double[] banda").append(j).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        ret.put(\"banda").append(j).append("\",banda").append(j).append(");\n\n");
+                            variables.add("banda" + j);
+                        }
+                    } else {
+                        for (int j = 1; j < 8; j++) {
+                            variables.add("banda" + j);
+                            source.append("        double banda").append(j).append(" = 0;\n");
+                        }
+                    }
+                    break;
+                case "reflectancia":
+                case "O_reflectancia":
+                    if (terms[0].startsWith("O_")) {
+                        for (int j = 1; j < 8; j++) {
+                            variables.add("bandaRefletida" + j);
+                            source.append("        double[] bandaRefletida").append(j).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        ret.put(\"bandaRefletida").append(j).append("\",bandaRefletida").append(j).append(");\n\n");
+                        }
+                    } else {
+                        for (int j = 1; j < 8; j++) {
+                            variables.add("bandaRefletida" + j);
+                            source.append("        double bandaRefletida").append(j).append(" = 0;\n");
+                        }
+                    }
+                    break;
+                default:
+                    if (terms[0].startsWith("O_")) {
+                        source.append("        double[] ").append(terms[0]).append(" = new double[").append(vet1).append(".length];\n");
+                        source.append("        ret.put(\"").append(terms[0].substring(2)).append("\",").append(terms[0]).append(");\n\n");
+                    } else {
+                        source.append("        double ").append(terms[0]).append(" = 0;\n");
+                    }
+                    break;
             }
         }
+
+        verifyEquations(header + "\n" + body, variables);
 
         source.append("        for(int i = 0;i < ").append(vet1).append(".length;i++){\n");
 
         String equation;
         String[] outEquation;
         String t;
+        boolean rad_espectral = false;
 
         for (int i = 0; i < vet.length; i++) {
             terms = vet[i].split("=");
             terms[0] = terms[0].replace(" ", "");
             structure = new Structure();
             structure.setToken(terms[0]);
+            switch (terms[0]) {
+                case "rad_espectral":
+                case "O_rad_espectral":
+                    for (int j = 1; j < 8; j++) {
+                        equation = "            " + lexer.analyse(vet[i], structure, null, LanguageType.JAVA) + ";\n";
+                        equation = equation.replace("coef_calib_a", "calibration[" + (j - 1) + "][0]");
+                        equation = equation.replace("coef_calib_b", "calibration[" + (j - 1) + "][1]");
+                        equation = equation.replace("pixel", "pixel" + (j) + "[i]");
+                        equation = equation.replace("irrad_espectral", "calibration[" + (j - 1) + "][2]");
 
-            if (terms[0].equals("rad_espectral")) {
-
-                for (int j = 1; j < 8; j++) {
-                    equation = "            " + lexer.analyse(vet[i], structure, null, LanguageType.JAVA) + ";\n";
-                    equation = equation.replace("coef_calib_a", "calibration[" + (j - 1) + "][0]");
-                    equation = equation.replace("coef_calib_b", "calibration[" + (j - 1) + "][1]");
-                    equation = equation.replace("pixel", "pixel" + (j) + "[i]");
-                    equation = equation.replace("irrad_espectral", "calibration[" + (j - 1) + "][2]");
-
-                    equation = equation.replace("rad_espectral", "banda" + j + "[i]");
-                    source.append(equation);
-                    variables.add("banda" + j);
-                }
-            } else if (terms[0].equals("reflectancia")) {
-                for (int j = 1; j < 8; j++) {
-                    equation = "            " + lexer.analyse(vet[i], structure, null, LanguageType.JAVA) + ";\n";
-                    equation = equation.replace("coef_calib_a", "calibration[" + (j - 1) + "][0]");
-                    equation = equation.replace("coef_calib_b", "calibration[" + (j - 1) + "][1]");
-                    equation = equation.replace("pixel", "pixel" + (j) + "[i]");
-                    equation = equation.replace("irrad_espectral", "calibration[" + (j - 1) + "][2]");
-                    equation = equation.replace("reflectancia", "bandaRefletida" + j + "[i]");
-                    equation = equation.replace("rad_espectral", "banda" + j + "[i]");
-                    source.append(equation);
-                    variables.add("bandaRefletida" + j);
-
-                    if (albedo) {
-                        source.append("            sumBandas += parameterAlbedo[").append(j - 1).append("]*bandaRefletida").append(j).append("[i];\n");
+                        if (terms[0].startsWith("O_")) {
+                            equation = equation.replace("rad_espectral", "banda" + j + "[i]");
+                        } else {
+                            equation = equation.replace("rad_espectral", "banda" + j);
+                            rad_espectral = true;
+                        }
+                        source.append(equation);
+                        variables.add("banda" + j);
                     }
-                }
-            } else {
-                equation = "            " + lexer.analyse(vet[i], structure, null, LanguageType.JAVA) + ";\n";
-                ex.evaluateExpr(equation);
-                outEquation = ex.getOutput();
-                equation = "            " + terms[0] + "[i] = ";
-                for (int j = 0; j < outEquation.length; j++) {
-                    String string = outEquation[j];
-                    for (int k = 0; k < i; k++) {
-                        t = vet[k].split("=")[0].replace(" ", "");
-                        if (string.equals(t)) {
-                            string = t + "[i]";
-                            break;
-                        }else if(string.equals("~")){
-                            string = "-";
-                        }else if(string.contains("banda")){
-                            string = string + "[i]";
-                            break;
+                    break;
+                case "reflectancia":
+                case "O_reflectancia":
+                    for (int j = 1; j < 8; j++) {
+                        equation = "            " + lexer.analyse(vet[i], structure, null, LanguageType.JAVA) + ";\n";
+                        equation = equation.replace("coef_calib_a", "calibration[" + (j - 1) + "][0]");
+                        equation = equation.replace("coef_calib_b", "calibration[" + (j - 1) + "][1]");
+                        equation = equation.replace("pixel", "pixel" + (j) + "[i]");
+                        equation = equation.replace("irrad_espectral", "calibration[" + (j - 1) + "][2]");
+                        if (terms[0].startsWith("O_")) {
+                            equation = equation.replace("reflectancia", "bandaRefletida" + j + "[i]");
+                        } else {
+                            equation = equation.replace("reflectancia", "bandaRefletida" + j);
+                        }
+                        if (rad_espectral) {
+                            equation = equation.replace("rad_espectral", "banda" + j);
+                        } else {
+                            equation = equation.replace("rad_espectral", "banda" + j + "[i]");
+                        }
+                        source.append(equation);
+                        variables.add("bandaRefletida" + j);
+
+                        if (albedo) {
+                            if (terms[0].startsWith("O_")) {
+                                source.append("            sumBandas += parameterAlbedo[").append(j - 1).append("]*bandaRefletida").append(j).append("[i];\n");
+                            } else {
+                                source.append("            sumBandas += parameterAlbedo[").append(j - 1).append("]*bandaRefletida").append(j).append(";\n");
+                            }
                         }
                     }
-                    equation += string;
-                }
-                equation += "\n";
-                variables.add(terms[0]);
-                source.append(equation);
+                    break;
+                default:
+                    equation = "            " + lexer.analyse(vet[i], structure, null, LanguageType.JAVA) + ";\n";
+                    ex.evaluateExpr(equation);
+                    outEquation = ex.getOutput();
+//                    System.out.println("eq:"+equation);
+                    if (terms[0].startsWith("O_")) {
+                        equation = "            " + terms[0] + "[i] = ";
+                    } else {
+                        equation = "            " + terms[0] + " = ";
+                    }
+
+                    for (int j = 0; j < outEquation.length; j++) {
+                        String string = outEquation[j];
+                        for (int k = 0; k < i; k++) {
+                            t = vet[k].split("=")[0].replace(" ", "");
+//                            System.out.println("T:"+t);
+                            if (t.equals("O_" + string)) {
+                                string = t + "[i]";
+                                break;
+                            } else if (string.equals(t)) {
+                                string = t;
+                            } else if (string.equals("~")) {
+                                string = "-";
+                            } else if (t.contains("banda") && t.contains(string)) {
+                                if (t.startsWith("O_")) {
+                                    string = string + "[i]";
+                                }
+                                break;
+                            }
+                        }
+                        equation += string;
+                    }
+                    equation += "\n";
+                    variables.add(terms[0]);
+                    source.append(equation);
+                    break;
             }
         }
 
-
         source.append("        }\n");
-        source.append("        return ret;\n");
         source.append("    }\n");
         source.append("}\n");
 
         System.out.println(source.toString());
 
-        compile(source.toString(), "Equation");
+        Object instanced = compile(source.toString(), "Equation");
+        try {
+            Method method = instanced.getClass().getDeclaredMethod("execute", classes);
+            try {
+                method.invoke(instanced, pars);
+                ResultEquation result = (ResultEquation) instanced;
+                ret = result.getRet();
+            } catch (IllegalAccessException ex1) {
+                Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+            } catch (IllegalArgumentException ex1) {
+                Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+            } catch (InvocationTargetException ex1) {
+                Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+        } catch (NoSuchMethodException ex1) {
+            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+        } catch (SecurityException ex1) {
+            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+        }
+
 
         return ret;
     }
@@ -355,8 +435,8 @@ public class GenericSEB {
         parameters.put("pixel5", new double[]{1.0, 2.0});
         parameters.put("pixel6", new double[]{1.0, 2.0});
         parameters.put("pixel7", new double[]{1.0, 2.0});
-        
-        
+
+
         Map<String, Double> constants = new HashMap<>();
         constants.put("reflectanciaAtmosfera", 0.03);
         constants.put("Kt", 1.0);
@@ -405,15 +485,15 @@ public class GenericSEB {
 
         String body = "rad_espectral = coef_calib_a + ((coef_calib_b - coef_calib_a) / 255.0) * pixel\n"
                 + "reflectancia = (pi * rad_espectral) / (irrad_espectral * cosZ * dr)\n"
-                + "albedo = (sumBandas - reflectanciaAtmosfera) / (transmissividade * transmissividade)\n"
-                + "NDVI = (bandaRefletida4 - bandaRefletida3) / (bandaRefletida4 + bandaRefletida3)\n"
-                + "SAVI = ((1.0 + L) * (bandaRefletida4 - bandaRefletida3)) / (L + bandaRefletida4 + bandaRefletida3)\n"
-                + "IAF = (-ln((0.69 - SAVI) / 0.59) / 0.91)\n"
-                + "emissividadeNB = 0.97 + 0.0033 * IAF\n"
-                + "emissivity = 0.95 + 0.01 * IAF\n"
-                + "Ts = K2/ln(((emissividadeNB * K1) / banda6) + 1.0)\n"
-                + "LWd = emissivity * StefanBoltzman * (pow(Ts, 4))\n"
-                + "Rn = ((1.0 - albedo) * SWd) + (emissivity * (LWdAtm) - LWd)";
+                + "O_albedo = (sumBandas - reflectanciaAtmosfera) / (transmissividade * transmissividade)\n"
+                + "O_NDVI = (bandaRefletida4 - bandaRefletida3) / (bandaRefletida4 + bandaRefletida3)\n"
+                + "O_SAVI = ((1.0 + L) * (bandaRefletida4 - bandaRefletida3)) / (L + bandaRefletida4 + bandaRefletida3)\n"
+                + "O_IAF = (-ln((0.69 - SAVI) / 0.59) / 0.91)\n"
+                + "O_emissividadeNB = 0.97 + 0.0033 * IAF\n"
+                + "O_emissivity = 0.95 + 0.01 * IAF\n"
+                + "O_Ts = K2/ln(((emissividadeNB * K1) / banda6) + 1.0)\n"
+                + "O_LWd = emissivity * StefanBoltzman * (pow(Ts, 4))\n"
+                + "O_Rn = ((1.0 - albedo) * SWd) + (emissivity * (LWdAtm) - LWd)";
         GenericSEB g = new GenericSEB();
         g.execute(header, body, parameters, constants, constVetor, constMatrix);
     }
