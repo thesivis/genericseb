@@ -1691,7 +1691,8 @@ public class LandSat {
 
     public List<DataFile> preprocessingLandSat5(String path, int julianDay, float Z, float P, float UR, float Ta, float latitude, float Rg_24h, float Uref) {
 
-        float[][] calibration = new float[][]{{-1.52f, 193.0f, 1957.0f},
+        float[][] calibration = new float[][]{
+            {-1.52f, 193.0f, 1957.0f},
             {-2.84f, 365.0f, 1826.0f},
             {-1.17f, 264.0f, 1554.0f},
             {-1.51f, 221.0f, 1036.0f},
