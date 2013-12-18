@@ -95,9 +95,7 @@ public class GenericLexerSEB {
         } else {
             equation = dependent.getToken() + "=";
         }
-        if(language.equals(LanguageType.JAVA)){
-            equation += "(float) (";
-        }
+
         for (int i = 0; i < terms.length; i++) {
             function = funcs.get(terms[i]);
             if (function != null) {
@@ -122,9 +120,7 @@ public class GenericLexerSEB {
             }
             equation += terms[i];
         }
-        if(language.equals(LanguageType.JAVA)){
-            equation += ")";
-        }
+
 
 //        System.out.println(equation);
         return equation;

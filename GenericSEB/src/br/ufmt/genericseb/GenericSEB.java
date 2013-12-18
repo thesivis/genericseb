@@ -18,6 +18,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -230,6 +231,7 @@ public class GenericSEB {
         source.append("        for(int i = 0;i < ").append(vet1).append(".length;i++){\n");
 
         String equation;
+        String[] outEquation;
         String t;
 
         for (int i = 0; i < vet.length; i++) {
@@ -237,18 +239,7 @@ public class GenericSEB {
             terms[0] = terms[0].replace(" ", "");
             structure = new Structure();
             structure.setToken(terms[0]);
-            equation = "            " + lexer.analyse(vet[i], structure, null, LanguageType.JAVA) + ";\n";
-            for (int j = 0; j < i; j++) {
-                t = vet[j].split("=")[0].replace(" ", "");
-                ex.evaluateExpr(t);
 
-                String[] out = ex.getOutput();
-                for (int k = 0; k < out.length; k++) {
-                    if (t.equals(out[k])) {
-                        equation = equation.replace(t, t + "[i]");
-                    }
-                }
-            }
             if (terms[0].equals("rad_espectral")) {
 
                 for (int j = 1; j < 8; j++) {
@@ -279,7 +270,27 @@ public class GenericSEB {
                     }
                 }
             } else {
-                equation = equation.replace(terms[0], terms[0] + "[i]");
+                equation = "            " + lexer.analyse(vet[i], structure, null, LanguageType.JAVA) + ";\n";
+                ex.evaluateExpr(equation);
+                outEquation = ex.getOutput();
+                equation = "            " + terms[0] + "[i] = ";
+                for (int j = 0; j < outEquation.length; j++) {
+                    String string = outEquation[j];
+                    for (int k = 0; k < i; k++) {
+                        t = vet[k].split("=")[0].replace(" ", "");
+                        if (string.equals(t)) {
+                            string = t + "[i]";
+                            break;
+                        }else if(string.equals("~")){
+                            string = "-";
+                        }else if(string.contains("banda")){
+                            string = string + "[i]";
+                            break;
+                        }
+                    }
+                    equation += string;
+                }
+                equation += "\n";
                 variables.add(terms[0]);
                 source.append(equation);
             }
@@ -344,8 +355,10 @@ public class GenericSEB {
         parameters.put("pixel5", new double[]{1.0, 2.0});
         parameters.put("pixel6", new double[]{1.0, 2.0});
         parameters.put("pixel7", new double[]{1.0, 2.0});
+        
+        
         Map<String, Double> constants = new HashMap<>();
-        constants.put("reflectancaAtmosfera", 0.03);
+        constants.put("reflectanciaAtmosfera", 0.03);
         constants.put("Kt", 1.0);
         constants.put("L", 0.1);
         constants.put("K1", 607.76);
