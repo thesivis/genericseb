@@ -6,6 +6,7 @@
 package br.ufmt.genericlexerseb;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,7 @@ public class Main {
 //            
 //        }
         System.out.println(ex.evaluateExpr(eq));
+        System.out.println(Arrays.toString(ex.getOutput()));
 //        System.out.println(Arrays.toString(ExpressionParser.infixToRPN(a)));
 
     }
