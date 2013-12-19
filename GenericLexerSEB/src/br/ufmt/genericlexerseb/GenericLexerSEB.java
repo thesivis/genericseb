@@ -109,7 +109,7 @@ public class GenericLexerSEB {
                 terms[i] = function;
             } else if (terms[i].equals("~")) {
                 terms[i] = "-";
-            } else if (terms[i].matches("(-?)[0-9]+[\\.][0-9]+") && !language.equals(LanguageType.PYTHON)) {
+            } else if (terms[i].matches("(-?)[0-9]+[\\.][0-9]+") && !language.equals(LanguageType.PYTHON) && !language.equals(LanguageType.OPENCL)) {
                 terms[i] = terms[i] + "f";
             } else if (terms[i].equals("pi") && language.equals(LanguageType.JAVA)) {
                 terms[i] = "Math.PI";
