@@ -4,6 +4,9 @@
  */
 package br.ufmt.genericseb;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  *
  * @author raphael
@@ -51,7 +54,7 @@ public class Constants {
     public static double ri_i = 60.0f;  /* surface resistance of standard crop, s m-1 */
 
     /* The latent heat of vaporization at 30C from Brutsaert, 1982, p.41,tab. 3.4,
-    more exact values can be obtained from eqn(3.22, 3.24a,b) */
+     more exact values can be obtained from eqn(3.22, 3.24a,b) */
     public static double L_e = 2.430f;   /* MJ Kg-1 */
 
     public static double rho_w = 0.998f;  /* density of water [kg/(m2 mm)] */
@@ -65,11 +68,48 @@ public class Constants {
     public static int dimy = 120;
     public static int SelectedDevice = 0;
     public static int nThreadsPerBlock = 64;
-    
     public static float z200 = 200.0f;
     public static float z2 = 2.0f;
     public static float z1 = 0.1f;
     public static float p = 1.15f;
     public static float cp = 1004.0f;
+    static Map<String, Double> variables = new HashMap<>();
 
+    static {
+        variables.put("pi", pi);
+        variables.put("deg2rad", deg2rad);
+        variables.put("kel2deg", (double) kel2deg);
+        variables.put("k", (double) k);
+        variables.put("Sigma_SB", Sigma_SB);
+        variables.put("T0", (double) T0);
+        variables.put("Rso", (double) Rso);
+        variables.put("g", g);
+        variables.put("Rmax", Rmax);
+        variables.put("Rmin", Rmin);
+        variables.put("Rd", Rd);
+        variables.put("Rv", Rv);
+        variables.put("Cpw", Cpw);
+        variables.put("Cpd", Cpd);
+        variables.put("Cd", Cd);
+        variables.put("Ct", Ct);
+        variables.put("gammaConst", gammaConst);
+        variables.put("Pr", Pr);
+        variables.put("Pr_u", Pr_u);
+        variables.put("Pr_s", Pr_s);
+        variables.put("ri_i", ri_i);
+        variables.put("L_e", L_e);
+        variables.put("rho_w", rho_w);
+        variables.put("PSI0", PSI0);
+        variables.put("DT", DT);
+        variables.put("MaxAllowedError", (double) MaxAllowedError);
+        variables.put("dimx", (double) dimx);
+        variables.put("dimy", (double) dimy);
+        variables.put("SelectedDevice", (double) SelectedDevice);
+        variables.put("nThreadsPerBlock", (double) nThreadsPerBlock);
+        variables.put("z200", (double) z200);
+        variables.put("z2", (double) z2);
+        variables.put("z1", (double) z1);
+        variables.put("p", (double) p);
+        variables.put("cp", (double) cp);
+    }
 }
