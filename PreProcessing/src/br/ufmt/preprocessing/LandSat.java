@@ -4,12 +4,6 @@
  */
 package br.ufmt.preprocessing;
 
-import br.ufmt.genericlexerseb.ExpressionParser;
-import br.ufmt.genericlexerseb.GenericLexerSEB;
-import br.ufmt.genericlexerseb.LanguageType;
-import br.ufmt.genericlexerseb.Structure;
-import br.ufmt.genericlexerseb.Variable;
-import br.ufmt.genericseb.GenericSEB;
 import br.ufmt.preprocessing.exceptions.CalibrationException;
 import br.ufmt.preprocessing.exceptions.TiffErrorBandsException;
 import br.ufmt.preprocessing.exceptions.TiffNotFoundException;
@@ -17,50 +11,29 @@ import static br.ufmt.preprocessing.utils.Constants.*;
 import br.ufmt.preprocessing.utils.DataFile;
 import br.ufmt.preprocessing.utils.ParameterEnum;
 import br.ufmt.preprocessing.utils.Utilities;
-import com.sun.media.imageio.plugins.tiff.TIFFDirectory;
-import com.sun.media.imageio.plugins.tiff.TIFFField;
 import com.sun.media.jai.codec.FileSeekableStream;
 import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageDecoder;
-import com.sun.media.jai.codec.ImageEncoder;
 import com.sun.media.jai.codec.SeekableStream;
 import com.sun.media.jai.codec.TIFFDecodeParam;
-import com.sun.media.jai.codec.TIFFEncodeParam;
-import java.awt.Point;
-import java.awt.image.ColorModel;
-
-import java.awt.image.DataBuffer;
-import java.awt.image.DataBufferFloat;
-import java.awt.image.BandedSampleModel;
 import java.awt.image.Raster;
-import java.awt.image.WritableRaster;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.metadata.IIOMetadata;
-import javax.imageio.stream.FileImageInputStream;
-import javax.imageio.stream.ImageInputStream;
-import sun.awt.image.SunWritableRaster;
 
 /**
  *
  * @author raphael
  */
 public class LandSat {
-
-    private static int QUANTITY = 40000000;
 
     public List<DataFile> preprocessing(String pathToOriginalTiff, double[][] calibration, double[] parameterAlbedo, int julianDay, float Z, float reflectanciaAtmosfera, float P, float UR, float Ta, float Kt, float L, float K1, float K2, float S, float StefanBoltzman, float latitude, float Rg_24h, float Uref) {
 
@@ -77,7 +50,6 @@ public class LandSat {
                     // Which of the multiple images in the TIFF file do we want to load
                     // 0 refers to the first, 1 to the second and so on.
                     int bands;
-                    ColorModel model = dec.decodeAsRenderedImage().getColorModel();
                     Raster raster = dec.decodeAsRaster(0);
                     bands = raster.getNumBands();
                     int width = raster.getWidth();
@@ -106,150 +78,49 @@ public class LandSat {
                         variables.put("Uref", (double) Uref);
 
 
-
-//                        System.out.println("transmissividade:" + transmissividade);
-//                        System.out.println("w:" + W);
-//                        System.out.println("ea:" + ea);
-//                        System.out.println("cosZ:" + cosZ);
-//                        System.out.println("dr:" + dr);
-//                        System.out.println("P:" + P);
-
-//                        System.exit(1);
-
-                        int size = tam;
-
-
-                        double[] valor = null;
-                        int idx = 0;
-                        int k = 0;
-
-
-
-                        //GETTING CONFIGURATION OF TIFF
-                        Iterator readersIterator = ImageIO.getImageReadersByFormatName("tif");
-                        ImageReader imageReader = (ImageReader) readersIterator.next();
-                        ImageInputStream imageInputStream = new FileImageInputStream(tiff);
-                        imageReader.setInput(imageInputStream, false, true);
-                        IIOMetadata imageMetaData = imageReader.getImageMetadata(k);
-                        TIFFDirectory ifd = TIFFDirectory.createFromMetadata(imageMetaData);
-                        /* Create a Array of TIFFField*/
-                        TIFFField[] allTiffFields = ifd.getTIFFFields();
-
-                        System.out.println("Calculating ");
-
-
-                        double[] pixel1 = new double[width * height];
-                        double[] pixel2 = new double[width * height];
-                        double[] pixel3 = new double[width * height];
-                        double[] pixel4 = new double[width * height];
-                        double[] pixel5 = new double[width * height];
-                        double[] pixel6 = new double[width * height];
-                        double[] pixel7 = new double[width * height];
-
-                        Map<String, double[]> parameters = new HashMap<>();
-                        parameters.put("pixel1", pixel1);
-                        parameters.put("pixel2", pixel2);
-                        parameters.put("pixel3", pixel3);
-                        parameters.put("pixel4", pixel4);
-                        parameters.put("pixel5", pixel5);
-                        parameters.put("pixel6", pixel6);
-                        parameters.put("pixel7", pixel7);
-
+                        String[] nameParameters = new String[]{"pixel1", "pixel2", "pixel3", "pixel4", "pixel5", "pixel6", "pixel7"};
+                        
                         Map<String, double[][]> constMatrix = new HashMap<>();
                         constMatrix.put("calibration", calibration);
 
                         Map<String, double[]> constVetor = new HashMap<>();
                         constVetor.put("parameterAlbedo", parameterAlbedo);
-
-                        String header = "dr = 1.0 + 0.033 * cos(julianDay * 2 * pi / 365)\n"
-                                + "cosZ = cos(((90.0 - Z) * pi) / 180.0)\n"
-                                + "declinacaoSolar = radians(23.45 * sin(radians(360.0 * (julianDay - 80) / 365)))\n"
-                                + "anguloHorarioNascerSol = acos(-tan(pi * latitude / 180.0) * tan(declinacaoSolar))\n"
-                                + "rad_solar_toa = 24.0 * 60.0 * 0.082 * dr * (anguloHorarioNascerSol * sin(pi * latitude / 180.0) * sin(declinacaoSolar) + cos(pi * latitude / 180.0) * cos(declinacaoSolar) * sin(anguloHorarioNascerSol)) / pi\n"
-                                + "Rg_24h_mj = 0.0864 * Rg_24h\n"
-                                + "transmissividade24h = Rg_24h_mj / rad_solar_toa\n"
-                                + "ea = (0.61078 * exp(17.269 * Ta / (237.3 + Ta))) * UR / 100\n"
-                                + "W = 0.14 * ea * P + 2.1\n"
-                                + "transmissividade = 0.35 + 0.627 * exp((-0.00146 * P / (Kt * cosZ)) - 0.075 * pow((W / cosZ), 0.4))\n"
-                                + "emissivityAtm = 0.625 * pow((1000.0 * ea / (Ta + T0)), 0.131)\n"
-                                + "SWd = (S * cosZ * cosZ) / (1.085 * cosZ + 10.0 * ea * (2.7 + cosZ) * 0.001 + 0.2)\n"
-                                + "LWdAtm = emissivityAtm * StefanBoltzman * (pow(Ta + T0, 4))";
-
-                        String body = "rad_espectral = coef_calib_a + ((coef_calib_b - coef_calib_a) / 255.0) * pixel\n"
-                                + "reflectancia = (pi * rad_espectral) / (irrad_espectral * cosZ * dr)\n"
-                                + "O_albedo = (sumBandas - reflectanciaAtmosfera) / (transmissividade * transmissividade)\n"
-                                + "O_NDVI = (bandaRefletida4 - bandaRefletida3) / (bandaRefletida4 + bandaRefletida3)\n"
-                                + "O_SAVI = ((1.0 + L) * (bandaRefletida4 - bandaRefletida3)) / (L + bandaRefletida4 + bandaRefletida3)\n"
-                                + "O_IAF = (-ln((0.69 - SAVI) / 0.59) / 0.91)\n"
-                                + "O_emissividadeNB = 0.97 + 0.0033 * IAF\n"
-                                + "O_emissivity = 0.95 + 0.01 * IAF\n"
-                                + "O_Ts = K2/ln(((emissividadeNB * K1) / banda6) + 1.0)\n"
-                                + "O_LWd = emissivity * StefanBoltzman * (pow(Ts, 4))\n"
-                                + "O_Rn = ((1.0 - albedo) * SWd) + (emissivity * (LWdAtm) - LWd)";
-
-                        idx = 0;
-                        for (int j = 0; j < width; j++) {
-                            for (int i = 0; i < height; i++) {
-//                                System.out.println("I:" + i + " H:" + height);
-                                valor = raster.getPixel(j, i, valor);
-                                pixel1[idx] = valor[0];
-                                pixel2[idx] = valor[1];
-                                pixel3[idx] = valor[2];
-                                pixel4[idx] = valor[3];
-                                pixel5[idx] = valor[4];
-                                pixel6[idx] = valor[5];
-                                pixel7[idx] = valor[6];
-                                idx++;
+                        
+                        BufferedReader bur = new BufferedReader(new FileReader(System.getProperty("user.dir")+"/source/landsat.prop"));
+                        String linha = bur.readLine();
+                        
+                        StringBuilder header = new StringBuilder();
+                        StringBuilder body = new StringBuilder();
+                        
+                        if(linha.equals("<header>")){
+                            linha = bur.readLine();
+                            while(!linha.equals("<body>")){
+                                header.append(linha).append("\n");
+                                linha = bur.readLine();
+                            }
+                            linha = bur.readLine();
+                            while(linha != null){
+                                body.append(linha).append("\n");
+                                linha = bur.readLine();
+                            }
+                        }else{
+                            linha = bur.readLine();
+                            while(!linha.equals("<header>")){
+                                body.append(linha).append("\n");
+                                linha = bur.readLine();
+                            }
+                            linha = bur.readLine();
+                            while(linha != null){
+                                header.append(linha).append("\n");
+                                linha = bur.readLine();
                             }
                         }
-                        GenericSEB g = new GenericSEB();
-                        Map<String, double[]> datas = g.execute(header, body, parameters, variables, constVetor, constMatrix);
 
-                        FileOutputStream fos = null;
-                        WritableRaster rasterResp = null;
+                        
 
-                        BandedSampleModel mppsm;
-                        DataBufferFloat dataBuffer;
-                        TIFFEncodeParam encParam = null;
-                        ImageEncoder enc;
 
-                        String parent = tiff.getParent() + "/OutputParameters/";
-                        File dir = new File(parent);
-                        dir.mkdirs();
-                        String pathTiff;
-
-                        float[] dado = new float[]{};
-                        int x, y;
-                        System.out.println("Width:" + width);
-                        System.out.println("height:" + height);
-                        double[] vet = datas.get("albedo");
-                        for (String string : datas.keySet()) {
-                            vet = datas.get(string);
-
-                            pathTiff = parent + string + ".tif";
-                            mppsm = new BandedSampleModel(DataBuffer.TYPE_FLOAT, raster.getWidth(), raster.getHeight(), 1);
-                            dataBuffer = new DataBufferFloat(raster.getWidth() * raster.getHeight());
-                            rasterResp = new SunWritableRaster(mppsm, dataBuffer, new Point(0, 0));
-                            fos = new FileOutputStream(pathTiff);
-
-                            for (int i = 0; i < vet.length; i++) {
-                                dado = new float[]{(float) vet[i]};
-                                x = i % width;
-                                y = i / width;
-                                try {
-                                    rasterResp.setPixel(x, y, dado);
-                                } catch (java.lang.ArrayIndexOutOfBoundsException ex) {
-                                    System.out.println("i:" + i + " X:" + x + " Y: " + y);
-                                    System.exit(1);
-                                }
-                            }
-                            
-                            enc = ImageCodec.createImageEncoder("tiff", fos, encParam);
-                            enc.encode(rasterResp, model);
-                            fos.close();
-                            Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterResp);
-                            ret.add(new DataFile(ParameterEnum.valueOf(string), new File(pathTiff)));
-                        }
+                        ProcessorTiff processorTiff = new ProcessorTiff();
+                        ret = processorTiff.execute(header.toString(), body.toString(), pathToOriginalTiff, nameParameters, variables, constVetor, constMatrix);
 
                         System.out.println("End");
                     } else {
