@@ -4,6 +4,7 @@
  */
 package br.ufmt.preprocessing;
 
+import br.ufmt.genericlexerseb.LanguageType;
 import br.ufmt.preprocessing.exceptions.CalibrationException;
 import br.ufmt.preprocessing.exceptions.TiffErrorBandsException;
 import br.ufmt.preprocessing.exceptions.TiffNotFoundException;
@@ -119,7 +120,7 @@ public class LandSat {
                         
 
 
-                        ProcessorTiff processorTiff = new ProcessorTiff();
+                        ProcessorTiff processorTiff = new ProcessorTiff(LanguageType.CUDA_FLOAT);
                         ret = processorTiff.execute(header.toString(), body.toString(), pathToOriginalTiff, nameParameters, variables, constVetor, constMatrix);
 
                         System.out.println("End");

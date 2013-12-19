@@ -4,6 +4,7 @@
  */
 package br.ufmt.preprocessing;
 
+import br.ufmt.genericlexerseb.LanguageType;
 import br.ufmt.genericseb.GenericSEB;
 import br.ufmt.preprocessing.utils.DataFile;
 import br.ufmt.preprocessing.utils.ParameterEnum;
@@ -46,6 +47,15 @@ import sun.awt.image.SunWritableRaster;
  * @author raphael
  */
 public class ProcessorTiff {
+
+    private LanguageType language = LanguageType.JAVA;
+
+    public ProcessorTiff() {
+    }
+
+    public ProcessorTiff(LanguageType language) {
+        this.language = language;
+    }
 
     public List<DataFile> execute(String header, String body, String pathProcessorTiff, String[] nameParameters, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) {
         File tiff = new File(pathProcessorTiff);
@@ -97,7 +107,7 @@ public class ProcessorTiff {
                         idx++;
                     }
                 }
-                GenericSEB g = new GenericSEB();
+                GenericSEB g = new GenericSEB(language);
                 Map<String, double[]> datas = g.execute(header, body, parameters, constants, constantsVetor, constantsMatrix);
 
                 FileOutputStream fos;
