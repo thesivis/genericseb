@@ -876,7 +876,7 @@ public class GenericSEB {
 
 
         gpuCode.append("        int idx");
-        gpuCodeBody.append("        int size");
+        gpuCodeBody.append("        __global int * size");
 
         gpuCode.append("){\n");
         gpuCodeBody.append("){\n");
@@ -885,7 +885,7 @@ public class GenericSEB {
 
 
         gpuCodeBody.append("        int idx = get_global_id(0);\n");
-        gpuCodeBody.append("        if(idx < size){\n");
+        gpuCodeBody.append("        if(idx < size[0]){\n");
         gpuCodeBody.append("            execute_sub(\n");
         for (String string : parameters.keySet()) {
             gpuCodeBody.append("                ").append(string).append("[idx],\n");
