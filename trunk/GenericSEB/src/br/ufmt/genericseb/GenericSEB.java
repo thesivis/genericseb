@@ -122,12 +122,11 @@ public class GenericSEB {
         source.append("import static br.ufmt.genericseb.Constants.*;\n");
         source.append("import java.util.HashMap;\n");
         source.append("import java.util.Map;\n");
-        source.append("import br.ufmt.genericseb.ResultEquation;\n");
         source.append("import java.util.List;\n\n");
 
-        source.append("public class Equation extends ResultEquation{\n");
+        source.append("public class Equation{\n");
 
-        source.append("    public void execute(");
+        source.append("    public Map<String, double[]> execute(");
         int size = 0;
         String vet1 = null;
         Object[] pars = new Object[parameters.size()];
@@ -144,7 +143,7 @@ public class GenericSEB {
         }
         source.append("){\n\n");
 
-        source.append("        ret = new HashMap<>();\n\n");
+        source.append("        Map<String, double[]> ret = new HashMap<>();\n\n");
 
         for (String string : constants.keySet()) {
             source.append("        double ").append(string).append(" = ").append(constants.get(string)).append("f;\n");
@@ -360,6 +359,7 @@ public class GenericSEB {
         }
 
         source.append("        }\n");
+        source.append("        return ret;\n");
         source.append("    }\n");
         source.append("}\n");
 
@@ -369,9 +369,7 @@ public class GenericSEB {
         try {
             Method method = instanced.getClass().getDeclaredMethod("execute", classes);
             try {
-                method.invoke(instanced, pars);
-                ResultEquation result = (ResultEquation) instanced;
-                ret = result.getRet();
+                ret = (Map<String, double[]>) method.invoke(instanced, pars);
             } catch (IllegalAccessException ex1) {
                 Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
             } catch (IllegalArgumentException ex1) {
