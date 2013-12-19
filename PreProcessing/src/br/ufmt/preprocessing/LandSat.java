@@ -118,7 +118,7 @@ public class LandSat {
                         }
 
 
-                        ProcessorTiff processorTiff = new ProcessorTiff(LanguageType.CUDA_FLOAT);
+                        ProcessorTiff processorTiff = new ProcessorTiff(LanguageType.OPENCL);
                         ret = processorTiff.execute(header.toString(), body.toString(), pathToOriginalTiff, nameParameters, variables, constVetor, constMatrix);
 
                         System.out.println("End");
