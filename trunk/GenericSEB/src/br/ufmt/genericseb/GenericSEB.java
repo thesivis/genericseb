@@ -619,8 +619,416 @@ public class GenericSEB {
     }
 
     private String generateOpenCL(String header, String body, Map<String, double[]> parameters, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) {
+        List<String> variables = getVariables();
+        ExpressionParser ex = new ExpressionParser();
 
-        return null;
+        StringBuilder source = new StringBuilder();
+        source.append("import static br.ufmt.genericseb.Constants.*;\n");
+        source.append("import java.util.HashMap;\n");
+        source.append("import java.util.Map;\n");
+        source.append("import br.ufmt.jseriesgpu.ParameterGPU;\n");
+        source.append("import java.util.ArrayList;\n");
+        source.append("import br.ufmt.jseriesgpu.JSeriesCL;\n");
+        source.append("import java.io.File;\n");
+        source.append("import java.io.IOException;\n");
+        source.append("import java.util.logging.Level;\n");
+        source.append("import java.util.logging.Logger;\n");
+        source.append("import java.io.BufferedReader;\n");
+        source.append("import java.io.FileReader;\n");
+        source.append("import java.util.List;\n\n");
+
+
+
+        source.append("public class Equation{\n");
+
+        source.append("    public Map<String, double[]> execute(");
+        int size = 0;
+        String vet1 = null;
+        pars = new Object[parameters.size()];
+        classes = new Class[parameters.size()];
+        for (String string : parameters.keySet()) {
+            vet1 = string;
+            pars[size] = parameters.get(string);
+            classes[size] = parameters.get(string).getClass();
+            source.append("double[] ").append(string);
+            size++;
+            if (size < parameters.size()) {
+                source.append(",");
+            }
+        }
+        source.append("){\n\n");
+
+        source.append("        Map<String, double[]> ret = new HashMap<>();\n\n");
+        source.append("        List<ParameterGPU> par = new ArrayList<ParameterGPU>();\n\n");
+
+        boolean first = true;
+        for (String string : parameters.keySet()) {
+            if (first) {
+                source.append("        int[] N = new int[]{").append(string).append(".length};\n\n");
+                source.append("        par.add(new ParameterGPU(").append(string).append(",true,false,true));\n");
+                first = false;
+            } else {
+                source.append("        par.add(new ParameterGPU(").append(string).append(",true));\n");
+            }
+        }
+
+        source.append("\n");
+
+        //DECLARANDO OS VETORES QUE SERAO RETORNADOS
+        String[] vet = body.split("\n");
+        String[] terms;
+        String term;
+        for (int i = 0; i < vet.length; i++) {
+            terms = vet[i].split("=");
+            terms[0] = terms[0].replace(" ", "");
+            switch (terms[0]) {
+                case "rad_espectral":
+                case "O_rad_espectral":
+                    variables.add("pixel");
+                    for (int j = 1; j < 8; j++) {
+                        if (terms[0].startsWith("O_")) {
+                            source.append("        double[] banda").append(j).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        par.add(new ParameterGPU(banda").append(j).append(",true,true));\n");
+                            source.append("        ret.put(\"banda").append(j).append("\",banda").append(j).append(");\n\n");
+                        }
+                        variables.add("banda" + j);
+                    }
+                    break;
+                case "reflectancia":
+                case "O_reflectancia":
+                    for (int j = 1; j < 8; j++) {
+                        variables.add("bandaRefletida" + j);
+                        if (terms[0].startsWith("O_")) {
+                            source.append("        double[] bandaRefletida").append(j).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        par.add(new ParameterGPU(bandaRefletida").append(j).append(",true,true));\n");
+                            source.append("        ret.put(\"bandaRefletida").append(j).append("\",bandaRefletida").append(j).append(");\n\n");
+                        }
+                    }
+                    break;
+                default:
+                    if (terms[0].startsWith("O_")) {
+                        term = terms[0].substring(2);
+                        source.append("        double[] ").append(term).append(" = new double[").append(vet1).append(".length];\n");
+                        source.append("        par.add(new ParameterGPU(").append(term).append(",true,true));\n");
+                        source.append("        ret.put(\"").append(term).append("\",").append(term).append(");\n\n");
+                    }
+                    break;
+            }
+        }
+
+        source.append("        par.add(new ParameterGPU(N,true));\n\n");
+
+        source.append("        String source = \"code.cl\";\n");
+        source.append("        try {\n");
+        source.append("            BufferedReader bur = new BufferedReader(new FileReader(System.getProperty(\"user.dir\") + \"/source/\" + source));\n");
+        source.append("            JSeriesCL opencl = new JSeriesCL();\n");
+        source.append("            opencl.setMeasure(true);\n");
+        source.append("            String linha = bur.readLine();\n");
+        source.append("            StringBuilder codigo = new StringBuilder(linha + \"\\n\");\n");
+        source.append("            while (linha != null) {\n");
+        source.append("                codigo.append(linha + \"\\n\");\n");
+        source.append("                linha = bur.readLine();\n");
+        source.append("            }\n");
+        source.append("            bur.close();\n");
+        source.append("            opencl.execute(par, codigo.toString(), \"execute\");\n");
+        source.append("            File newFile = new File(System.getProperty(\"user.dir\") + \"/source/\" + source);\n");
+        source.append("            //newFile.delete();\n");
+        source.append("        } catch (IOException ex) {\n");
+        source.append("            Logger.getLogger(Equation.class.getName()).log(Level.SEVERE, null, ex);\n");
+        source.append("        }\n");
+
+
+        source.append("        return ret;\n");
+        source.append("    }\n");
+        source.append("}\n");
+
+        //gpu part
+
+        StringBuilder gpuCode = new StringBuilder("\n");
+        gpuCode.append("#ifdef cl_khr_fp64\n");
+        gpuCode.append("	#pragma OPENCL EXTENSION cl_khr_fp64: enable\n");
+        gpuCode.append("#else\n");
+        gpuCode.append("	#pragma OPENCL EXTENSION cl_amd_fp64: enable\n");
+        gpuCode.append("#endif\n\n");
+        gpuCode.append("\n#include \"./source/Constants.h\"\n\n");
+
+        StringBuilder gpuCodeBody = new StringBuilder("    __kernel void execute(\n");
+
+        if (constants != null) {
+            for (String string : constants.keySet()) {
+                gpuCode.append("    #define ").append(string).append(" ").append(constants.get(string)).append("f\n");
+                variables.add(string);
+            }
+        }
+        gpuCode.append("\n");
+
+        vet = header.split("\n");
+        GenericLexerSEB lexer = new GenericLexerSEB();
+        Structure structure;
+        Map<String, Double> vars = new HashMap<>();
+        vars.putAll(constants);
+        vars.putAll(Constants.variables);
+
+        //COLOCANDO AS FORMULAS DO CABECALHOS
+        double res;
+        for (int i = 0; i < vet.length; i++) {
+            structure = new Structure();
+            structure.setToken(vet[i].split("=")[0].replace(" ", ""));
+            String equation = lexer.analyse(vet[i], structure, null, LanguageType.PYTHON);
+            res = lexer.getResults(equation, vars);
+            vars.put(structure.getToken(), res);
+            gpuCode.append("    #define ").append(structure.getToken()).append(" ").append(res).append("f\n");
+            variables.add(structure.getToken());
+        }
+        gpuCode.append("\n");
+
+
+        StringBuilder vf;
+        boolean albedo = false;
+        if (constantsVetor != null) {
+            for (String string : constantsVetor.keySet()) {
+                double[] doubleVet = constantsVetor.get(string);
+                vf = new StringBuilder();
+                for (int i = 0; i < doubleVet.length - 1; i++) {
+                    vf.append(doubleVet[i]).append("f,");
+                }
+                vf.append(doubleVet[doubleVet.length - 1] + "f");
+                gpuCode.append("    __constant double ").append(string).append("[] = {").append(vf.toString()).append("};\n");
+                if (string.equals("parameterAlbedo")) {
+                    albedo = true;
+                }
+            }
+        }
+        gpuCode.append("\n");
+
+        if (constantsMatrix != null) {
+            for (String string : constantsMatrix.keySet()) {
+                double[][] doubleVet = constantsMatrix.get(string);
+                for (int i = 0; i < doubleVet.length; i++) {
+                    vf = new StringBuilder();
+                    vf.append("{");
+                    gpuCode.append("    __constant double ").append(string + (i + 1)).append("[] = ");
+                    for (int j = 0; j < doubleVet[0].length - 1; j++) {
+                        vf.append(doubleVet[i][j]).append(",");
+                    }
+                    vf.append(doubleVet[i][doubleVet[0].length - 1]);
+                    vf.append("};\n");
+                    gpuCode.append(vf.toString());
+                }
+                if (string.equals("calibration")) {
+                    variables.add("coef_calib_a");
+                    variables.add("coef_calib_b");
+                    variables.add("irrad_espectral");
+                }
+
+            }
+        }
+        gpuCode.append("\n");
+
+
+        gpuCode.append("    void execute_sub(\n");
+        for (String string : parameters.keySet()) {
+            gpuCode.append("        double ").append(string).append(",\n");
+            gpuCodeBody.append("        __global double * ").append(string).append(",\n");
+            variables.add(string);
+        }
+        gpuCode.append("\n");
+        gpuCodeBody.append("\n");
+
+        vet = body.split("\n");
+        for (int i = 0; i < vet.length; i++) {
+            terms = vet[i].split("=");
+            terms[0] = terms[0].replace(" ", "");
+            switch (terms[0]) {
+                case "rad_espectral":
+                case "O_rad_espectral":
+                    if (albedo) {
+                        variables.add("sumBandas");
+                    }
+                    for (int j = 1; j < 8; j++) {
+                        if (terms[0].startsWith("O_")) {
+                            gpuCode.append("        __global double * banda").append(j).append(",\n");
+                            gpuCodeBody.append("        __global double * banda").append(j).append(",\n");
+                            variables.add("banda" + j);
+                        }
+                    }
+                    break;
+                case "reflectancia":
+                case "O_reflectancia":
+                    for (int j = 1; j < 8; j++) {
+                        if (terms[0].startsWith("O_")) {
+                            gpuCode.append("        __global double * bandaRefletida").append(j).append(",\n");
+                            gpuCodeBody.append("        __global double * bandaRefletida").append(j).append(",\n");
+                            variables.add("bandaRefletida" + j);
+                        }
+                    }
+                    break;
+                default:
+                    if (terms[0].startsWith("O_")) {
+                        term = terms[0].substring(2);
+                        gpuCode.append("        __global double * ").append(term).append(",\n");
+                        gpuCodeBody.append("        __global double * ").append(term).append(",\n");
+                        variables.add(term);
+                    }
+                    break;
+            }
+        }
+
+
+        gpuCode.append("        int idx");
+        gpuCodeBody.append("        int size");
+
+        gpuCode.append("){\n");
+        gpuCodeBody.append("){\n");
+
+        verifyEquations(header + "\n" + body, variables);
+
+
+        gpuCodeBody.append("        int idx = get_global_id(0);\n");
+        gpuCodeBody.append("        if(idx < size){\n");
+        gpuCodeBody.append("            execute_sub(\n");
+        for (String string : parameters.keySet()) {
+            gpuCodeBody.append("                ").append(string).append("[idx],\n");
+        }
+
+        String equation;
+        String[] outEquation;
+        String t;
+        boolean rad_espectral = false;
+
+        for (int i = 0; i < vet.length; i++) {
+            terms = vet[i].split("=");
+            terms[0] = terms[0].replace(" ", "");
+            structure = new Structure();
+            structure.setToken(terms[0]);
+            switch (terms[0]) {
+                case "rad_espectral":
+                case "O_rad_espectral":
+                    if (albedo) {
+                        gpuCode.append("        double sumBandas = 0;\n");
+                    }
+                    for (int j = 1; j < 8; j++) {
+
+                        equation = "        " + ((terms[0].startsWith("O_")) ? "" : "double ") + lexer.analyse(vet[i], structure, null, language) + ";\n";
+                        equation = equation.replace("coef_calib_a", "calibration" + (j) + "[0]");
+                        equation = equation.replace("coef_calib_b", "calibration" + (j) + "[1]");
+                        equation = equation.replace("pixel", "pixel" + (j));
+                        equation = equation.replace("irrad_espectral", "calibration" + (j) + "[2]");
+
+                        if (terms[0].startsWith("O_")) {
+                            equation = equation.replace("rad_espectral", " banda" + j+"[idx]");
+                            gpuCodeBody.append("                banda").append(j).append(",\n");
+                        } else {
+                            equation = equation.replace("rad_espectral", "banda" + j);
+
+                            rad_espectral = true;
+                        }
+                        gpuCode.append(equation);
+                    }
+
+
+                    break;
+                case "reflectancia":
+                case "O_reflectancia":
+                    for (int j = 1; j < 8; j++) {
+
+
+                        equation = "        " + ((terms[0].startsWith("O_")) ? "" : "double ") + lexer.analyse(vet[i], structure, null, language) + ";\n";
+                        equation = equation.replace("coef_calib_a", "calibration" + (j) + "[0]");
+                        equation = equation.replace("coef_calib_b", "calibration" + (j) + "[1]");
+                        equation = equation.replace("pixel", "pixel" + (j) + "[i]");
+                        equation = equation.replace("irrad_espectral", "calibration" + (j) + "[2]");
+                        if (terms[0].startsWith("O_")) {
+                            equation = equation.replace("reflectancia", " bandaRefletida" + j + "[idx]");
+                        } else {
+                            equation = equation.replace("reflectancia", "bandaRefletida" + j);
+                        }
+                        if (rad_espectral) {
+                            equation = equation.replace("rad_espectral", "banda" + j);
+                        } else {
+                            equation = equation.replace("rad_espectral", " banda" + j + "[idx]");
+                        }
+                        gpuCode.append(equation);
+
+                        if (albedo) {
+                            if (terms[0].startsWith("O_")) {
+                                gpuCode.append("        sumBandas += parameterAlbedo[").append(j - 1).append("]* bandaRefletida").append(j).append("[idx];\n");
+
+                                gpuCodeBody.append("                bandaRefletida").append(j).append(",\n");
+                            } else {
+                                gpuCode.append("        sumBandas += parameterAlbedo[").append(j - 1).append("]*bandaRefletida").append(j).append(";\n");
+                            }
+                        }
+
+                    }
+                    break;
+                default:
+
+
+                    equation = "        " + lexer.analyse(vet[i], structure, null, language) + ";\n";
+                    ex.evaluateExpr(equation);
+                    outEquation = ex.getOutput();
+                    if (terms[0].startsWith("O_")) {
+                        term = terms[0].substring(2);
+                        equation = "        " + term + "[idx] = ";
+
+                        gpuCodeBody.append("                ").append(term).append(",\n");
+
+                    } else {
+                        equation = "        " + terms[0] + " = ";
+                    }
+
+                    for (int j = 0; j < outEquation.length; j++) {
+                        String string = outEquation[j];
+                        for (int k = 0; k < i; k++) {
+                            t = vet[k].split("=")[0].replace(" ", "");
+//                            System.out.println("T:"+t);
+                            if (t.equals("O_" + string)) {
+                                t = t.substring(2);
+                                string = t + "[idx]";
+                                break;
+                            } else if (string.equals(t)) {
+                                string = t;
+                            } else if (string.equals("~")) {
+                                string = "-";
+                            } else if (t.contains("banda") && t.contains(string)) {
+                                if (t.startsWith("O_")) {
+                                    string = string + "[idx]";
+                                }
+                                break;
+                            }
+                        }
+                        equation += string;
+                    }
+                    equation += "\n";
+                    gpuCode.append(equation);
+
+                    break;
+            }
+        }
+
+
+        gpuCodeBody.append("            idx);\n");
+        gpuCodeBody.append("        }\n");
+        gpuCodeBody.append("    }\n");
+
+
+        gpuCode.append("    }\n\n");
+
+        gpuCode.append(gpuCodeBody.toString());
+
+
+//        System.out.println(source.toString());
+        try {
+            PrintWriter pw = new PrintWriter(System.getProperty("user.dir") + "/source/code.cl");
+            pw.println(gpuCode.toString());
+            pw.close();
+        } catch (FileNotFoundException ex1) {
+            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+        }
+//        System.exit(1);
+
+        return source.toString();
     }
 
     private String generateJava(String header, String body, Map<String, double[]> parameters, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) {
