@@ -129,7 +129,7 @@ public class GenericSEB {
         Map<String, double[]> ret = new HashMap<>();
         String source = null;
 
-        if (language.equals(LanguageType.CUDA_FLOAT) || language.equals(LanguageType.CUDA_DOUBLE)) {
+        if (language.equals(LanguageType.CUDA)) {
             source = generateCUDA(header, body, parameters, constants, constantsVetor, constantsMatrix);
         } else if (language.equals(LanguageType.OPENCL)) {
             source = generateOpenCL(header, body, parameters, constants, constantsVetor, constantsMatrix);
@@ -1361,7 +1361,7 @@ public class GenericSEB {
                 + "O_Ts = K2/ln(((emissividadeNB * K1) / banda6) + 1.0)\n"
                 + "O_LWd = emissivity * StefanBoltzman * (pow(Ts, 4))\n"
                 + "O_Rn = ((1.0 - albedo) * SWd) + (emissivity * (LWdAtm) - LWd)";
-        GenericSEB g = new GenericSEB(LanguageType.CUDA_FLOAT);
+        GenericSEB g = new GenericSEB(LanguageType.CUDA);
         g.execute(header, body, parameters, constants, constVetor, constMatrix);
     }
 }

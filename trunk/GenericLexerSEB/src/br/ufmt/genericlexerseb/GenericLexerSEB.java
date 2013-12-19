@@ -43,17 +43,10 @@ public class GenericLexerSEB {
                 }
                 funcs.put(vet[0], vet[1]);
 
-                funcs = functions.get(LanguageType.CUDA_FLOAT);
+                funcs = functions.get(LanguageType.CUDA);
                 if (funcs == null) {
                     funcs = new HashMap<>();
-                    functions.put(LanguageType.CUDA_FLOAT, funcs);
-                }
-                funcs.put(vet[0], vet[2]);
-
-                funcs = functions.get(LanguageType.CUDA_DOUBLE);
-                if (funcs == null) {
-                    funcs = new HashMap<>();
-                    functions.put(LanguageType.CUDA_DOUBLE, funcs);
+                    functions.put(LanguageType.CUDA, funcs);
                 }
                 funcs.put(vet[0], vet[3]);
 

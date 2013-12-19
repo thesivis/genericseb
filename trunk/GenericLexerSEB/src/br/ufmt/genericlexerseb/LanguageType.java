@@ -11,5 +11,5 @@ package br.ufmt.genericlexerseb;
  */
 public enum LanguageType {
 
-    OPENCL, CUDA_FLOAT, CUDA_DOUBLE, JAVA, PYTHON;
+    OPENCL, CUDA, JAVA, PYTHON;
 }
