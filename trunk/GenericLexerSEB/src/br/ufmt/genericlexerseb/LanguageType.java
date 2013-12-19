@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package br.ufmt.genericlexerseb;
 
 /**
@@ -11,7 +10,6 @@ package br.ufmt.genericlexerseb;
  * @author raphael
  */
 public enum LanguageType {
-    
-    OPENCL, CUDA_FLOAT,CUDA_DOUBLE,JAVA;
-    
+
+    OPENCL, CUDA_FLOAT, CUDA_DOUBLE, JAVA, PYTHON;
 }

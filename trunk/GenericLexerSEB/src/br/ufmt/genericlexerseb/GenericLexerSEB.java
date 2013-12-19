@@ -63,6 +63,13 @@ public class GenericLexerSEB {
                     functions.put(LanguageType.JAVA, funcs);
                 }
                 funcs.put(vet[0], vet[4]);
+                
+                funcs = functions.get(LanguageType.PYTHON);
+                if (funcs == null) {
+                    funcs = new HashMap<>();
+                    functions.put(LanguageType.PYTHON, funcs);
+                }
+                funcs.put(vet[0], vet[5]);
 
 
                 line = bur.readLine();
@@ -102,10 +109,12 @@ public class GenericLexerSEB {
                 terms[i] = function;
             } else if (terms[i].equals("~")) {
                 terms[i] = "-";
-            } else if (terms[i].matches("(-?)[0-9]+[\\.][0-9]+")) {
+            } else if (terms[i].matches("(-?)[0-9]+[\\.][0-9]+") && !language.equals(LanguageType.PYTHON)) {
                 terms[i] = terms[i] + "f";
             } else if (terms[i].equals("pi") && language.equals(LanguageType.JAVA)) {
                 terms[i] = "Math.PI";
+            } else if (terms[i].equals("pi") && language.equals(LanguageType.PYTHON)) {
+                terms[i] = "math.pi";
             } else if (variables != null) {
                 independent = variables.get(terms[i]);
                 if (independent != null) {
@@ -138,6 +147,23 @@ public class GenericLexerSEB {
         in.exec("import math");
         in.exec(equation);
         PyObject o = in.get(vet[0]);
+        return o.asDouble();
+    }
+
+    public double getResults(String equation, Map<String, Double> variables) {
+        PythonInterpreter in = new PythonInterpreter();
+        String[] vet = equation.split("=");
+        vet[0] = vet[0].replace(" ", "");
+
+        StringBuilder t = new StringBuilder("import math\n");
+        for (String variable : variables.keySet()) {
+            t.append(variable +"="+variables.get(variable)+"\n");
+        }
+
+        t.append(equation);
+        t.append("\nres = str("+vet[0]+")\n");
+        PyObject o = in.eval(in.compile(t.toString()));
+        o = in.get(vet[0]);
         return o.asDouble();
     }
 }
