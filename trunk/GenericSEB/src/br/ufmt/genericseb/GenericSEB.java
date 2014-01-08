@@ -1494,7 +1494,7 @@ public class GenericSEB {
                 + "O_Ts = K2/ln(((emissividadeNB * K1) / banda6) + 1.0)\n"
                 + "O_LWd = emissivity * StefanBoltzman * (pow(Ts, 4))\n"
                 + "O_Rn = ((1.0 - albedo) * SWd) + (emissivity * (LWdAtm) - LWd)";
-        GenericSEB g = new GenericSEB(LanguageType.CUDA);
+        GenericSEB g = new GenericSEB(LanguageType.JAVA);
         g.execute(header, body, parameters, constants, constVetor, constMatrix);
     }
 }
