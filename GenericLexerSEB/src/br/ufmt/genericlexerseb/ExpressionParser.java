@@ -35,6 +35,7 @@ public class ExpressionParser {
     // Associativity constants for operators  
 
     private boolean debug = false;
+    private boolean tokenideIf = false;
     private static final int LEFT_ASSOC = 0;
     private static final int RIGHT_ASSOC = 1;
     // Operators      
@@ -187,6 +188,9 @@ public class ExpressionParser {
                 }
                 stack.pop();
             } else {
+                if (debug) {
+                    System.out.println("Token2:" + token);
+                }
                 if (!isNumeric(token)) {
                     isVariable(token);
                 }
@@ -231,6 +235,7 @@ public class ExpressionParser {
     }
 
     public boolean evaluateExpr(String expr) {
+        tokenideIf = false;
         String str = preprocessExpr(expr);
         if (debug) {
             System.out.println("After:" + str);
@@ -249,6 +254,86 @@ public class ExpressionParser {
         }
         boolean result = RPNtoDouble(output2);
         return result;
+    }
+
+    public boolean evaluateExprIf(String expr) {
+        tokenideIf = true;
+        String str = preprocessExpr(expr);
+        if (debug) {
+            System.out.println("After:" + str);
+        }
+//        System.out.println("After:" + str);
+        String[] input = tokenize(str);
+
+//        System.out.println(Arrays.toString(input));
+
+        OPERATORS.put("<", new int[]{0, LEFT_ASSOC, 2});
+        OPERATORS.put("<=", new int[]{0, LEFT_ASSOC, 2});
+        OPERATORS.put(">", new int[]{0, LEFT_ASSOC, 2});
+        OPERATORS.put(">=", new int[]{0, LEFT_ASSOC, 2});
+        OPERATORS.put("==", new int[]{0, LEFT_ASSOC, 2});
+        OPERATORS.put("!=", new int[]{0, LEFT_ASSOC, 2});
+        OPERATORS.put("||", new int[]{0, LEFT_ASSOC, 2});
+        OPERATORS.put("&&", new int[]{0, LEFT_ASSOC, 2});
+
+        StringBuilder together = new StringBuilder();
+        for (int i = 0; i < input.length - 1; i++) {
+            String string = input[i];
+            together.append(string);
+            switch (string) {
+                case "<":
+                case ">":
+                    break;
+                case "&":
+                case "|":
+                case "=":
+                    if (!(input[i + 1].equals("&") || input[i + 1].equals("|") || input[i + 1].equals("="))) {
+                        together.append(" ");
+                    }
+                    break;
+                default:
+                    together.append(" ");
+            }
+        }
+        together.append(input[input.length - 1]);
+        StringTokenizer strTokenizer = new StringTokenizer(together.toString());
+        List<String> list = new ArrayList<>();
+        while (strTokenizer.hasMoreTokens()) {
+            String tok = strTokenizer.nextToken();
+//            System.out.println(tok);
+            list.add(tok);
+        }
+        input = new String[list.size()];
+        input = (String[]) list.toArray(input);
+        System.out.println(Arrays.toString(input));
+        this.output = input;
+
+//        debug = true;
+        String[] output2 = infixToRPN(input);
+//        System.out.println(Arrays.toString(input));
+        if (debug) {
+            for (String token : output2) {
+                System.out.print(token + " ");
+            }
+            System.out.println("");
+        }
+        boolean result = RPNtoDouble(output2);
+
+        OPERATORS.remove("<");
+        OPERATORS.remove("<=");
+        OPERATORS.remove(">");
+        OPERATORS.remove(">=");
+        OPERATORS.remove("==");
+        OPERATORS.remove("!=");
+        OPERATORS.remove("||");
+        OPERATORS.remove("&&");
+        return result;
+    }
+
+    public boolean evaluateExprIf(String expr, List<String> variables) {
+        this.variables.clear();
+        this.variables.addAll(variables);
+        return evaluateExprIf(expr);
     }
 
     public boolean evaluateExpr(String expr, List<String> variables) {
@@ -291,6 +376,13 @@ public class ExpressionParser {
         str = fixUnaryMinus(str, "\\*-");
         str = fixUnaryMinus(str, "/-");
         str = fixUnaryMinus(str, "\\^-");
+        str = fixUnaryMinus(str, "<-");
+        str = fixUnaryMinus(str, "<=-");
+        str = fixUnaryMinus(str, ">-");
+        str = fixUnaryMinus(str, ">=-");
+        str = fixUnaryMinus(str, "==-");
+        str = fixUnaryMinus(str, "&&-");
+        str = fixUnaryMinus(str, "\\|\\|-");
         if (debug) {
             System.out.println("Before:" + str);
         }
@@ -302,16 +394,18 @@ public class ExpressionParser {
     public String[] tokenize(String s) {
         try {
             String equation = s;
-            if (s.contains("=")) {
+            if (!tokenideIf && s.contains("=")) {
                 String[] vet = s.split("=");
                 isVariable(vet[0]);
                 equation = vet[1];
             }
+
             StreamTokenizer tokenizer = new StreamTokenizer(new StringReader(equation));
 //            StringTokenizer st = new StringTokenizer(equation);
             tokenizer.ordinaryChar('/');  // Don't parse div as part of numbers.
             tokenizer.ordinaryChar('-');// Don't parse minus as part of numbers.
             tokenizer.wordChars('_', '_');// Don't parse minus as part of numbers.
+
             List<String> tokBuf = new ArrayList<String>();
             while (tokenizer.nextToken() != StreamTokenizer.TT_EOF) {
                 switch (tokenizer.ttype) {
@@ -347,6 +441,11 @@ public class ExpressionParser {
     }
 
     public String[] getOutput() {
+        for (int i = 0; i < output.length; i++) {
+            if (output[i].equals("~")) {
+                output[i] = "-";
+            }
+        }
         return output;
     }
 }
