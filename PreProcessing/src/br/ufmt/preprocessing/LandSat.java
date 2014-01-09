@@ -80,43 +80,32 @@ public class LandSat {
 
 
                         String[] nameParameters = new String[]{"pixel1", "pixel2", "pixel3", "pixel4", "pixel5", "pixel6", "pixel7"};
-                        
+
                         Map<String, double[][]> constMatrix = new HashMap<>();
                         constMatrix.put("calibration", calibration);
 
                         Map<String, double[]> constVetor = new HashMap<>();
                         constVetor.put("parameterAlbedo", parameterAlbedo);
-                        
-                        BufferedReader bur = new BufferedReader(new FileReader(System.getProperty("user.dir")+"/source/landsat.prop"));
+
+                        BufferedReader bur = new BufferedReader(new FileReader(System.getProperty("user.dir") + "/source/landsat.prop"));
                         String linha = bur.readLine();
-                        
+
                         StringBuilder header = new StringBuilder();
                         StringBuilder body = new StringBuilder();
-                        
-                        if(linha.equals("<header>")){
+
+                        if (linha.equals("<header>")) {
                             linha = bur.readLine();
-                            while(!linha.equals("<body>")){
-                                header.append(linha).append("\n");
-                                linha = bur.readLine();
-                            }
-                            linha = bur.readLine();
-                            while(linha != null){
-                                body.append(linha).append("\n");
-                                linha = bur.readLine();
-                            }
-                        }else{
-                            linha = bur.readLine();
-                            while(!linha.equals("<header>")){
-                                body.append(linha).append("\n");
-                                linha = bur.readLine();
-                            }
-                            linha = bur.readLine();
-                            while(linha != null){
+                            while (!linha.equals("<body>")) {
                                 header.append(linha).append("\n");
                                 linha = bur.readLine();
                             }
                         }
 
+                        linha = bur.readLine();
+                        while (linha != null) {
+                            body.append(linha).append("\n");
+                            linha = bur.readLine();
+                        }
 
                         ProcessorTiff processorTiff = new ProcessorTiff(LanguageType.JAVA);
                         ret = processorTiff.execute(header.toString(), body.toString(), pathToOriginalTiff, nameParameters, variables, constVetor, constMatrix);

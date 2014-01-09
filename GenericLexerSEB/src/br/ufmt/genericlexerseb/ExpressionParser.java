@@ -305,7 +305,7 @@ public class ExpressionParser {
         }
         input = new String[list.size()];
         input = (String[]) list.toArray(input);
-        System.out.println(Arrays.toString(input));
+//        System.out.println(Arrays.toString(input));
         this.output = input;
 
 //        debug = true;

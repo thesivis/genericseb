@@ -22,8 +22,10 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.text.Utilities;
@@ -38,6 +40,7 @@ public class GenericSEB {
     private Object[] pars;
     private Class[] classes;
     private List<Equation> equations;
+    private Equation index;
 
     public GenericSEB(LanguageType language) {
         this.language = language;
@@ -83,7 +86,7 @@ public class GenericSEB {
                 if (verifyIF) {
                     String ifTest = vet[0].substring(vet[0].indexOf("_(") + 2, vet[0].length() - 1);
                     vet[0] = vet[0].substring(0, vet[0].indexOf("_("));
-                    System.out.println(ifTest + " " + vet[0]);
+//                    System.out.println(ifTest + " " + vet[0]);
                     try {
                         ex.evaluateExprIf(ifTest, variables);
                         if (verifyIF) {
@@ -103,7 +106,12 @@ public class GenericSEB {
             if (verifyIF) {
                 equation.setTerm(vet[0]);
                 equation.setForm(vet[1]);
-                equations.add(equation);
+                if (vet[0].equals("index")) {
+                    index = equation;
+                    equation.setIndex(null);
+                } else {
+                    equations.add(equation);
+                }
             }
             variables.add(vet[0]);
             try {
@@ -292,30 +300,34 @@ public class GenericSEB {
 
         //DECLARANDO OS VETORES QUE SERAO RETORNADOS
         String[] vet = body.split("\n");
-        String[] terms;
         String term;
         boolean vector;
+        Set<String> variablesDeclared = new HashSet<>();
         for (int i = 0; i < vet.length; i++) {
             if (vet[i].startsWith("rad_espectral") || vet[i].startsWith("O_rad_espectral")) {
-                variables.add("pixel");
-                vector = vet[i].startsWith("O_rad_espectral");
-                for (int j = 1; j < 8; j++) {
-                    if (vector) {
-                        source.append("        double[] banda").append(j).append(" = new double[").append(vet1).append(".length];\n");
-                        source.append("        par.add(new ParameterGPU(banda").append(j).append(",true,true));\n");
-                        source.append("        ret.put(\"banda").append(j).append("\",banda").append(j).append(");\n\n");
+                if (variablesDeclared.add("banda")) {
+                    variables.add("pixel");
+                    vector = vet[i].startsWith("O_rad_espectral");
+                    for (int j = 1; j < 8; j++) {
+                        if (vector) {
+                            source.append("        double[] banda").append(j).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        par.add(new ParameterGPU(banda").append(j).append(",true,true));\n");
+                            source.append("        ret.put(\"banda").append(j).append("\",banda").append(j).append(");\n\n");
+                        }
+                        variables.add("banda" + j);
                     }
-                    variables.add("banda" + j);
                 }
             } else if (vet[i].startsWith("reflectancia") || vet[i].startsWith("O_reflectancia")) {
-                vector = vet[i].startsWith("O_reflectancia");
+                if (variablesDeclared.add("bandaRefletida")) {
+                    vector = vet[i].startsWith("O_reflectancia");
 
-                for (int j = 1; j < 8; j++) {
-                    variables.add("bandaRefletida" + j);
-                    if (vector) {
-                        source.append("        double[] bandaRefletida").append(j).append(" = new double[").append(vet1).append(".length];\n");
-                        source.append("        par.add(new ParameterGPU(bandaRefletida").append(j).append(",true,true));\n");
-                        source.append("        ret.put(\"bandaRefletida").append(j).append("\",bandaRefletida").append(j).append(");\n\n");
+                    for (int j = 1; j < 8; j++) {
+                        variables.add("bandaRefletida" + j);
+                        if (vector) {
+                            source.append("        double[] bandaRefletida").append(j).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        par.add(new ParameterGPU(bandaRefletida").append(j).append(",true,true));\n");
+                            source.append("        ret.put(\"bandaRefletida").append(j).append("\",bandaRefletida").append(j).append(");\n\n");
+                        }
                     }
                 }
             }
@@ -456,22 +468,24 @@ public class GenericSEB {
                 case "O_reflectancia":
                     break;
                 default:
-                    if (eq.getIndex() != null) {
-                        term = eq.getTerm();
-                        gpuCode.append("        double * ").append(term);
-                        gpuCodeBody.append("        double * ").append(term).append(",\n");
-                        if (i + 1 < vet.length) {
-                            gpuCode.append(",");
+                    if (variablesDeclared.add(eq.getTerm())) {
+                        if (eq.getIndex() != null) {
+                            term = eq.getTerm();
+                            gpuCode.append("        double * ").append(term);
+                            gpuCodeBody.append("        double * ").append(term).append(",\n");
+                            if (i + 1 < vet.length) {
+                                gpuCode.append(",");
+                            }
+                            gpuCode.append("\n");
+
+
+                            source.append("        double[] ").append(term).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        par.add(new ParameterGPU(").append(term).append(",true,true));\n");
+                            source.append("        ret.put(\"").append(term).append("\",").append(term).append(");\n\n");
+
+
+                            variables.add(term);
                         }
-                        gpuCode.append("\n");
-                        
-                        
-                        source.append("        double[] ").append(term).append(" = new double[").append(vet1).append(".length];\n");
-                        source.append("        par.add(new ParameterGPU(").append(term).append(",true,true));\n");
-                        source.append("        ret.put(\"").append(term).append("\",").append(term).append(");\n\n");
-                        
-                        
-                        variables.add(term);
                     }
                     break;
             }
@@ -520,6 +534,7 @@ public class GenericSEB {
         String ident;
         Equation eq2;
 
+        variablesDeclared = new HashSet<>();
         for (int i = 0; i < vet.length; i++) {
             eq = equations.get(i);
 //            terms = vet[i].split("=");
@@ -570,17 +585,19 @@ public class GenericSEB {
 
                         if (eq.getIndex() != null) {
                             equation = equation.replace("rad_espectral", " *banda" + j);
-                            gpuCodeBody.append("                (banda").append(j).append("+idx)");
-                            if (i + 1 < vet.length && j < 8) {
-                                gpuCodeBody.append(",");
+                            if (variablesDeclared.add("banda")) {
+                                gpuCodeBody.append("                (banda").append(j).append("+idx)");
+                                if (i + 1 < vet.length && j < 8) {
+                                    gpuCodeBody.append(",");
+                                }
+                                gpuCodeBody.append("\n");
                             }
-                            gpuCodeBody.append("\n");
                         } else {
                             equation = equation.replace("rad_espectral", "banda" + j);
 
                             rad_espectral = true;
                         }
-                        gpuCode.append(equation);
+                        gpuCode.append(equation).append("\n");
                     }
 
 
@@ -605,17 +622,19 @@ public class GenericSEB {
                         } else {
                             equation = equation.replace("rad_espectral", " *banda" + j);
                         }
-                        gpuCode.append(equation);
+                        gpuCode.append(equation).append("\n");
 
                         if (albedo) {
                             if (eq.getIndex() != null) {
                                 gpuCode.append(ident).append("        sumBandas += parameterAlbedo[").append(j - 1).append("]* *bandaRefletida").append(j).append(";\n");
 
-                                gpuCodeBody.append("                (bandaRefletida").append(j).append("+idx)");
-                                if (i + 1 < vet.length && j < 8) {
-                                    gpuCodeBody.append(",");
+                                if (variablesDeclared.add("bandaRefletida")) {
+                                    gpuCodeBody.append("                (bandaRefletida").append(j).append("+idx)");
+                                    if (i + 1 < vet.length && j < 8) {
+                                        gpuCodeBody.append(",");
+                                    }
+                                    gpuCodeBody.append("\n");
                                 }
-                                gpuCodeBody.append("\n");
                             } else {
                                 gpuCode.append(ident).append("        sumBandas += parameterAlbedo[").append(j - 1).append("]*bandaRefletida").append(j).append(";\n");
                             }
@@ -632,11 +651,13 @@ public class GenericSEB {
                         term = eq.getTerm();
                         equation = ident + "        *" + term + " = ";
 
-                        gpuCodeBody.append("                (").append(term).append("+idx)");
-                        if (i + 1 < vet.length) {
-                            gpuCodeBody.append(",");
+                        if (variablesDeclared.add(term)) {
+                            gpuCodeBody.append("                (").append(term).append("+idx)");
+                            if (i + 1 < vet.length) {
+                                gpuCodeBody.append(",");
+                            }
+                            gpuCodeBody.append("\n");
                         }
-                        gpuCodeBody.append("\n");
 
                     } else {
                         equation = ident + "        " + eq.getTerm() + " = ";
@@ -667,13 +688,13 @@ public class GenericSEB {
                         }
                         equation += string;
                     }
-                    equation += "\n";
+                    equation += "\n\n";
                     gpuCode.append(equation);
 
                     break;
             }
             if (eq.getCondition() != null) {
-                gpuCode.append("        }\n");
+                gpuCode.append("        }\n\n");
             }
         }
 
@@ -689,7 +710,7 @@ public class GenericSEB {
 
         gpuCode.append("}\n");
 
-        System.out.println(gpuCode.toString());
+        System.out.println(source.toString());
 //        System.exit(1);
         try {
             File dir = new File(System.getProperty("user.dir") + "/source");
@@ -762,71 +783,38 @@ public class GenericSEB {
 
         //DECLARANDO OS VETORES QUE SERAO RETORNADOS
         String[] vet = body.split("\n");
-        String[] terms;
         String term;
+        boolean vector;
+        Set<String> variablesDeclared = new HashSet<>();
+
         for (int i = 0; i < vet.length; i++) {
-            terms = vet[i].split("=");
-            terms[0] = terms[0].replace(" ", "");
-            switch (terms[0]) {
-                case "rad_espectral":
-                case "O_rad_espectral":
+            if (vet[i].startsWith("rad_espectral") || vet[i].startsWith("O_rad_espectral")) {
+                if (variablesDeclared.add("banda")) {
                     variables.add("pixel");
+                    vector = vet[i].startsWith("O_rad_espectral");
                     for (int j = 1; j < 8; j++) {
-                        if (terms[0].startsWith("O_")) {
+                        if (vector) {
                             source.append("        double[] banda").append(j).append(" = new double[").append(vet1).append(".length];\n");
                             source.append("        par.add(new ParameterGPU(banda").append(j).append(",true,true));\n");
                             source.append("        ret.put(\"banda").append(j).append("\",banda").append(j).append(");\n\n");
                         }
                         variables.add("banda" + j);
                     }
-                    break;
-                case "reflectancia":
-                case "O_reflectancia":
-                    for (int j = 1; j < 8; j++) {
-                        variables.add("bandaRefletida" + j);
-                        if (terms[0].startsWith("O_")) {
-                            source.append("        double[] bandaRefletida").append(j).append(" = new double[").append(vet1).append(".length];\n");
-                            source.append("        par.add(new ParameterGPU(bandaRefletida").append(j).append(",true,true));\n");
-                            source.append("        ret.put(\"bandaRefletida").append(j).append("\",bandaRefletida").append(j).append(");\n\n");
+                } else if (vet[i].startsWith("reflectancia") || vet[i].startsWith("O_reflectancia")) {
+                    if (variablesDeclared.add("bandaRefletida")) {
+                        vector = vet[i].startsWith("O_reflectancia");
+                        for (int j = 1; j < 8; j++) {
+                            variables.add("bandaRefletida" + j);
+                            if (vector) {
+                                source.append("        double[] bandaRefletida").append(j).append(" = new double[").append(vet1).append(".length];\n");
+                                source.append("        par.add(new ParameterGPU(bandaRefletida").append(j).append(",true,true));\n");
+                                source.append("        ret.put(\"bandaRefletida").append(j).append("\",bandaRefletida").append(j).append(");\n\n");
+                            }
                         }
                     }
-                    break;
-                default:
-                    if (terms[0].startsWith("O_")) {
-                        term = terms[0].substring(2);
-                        source.append("        double[] ").append(term).append(" = new double[").append(vet1).append(".length];\n");
-                        source.append("        par.add(new ParameterGPU(").append(term).append(",true,true));\n");
-                        source.append("        ret.put(\"").append(term).append("\",").append(term).append(");\n\n");
-                    }
-                    break;
+                }
             }
         }
-
-        source.append("        par.add(new ParameterGPU(N,true));\n\n");
-
-        source.append("        String source = \"code.cl\";\n");
-        source.append("        try {\n");
-        source.append("            BufferedReader bur = new BufferedReader(new FileReader(System.getProperty(\"user.dir\") + \"/source/\" + source));\n");
-        source.append("            JSeriesCL opencl = new JSeriesCL();\n");
-        source.append("            opencl.setMeasure(true);\n");
-        source.append("            String linha = bur.readLine();\n");
-        source.append("            StringBuilder codigo = new StringBuilder(linha + \"\\n\");\n");
-        source.append("            while (linha != null) {\n");
-        source.append("                codigo.append(linha + \"\\n\");\n");
-        source.append("                linha = bur.readLine();\n");
-        source.append("            }\n");
-        source.append("            bur.close();\n");
-        source.append("            opencl.execute(par, codigo.toString(), \"execute\");\n");
-        source.append("            File newFile = new File(System.getProperty(\"user.dir\") + \"/source/\" + source);\n");
-        source.append("            //newFile.delete();\n");
-        source.append("        } catch (IOException ex) {\n");
-        source.append("            Logger.getLogger(Equation.class.getName()).log(Level.SEVERE, null, ex);\n");
-        source.append("        }\n");
-
-
-        source.append("        return ret;\n");
-        source.append("    }\n");
-        source.append("}\n");
 
         //gpu part
 
@@ -923,53 +911,91 @@ public class GenericSEB {
 
         vet = body.split("\n");
         for (int i = 0; i < vet.length; i++) {
-            terms = vet[i].split("=");
-            terms[0] = terms[0].replace(" ", "");
-            switch (terms[0]) {
+            if (vet[i].startsWith("rad_espectral") || vet[i].startsWith("O_rad_espectral")) {
+                vector = vet[i].startsWith("O_rad_espectral");
+                if (albedo) {
+                    variables.add("sumBandas");
+                }
+                for (int j = 1; j < 8; j++) {
+                    if (vector) {
+                        gpuCode.append("        __global double * banda").append(j).append(",\n");
+                        gpuCodeBody.append("        __global double * banda").append(j).append(",\n");
+                    }
+                    variables.add("banda" + j);
+                }
+            } else if (vet[i].startsWith("reflectancia") || vet[i].startsWith("O_reflectancia")) {
+                vector = vet[i].startsWith("O_reflectancia");
+                for (int j = 1; j < 8; j++) {
+                    if (vector) {
+                        gpuCode.append("        __global double * bandaRefletida").append(j).append(",\n");
+                        gpuCodeBody.append("        __global double * bandaRefletida").append(j).append(",\n");
+                    }
+                    variables.add("bandaRefletida" + j);
+                }
+            }
+        }
+
+        verifyEquations(header, variables, false);
+        verifyEquations(body, variables, true);
+        Equation eq;
+        for (int i = 0; i < equations.size(); i++) {
+            eq = equations.get(i);
+            switch (eq.getTerm()) {
                 case "rad_espectral":
                 case "O_rad_espectral":
-                    if (albedo) {
-                        variables.add("sumBandas");
-                    }
-                    for (int j = 1; j < 8; j++) {
-                        if (terms[0].startsWith("O_")) {
-                            gpuCode.append("        __global double * banda").append(j).append(",\n");
-                            gpuCodeBody.append("        __global double * banda").append(j).append(",\n");
-                            variables.add("banda" + j);
-                        }
-                    }
-                    break;
                 case "reflectancia":
                 case "O_reflectancia":
-                    for (int j = 1; j < 8; j++) {
-                        if (terms[0].startsWith("O_")) {
-                            gpuCode.append("        __global double * bandaRefletida").append(j).append(",\n");
-                            gpuCodeBody.append("        __global double * bandaRefletida").append(j).append(",\n");
-                            variables.add("bandaRefletida" + j);
-                        }
-                    }
                     break;
                 default:
-                    if (terms[0].startsWith("O_")) {
-                        term = terms[0].substring(2);
-                        gpuCode.append("        __global double * ").append(term).append(",\n");
-                        gpuCodeBody.append("        __global double * ").append(term).append(",\n");
-                        variables.add(term);
+                    if (variablesDeclared.add(eq.getTerm())) {
+                        if (eq.getIndex() != null) {
+                            term = eq.getTerm();
+                            gpuCode.append("        __global double * ").append(term).append(",\n");
+                            gpuCodeBody.append("        __global double * ").append(term).append(",\n");
+                            variables.add(term);
+
+                            source.append("        double[] ").append(term).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        par.add(new ParameterGPU(").append(term).append(",true,true));\n");
+                            source.append("        ret.put(\"").append(term).append("\",").append(term).append(");\n\n");
+
+                            variables.add(term);
+                        }
                     }
                     break;
             }
         }
 
+        source.append("        par.add(new ParameterGPU(N,true));\n\n");
+
+        source.append("        String source = \"code.cl\";\n");
+        source.append("        try {\n");
+        source.append("            BufferedReader bur = new BufferedReader(new FileReader(System.getProperty(\"user.dir\") + \"/source/\" + source));\n");
+        source.append("            JSeriesCL opencl = new JSeriesCL();\n");
+        source.append("            opencl.setMeasure(true);\n");
+        source.append("            String linha = bur.readLine();\n");
+        source.append("            StringBuilder codigo = new StringBuilder(linha + \"\\n\");\n");
+        source.append("            while (linha != null) {\n");
+        source.append("                codigo.append(linha + \"\\n\");\n");
+        source.append("                linha = bur.readLine();\n");
+        source.append("            }\n");
+        source.append("            bur.close();\n");
+        source.append("            opencl.execute(par, codigo.toString(), \"execute\");\n");
+        source.append("            File newFile = new File(System.getProperty(\"user.dir\") + \"/source/\" + source);\n");
+        source.append("            //newFile.delete();\n");
+        source.append("        } catch (IOException ex) {\n");
+        source.append("            Logger.getLogger(Equation.class.getName()).log(Level.SEVERE, null, ex);\n");
+        source.append("        }\n");
+
+
+        source.append("        return ret;\n");
+        source.append("    }\n");
+        source.append("}\n");
 
         gpuCode.append("        int idx");
         gpuCodeBody.append("        __global int * size");
 
         gpuCode.append("){\n");
         gpuCodeBody.append("){\n");
-
-        verifyEquations(header, variables, false);
-        verifyEquations(body, variables, true);
-
 
         gpuCodeBody.append("        int idx = get_global_id(0);\n");
         gpuCodeBody.append("        if(idx < size[0]){\n");
@@ -982,13 +1008,41 @@ public class GenericSEB {
         String[] outEquation;
         String t;
         boolean rad_espectral = false;
+        String ident;
+        Equation eq2;
 
+        variablesDeclared = new HashSet<>();
         for (int i = 0; i < vet.length; i++) {
-            terms = vet[i].split("=");
-            terms[0] = terms[0].replace(" ", "");
+            eq = equations.get(i);
             structure = new Structure();
-            structure.setToken(terms[0]);
-            switch (terms[0]) {
+            structure.setToken(eq.getTerm());
+            equation = eq.getTerm() + "=" + eq.getForm();
+            ident = "";
+            if (eq.getCondition() != null) {
+                gpuCode.append("        if(");
+                String[] condition = eq.getCondition();
+                boolean find;
+                for (int j = 0; j < condition.length; j++) {
+                    find = false;
+                    for (int k = 0; k < i; k++) {
+                        if (condition[j].equals(equations.get(k).getTerm())) {
+                            gpuCode.append(equations.get(k).getTerm());
+                            if (equations.get(k).getIndex() != null) {
+                                gpuCode.append("[idx]");
+                            }
+                            find = true;
+                            break;
+                        }
+                    }
+                    if (!find) {
+                        gpuCode.append(condition[j]);
+                    }
+                    gpuCode.append(" ");
+                }
+                gpuCode.append("){\n");
+                ident = "    ";
+            }
+            switch (eq.getTerm()) {
                 case "rad_espectral":
                 case "O_rad_espectral":
                     if (albedo) {
@@ -996,21 +1050,24 @@ public class GenericSEB {
                     }
                     for (int j = 1; j < 8; j++) {
 
-                        equation = "        " + ((terms[0].startsWith("O_")) ? "" : "double ") + lexer.analyse(vet[i], structure, null, language) + ";\n";
+                        equation = eq.getTerm() + "=" + eq.getForm();
+                        equation = ident + "        " + ((eq.getIndex() != null) ? "" : "double ") + lexer.analyse(equation, structure, null, language) + ";\n";
                         equation = equation.replace("coef_calib_a", "calibration" + (j) + "[0]");
                         equation = equation.replace("coef_calib_b", "calibration" + (j) + "[1]");
                         equation = equation.replace("pixel", "pixel" + (j));
                         equation = equation.replace("irrad_espectral", "calibration" + (j) + "[2]");
 
-                        if (terms[0].startsWith("O_")) {
+                        if (eq.getIndex() != null) {
                             equation = equation.replace("rad_espectral", " banda" + j + "[idx]");
-                            gpuCodeBody.append("                banda").append(j).append(",\n");
+                            if (variablesDeclared.add("banda")) {
+                                gpuCodeBody.append("                banda").append(j).append(",\n");
+                            }
                         } else {
                             equation = equation.replace("rad_espectral", "banda" + j);
 
                             rad_espectral = true;
                         }
-                        gpuCode.append(equation);
+                        gpuCode.append(equation).append("\n");
                     }
 
 
@@ -1019,13 +1076,13 @@ public class GenericSEB {
                 case "O_reflectancia":
                     for (int j = 1; j < 8; j++) {
 
-
-                        equation = "        " + ((terms[0].startsWith("O_")) ? "" : "double ") + lexer.analyse(vet[i], structure, null, language) + ";\n";
+                        equation = eq.getTerm() + "=" + eq.getForm();
+                        equation = ident + "        " + ((eq.getIndex() != null) ? "" : "double ") + lexer.analyse(equation, structure, null, language) + ";\n";
                         equation = equation.replace("coef_calib_a", "calibration" + (j) + "[0]");
                         equation = equation.replace("coef_calib_b", "calibration" + (j) + "[1]");
                         equation = equation.replace("pixel", "pixel" + (j) + "[i]");
                         equation = equation.replace("irrad_espectral", "calibration" + (j) + "[2]");
-                        if (terms[0].startsWith("O_")) {
+                        if (eq.getIndex() != null) {
                             equation = equation.replace("reflectancia", " bandaRefletida" + j + "[idx]");
                         } else {
                             equation = equation.replace("reflectancia", "bandaRefletida" + j);
@@ -1035,15 +1092,17 @@ public class GenericSEB {
                         } else {
                             equation = equation.replace("rad_espectral", " banda" + j + "[idx]");
                         }
-                        gpuCode.append(equation);
+                        gpuCode.append(equation).append("\n");
 
                         if (albedo) {
-                            if (terms[0].startsWith("O_")) {
-                                gpuCode.append("        sumBandas += parameterAlbedo[").append(j - 1).append("]* bandaRefletida").append(j).append("[idx];\n");
+                            if (eq.getIndex() != null) {
+                                gpuCode.append(ident + "        sumBandas += parameterAlbedo[").append(j - 1).append("]* bandaRefletida").append(j).append("[idx];\n");
 
-                                gpuCodeBody.append("                bandaRefletida").append(j).append(",\n");
+                                if (variablesDeclared.add("bandaRefletida")) {
+                                    gpuCodeBody.append("                bandaRefletida").append(j).append(",\n");
+                                }
                             } else {
-                                gpuCode.append("        sumBandas += parameterAlbedo[").append(j - 1).append("]*bandaRefletida").append(j).append(";\n");
+                                gpuCode.append(ident + "        sumBandas += parameterAlbedo[").append(j - 1).append("]*bandaRefletida").append(j).append(";\n");
                             }
                         }
 
@@ -1052,34 +1111,40 @@ public class GenericSEB {
                 default:
 
 
-                    equation = "        " + lexer.analyse(vet[i], structure, null, language) + ";\n";
+                    equation = ident + "        " + lexer.analyse(equation, structure, null, language) + ";\n";
                     ex.evaluateExpr(equation);
                     outEquation = ex.getOutput();
-                    if (terms[0].startsWith("O_")) {
-                        term = terms[0].substring(2);
-                        equation = "        " + term + "[idx] = ";
+                    if (eq.getIndex() != null) {
+                        term = eq.getTerm();
+                        equation = ident + "        " + term + "[idx] = ";
 
-                        gpuCodeBody.append("                ").append(term).append(",\n");
+                        if (variablesDeclared.add(term)) {
+                            gpuCodeBody.append("                ").append(term).append(",\n");
+                        }
 
                     } else {
-                        equation = "        " + terms[0] + " = ";
+                        equation = ident + "        " + eq.getTerm() + " = ";
                     }
 
                     for (int j = 0; j < outEquation.length; j++) {
                         String string = outEquation[j];
                         for (int k = 0; k < i; k++) {
-                            t = vet[k].split("=")[0].replace(" ", "");
+
+                            eq2 = equations.get(k);
+                            t = eq2.getTerm().replace(" ", "");
 //                            System.out.println("T:"+t);
-                            if (t.equals("O_" + string)) {
-                                t = t.substring(2);
-                                string = t + "[idx]";
+
+                            if (t.equals(string)) {
+                                if (eq2.getIndex() != null) {
+                                    string = t + "[idx]";
+                                } else {
+                                    string = t;
+                                }
                                 break;
-                            } else if (string.equals(t)) {
-                                string = t;
                             } else if (string.equals("~")) {
                                 string = "-";
                             } else if (t.contains("banda") && t.contains(string)) {
-                                if (t.startsWith("O_")) {
+                                if (eq2.getIndex() != null) {
                                     string = string + "[idx]";
                                 }
                                 break;
@@ -1087,10 +1152,13 @@ public class GenericSEB {
                         }
                         equation += string;
                     }
-                    equation += "\n";
+                    equation += "\n\n";
                     gpuCode.append(equation);
 
                     break;
+            }
+            if (eq.getCondition() != null) {
+                gpuCode.append("        }\n\n");
             }
         }
 
@@ -1126,6 +1194,7 @@ public class GenericSEB {
         source.append("import static br.ufmt.genericseb.Constants.*;\n");
         source.append("import java.util.HashMap;\n");
         source.append("import java.util.Map;\n");
+        source.append("import br.ufmt.genericseb.GenericSEB;\n");
 
         source.append("import java.util.List;\n\n");
 
@@ -1209,7 +1278,7 @@ public class GenericSEB {
         for (int i = 0; i < vet.length; i++) {
             structure = new Structure();
             structure.setToken(vet[i].split("=")[0]);
-            source.append("        double ").append(lexer.analyse(vet[i], structure, null, LanguageType.JAVA)).append(";\n");
+            source.append("        double ").append(lexer.analyse(vet[i], structure, null, LanguageType.JAVA)).append(";\n\n");
         }
         source.append("\n");
 
@@ -1217,44 +1286,64 @@ public class GenericSEB {
         vet = body.split("\n");
         Equation eq;
         boolean vector;
+        Set<String> variablesDeclared = new HashSet<>();
         for (int i = 0; i < vet.length; i++) {
             if (vet[i].startsWith("rad_espectral") || vet[i].startsWith("O_rad_espectral")) {
-                variables.add("pixel");
-                vector = vet[i].startsWith("O_rad_espectral");
-                if (albedo) {
-                    source.append("        double sumBandas = 0.0;\n");
-                    variables.add("sumBandas");
-                }
-                if (vector) {
-                    for (int j = 1; j < 8; j++) {
-                        source.append("        double[] banda").append(j).append(" = new double[").append(vet1).append(".length];\n");
-                        source.append("        ret.put(\"banda").append(j).append("\",banda").append(j).append(");\n\n");
-                        variables.add("banda" + j);
+                if (variablesDeclared.add("banda")) {
+                    variables.add("pixel");
+                    vector = vet[i].startsWith("O_rad_espectral");
+                    if (albedo) {
+                        source.append("        double sumBandas = 0.0;\n");
+                        variables.add("sumBandas");
                     }
-                } else {
-                    for (int j = 1; j < 8; j++) {
-                        variables.add("banda" + j);
-                        source.append("        double banda").append(j).append(" = 0;\n");
+                    if (vector) {
+                        for (int j = 1; j < 8; j++) {
+                            source.append("        double[] banda").append(j).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        ret.put(\"banda").append(j).append("\",banda").append(j).append(");\n\n");
+                            variables.add("banda" + j);
+                        }
+                    } else {
+                        for (int j = 1; j < 8; j++) {
+                            variables.add("banda" + j);
+                            source.append("        double banda").append(j).append(" = 0;\n");
+                        }
                     }
                 }
             } else if (vet[i].startsWith("reflectancia") || vet[i].startsWith("O_reflectancia")) {
-                vector = vet[i].startsWith("O_reflectancia");
-                if (vector) {
-                    for (int j = 1; j < 8; j++) {
-                        variables.add("bandaRefletida" + j);
-                        source.append("        double[] bandaRefletida").append(j).append(" = new double[").append(vet1).append(".length];\n");
-                        source.append("        ret.put(\"bandaRefletida").append(j).append("\",bandaRefletida").append(j).append(");\n\n");
-                    }
-                } else {
-                    for (int j = 1; j < 8; j++) {
-                        variables.add("bandaRefletida" + j);
-                        source.append("        double bandaRefletida").append(j).append(" = 0;\n");
+                if (variablesDeclared.add("bandaRefletida")) {
+                    vector = vet[i].startsWith("O_reflectancia");
+                    if (vector) {
+                        for (int j = 1; j < 8; j++) {
+                            variables.add("bandaRefletida" + j);
+                            source.append("        double[] bandaRefletida").append(j).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        ret.put(\"bandaRefletida").append(j).append("\",bandaRefletida").append(j).append(");\n\n");
+                        }
+                    } else {
+                        for (int j = 1; j < 8; j++) {
+                            variables.add("bandaRefletida" + j);
+                            source.append("        double bandaRefletida").append(j).append(" = 0;\n");
+                        }
                     }
                 }
             }
         }
         verifyEquations(header, variables, false);
         verifyEquations(body, variables, true);
+        
+        
+        if (index != null) {
+            source.append("        double tMax, tMin;\n"
+                    + "        double indexMax, indexMin, index;\n"
+                    + "        double RnHot = 0, GHot = 0;\n"
+                    + "        double SAVI_hot = 0;\n"
+                    + "\n"
+                    + "        tMax = 0;\n"
+                    + "        indexMax = 0;\n"
+                    + "\n"
+                    + "        indexMin = Double.MAX_VALUE;\n"
+                    + "        tMin = Double.MAX_VALUE;\n");
+        }
+        
         for (int i = 0; i < equations.size(); i++) {
             eq = equations.get(i);
             switch (eq.getTerm()) {
@@ -1264,15 +1353,18 @@ public class GenericSEB {
                 case "O_reflectancia":
                     break;
                 default:
-                    if (eq.getIndex() != null) {
-                        source.append("        double[] ").append(eq.getTerm()).append(" = new double[").append(vet1).append(".length];\n");
-                        source.append("        ret.put(\"").append(eq.getTerm()).append("\",").append(eq.getTerm()).append(");\n\n");
-                    } else {
-                        source.append("        double ").append(eq.getTerm()).append(" = 0;\n");
+                    if (variablesDeclared.add(eq.getTerm())) {
+                        if (eq.getIndex() != null) {
+                            source.append("        double[] ").append(eq.getTerm()).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        ret.put(\"").append(eq.getTerm()).append("\",").append(eq.getTerm()).append(");\n\n");
+                        } else {
+                            source.append("        double ").append(eq.getTerm()).append(" = 0;\n");
+                        }
                     }
                     break;
             }
         }
+
 
         source.append("        for(int i = 0;i < ").append(vet1).append(".length;i++){\n");
 
@@ -1283,7 +1375,8 @@ public class GenericSEB {
         boolean rad_espectral = false;
         String ident;
 
-        for (int i = 0; i < vet.length; i++) {
+        equations.add(index);
+        for (int i = 0; i < equations.size(); i++) {
 //            terms = vet[i].split("=");
             eq = equations.get(i);
             structure = new Structure();
@@ -1334,7 +1427,7 @@ public class GenericSEB {
                             equation = equation.replace("rad_espectral", "banda" + j);
                             rad_espectral = true;
                         }
-                        source.append(equation);
+                        source.append(equation).append("\n");
                         variables.add("banda" + j);
                     }
                     break;
@@ -1357,7 +1450,7 @@ public class GenericSEB {
                         } else {
                             equation = equation.replace("rad_espectral", "banda" + j + "[i]");
                         }
-                        source.append(equation);
+                        source.append(equation).append("\n");
                         variables.add("bandaRefletida" + j);
 
                         if (albedo) {
@@ -1404,17 +1497,67 @@ public class GenericSEB {
                         }
                         equation += string;
                     }
-                    equation += "\n";
+                    equation += "\n\n";
                     variables.add(eq.getTerm());
                     source.append(equation);
                     break;
             }
             if (eq.getCondition() != null) {
-                source.append("            }\n");
+                source.append("            }\n\n");
             }
         }
 
+
+        if (index != null) {
+            String ts = "Ts";
+            String rn = "Rn", g = "G0", savi = "SAVI";
+            for (int i = 0; i < equations.size(); i++) {
+                eq = equations.get(i);
+                if (eq.getIndex() != null) {
+                    switch (eq.getTerm()) {
+                        case "Ts":
+                            ts = "Ts[i]";
+                            break;
+                        case "Rn":
+                            rn = "Rn[i]";
+                            break;
+                        case "G0":
+                            g = "G0[i]";
+                            break;
+                        case "SAVI":
+                            savi = "SAVI[i]";
+                            break;
+                    }
+                }
+
+            }
+
+            source.append(
+                    "            if (index > indexMax) {\n"
+                    + "                if (" + ts + " < tMin) {\n"
+                    + "                    tMin = " + ts + ";\n"
+                    + "                    indexMax = index;\n"
+                    + "                }\n"
+                    + "            } else if (index < indexMin) {\n"
+                    + "                if (" + ts + " > tMax) {\n"
+                    + "                    tMax = " + ts + ";\n"
+                    + "                    indexMin = index;\n"
+                    + "                    RnHot = " + rn + ";\n"
+                    + "                    SAVI_hot = " + savi + ";\n"
+                    + "                    GHot = " + g + ";\n"
+                    + "                }\n"
+                    + "            }\n");
+        }
+
+
+
         source.append("        }\n");
+
+        if (index != null) {
+            source.append("        double[] coef = new double[2];\n"
+                    + "        GenericSEB.calculaAB(coef, RnHot, GHot, Uref, SAVI_hot, tMax, tMin);\n");
+            source.append("        ret.put(\"coef\",coef);\n\n");
+        }
 
         source.append("        return ret;\n");
         source.append("    }\n");
@@ -1488,13 +1631,105 @@ public class GenericSEB {
                 + "O_albedo = (sumBandas - reflectanciaAtmosfera) / (transmissividade * transmissividade)\n"
                 + "O_NDVI = (bandaRefletida4 - bandaRefletida3) / (bandaRefletida4 + bandaRefletida3)\n"
                 + "O_SAVI = ((1.0 + L) * (bandaRefletida4 - bandaRefletida3)) / (L + bandaRefletida4 + bandaRefletida3)\n"
-                + "O_IAF_(SAVI <= -0.1) = (-ln((0.69 - SAVI) / 0.59) / 0.91)\n"
+                + "O_IAF = (-ln((0.69 - SAVI) / 0.59) / 0.91)\n"
+                + "O_IAF_(SAVI <= 0.1) = 0\n"
+                + "O_IAF_(SAVI >= 0.687) = 6\n"
                 + "O_emissividadeNB = 0.97 + 0.0033 * IAF\n"
+                + "O_emissividadeNB_(IAF >= 3) = 0.98\n"
+                + "O_emissividadeNB_(NDVI <= 0) = 0.99\n"
                 + "O_emissivity = 0.95 + 0.01 * IAF\n"
+                + "O_emissivity_(IAF >= 3) = 0.98\n"
+                + "O_emissivity_(NDVI <= 0) = 0.985\n"
                 + "O_Ts = K2/ln(((emissividadeNB * K1) / banda6) + 1.0)\n"
                 + "O_LWd = emissivity * StefanBoltzman * (pow(Ts, 4))\n"
-                + "O_Rn = ((1.0 - albedo) * SWd) + (emissivity * (LWdAtm) - LWd)";
+                + "O_Rn = ((1.0 - albedo) * SWd) + (emissivity * (LWdAtm) - LWd)\n"
+                + "O_G = Rn * (((Ts - T0) / albedo) * (0.0038 * albedo + 0.0074 * albedo * albedo) * (1.0 - 0.98 * pow(NDVI, 4)))\n"
+                + "index = (0.5) * ((2.0 * bandaRefletida4 + 1) - sqrt((pow((2 * bandaRefletida4 + 1), 2) - 8 * (bandaRefletida4 - bandaRefletida3))))";
+
         GenericSEB g = new GenericSEB(LanguageType.JAVA);
         g.execute(header, body, parameters, constants, constVetor, constMatrix);
+    }
+
+    public static void calculaAB(double[] coeficientes, double Rn_hot, double G_hot, double Uref, double SAVI_hot, double Ts_hot, double Ts_cold) {
+
+        double z0m =Math.exp(-5.809f + 5.62f * SAVI_hot);
+
+        double U_star = (Constants.k * Uref / Math.log(Constants.z200 / z0m));
+
+        double r_ah = (Math.log(Constants.z2 / Constants.z1) / (U_star * Constants.k));
+
+        double H_hot = Rn_hot - G_hot;
+
+        double a = 0.0f;
+        double b = 0.0f;
+
+        double L;
+
+        double tm_200;
+        double th_2;
+        double th_0_1;
+
+        double errorH = 10.0f;
+        int step = 1;
+        double r_ah_anterior;
+        double H = H_hot;
+
+        while (errorH > Constants.MaxAllowedError && step < 100) {
+
+            a = ((H) * r_ah) / (Constants.p * Constants.cp * (Ts_hot - Ts_cold));
+            b = -a * (Ts_cold - Constants.T0);
+
+
+            H = Constants.p * Constants.cp * (b + a * (Ts_hot - Constants.T0)) / r_ah;
+
+            L =  (-(Constants.p * Constants.cp * U_star * U_star * U_star * (Ts_hot)) / (Constants.k * Constants.g * H));
+
+            tm_200 = Psim(L);
+            th_2 = Psih(Constants.z2, L);
+            th_0_1 = Psih(Constants.z1, L);
+
+            U_star =  (Constants.k * Uref / (Math.log(Constants.z200 / z0m) - tm_200));
+            r_ah_anterior = r_ah;
+            r_ah = ((Math.log(Constants.z2 / Constants.z1) - th_2 + th_0_1) / (U_star * Constants.k));
+
+            errorH = Math.abs(((r_ah - r_ah_anterior) * 100) / r_ah);
+
+            step++;
+        }
+
+//        System.out.println("Total de Interações:" + step);
+        coeficientes[0] = a;
+        coeficientes[1] = b;
+
+    }
+
+    protected static double X(double Zref_m, double L) {
+        return (float) (Math.sqrt(Math.sqrt((1.0f - 16.0f * Zref_m / L))));
+    }
+
+    protected static double Psim(double L) {
+        if (L < 0.0f) {
+            /* unstable */
+            double x200 = X(200, L);
+            return (2.0f * Math.log((1.0f + x200) / 2.0f) + Math.log((1.0f + x200 * x200) / (2.0f)) - 2.0f * Math.atan(x200) + 0.5f * Math.PI);
+        } else if (L > 0.0f) {
+            /* stable */
+            return (-5 * (2 / L));
+        } else {
+            return (0);
+        }
+    }
+
+    protected static double Psih(double Zref_h, double L) {
+        if (L < 0.0f) {
+            /* unstable */
+            double x = X(Zref_h, L);
+            return (2.0f * Math.log((1.0f + x * x) / 2.0f));
+        } else if (L > 0.0f) {
+            /* stable */
+            return (-5 * (2 / L));
+        } else {
+            return (0);
+        }
     }
 }

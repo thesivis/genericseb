@@ -28,6 +28,7 @@ import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -131,30 +132,44 @@ public class ProcessorTiff {
                 List<DataFile> ret = new ArrayList<>();
                 for (String string : datas.keySet()) {
                     vet = datas.get(string);
+                    if (!string.equals("coef")) {
 
-                    pathTiff = parent + string + ".tif";
-                    mppsm = new BandedSampleModel(DataBuffer.TYPE_FLOAT, raster.getWidth(), raster.getHeight(), 1);
-                    dataBuffer = new DataBufferFloat(raster.getWidth() * raster.getHeight());
-                    rasterResp = new SunWritableRaster(mppsm, dataBuffer, new Point(0, 0));
-                    fos = new FileOutputStream(pathTiff);
+                        pathTiff = parent + string + ".tif";
+                        mppsm = new BandedSampleModel(DataBuffer.TYPE_FLOAT, raster.getWidth(), raster.getHeight(), 1);
+                        dataBuffer = new DataBufferFloat(raster.getWidth() * raster.getHeight());
+                        rasterResp = new SunWritableRaster(mppsm, dataBuffer, new Point(0, 0));
+                        fos = new FileOutputStream(pathTiff);
 
-                    for (int i = 0; i < vet.length; i++) {
-                        dado = new float[]{(float) vet[i]};
-                        x = i % width;
-                        y = i / width;
-                        try {
-                            rasterResp.setPixel(x, y, dado);
-                        } catch (java.lang.ArrayIndexOutOfBoundsException ex) {
-                            System.out.println("i:" + i + " X:" + x + " Y: " + y);
-                            System.exit(1);
+                        for (int i = 0; i < vet.length; i++) {
+                            dado = new float[]{(float) vet[i]};
+                            x = i % width;
+                            y = i / width;
+                            try {
+                                rasterResp.setPixel(x, y, dado);
+                            } catch (java.lang.ArrayIndexOutOfBoundsException ex) {
+                                System.out.println("i:" + i + " X:" + x + " Y: " + y);
+                                System.exit(1);
+                            }
                         }
-                    }
 
-                    enc = ImageCodec.createImageEncoder("tiff", fos, encParam);
-                    enc.encode(rasterResp, model);
-                    fos.close();
-                    Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterResp);
-                    ret.add(new DataFile(ParameterEnum.valueOf(string), new File(pathTiff)));
+                        enc = ImageCodec.createImageEncoder("tiff", fos, encParam);
+                        enc.encode(rasterResp, model);
+                        fos.close();
+                        Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterResp);
+                        ret.add(new DataFile(ParameterEnum.valueOf(string), new File(pathTiff)));
+                    }else{
+                        pathTiff = parent + "A.dat";
+                        PrintWriter pw = new PrintWriter(pathTiff);
+                        pw.print(vet[0]);
+                        pw.close();
+                        ret.add(new DataFile(ParameterEnum.A, new File(pathTiff)));
+                        
+                        pathTiff = parent + "B.dat";
+                        pw = new PrintWriter(pathTiff);
+                        pw.print(vet[1]);
+                        pw.close();
+                        ret.add(new DataFile(ParameterEnum.A, new File(pathTiff)));
+                    }
                 }
 
                 return ret;
