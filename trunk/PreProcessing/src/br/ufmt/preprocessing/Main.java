@@ -4,11 +4,8 @@
  */
 package br.ufmt.preprocessing;
 
-import br.ufmt.genericlexerseb.Variable;
 import br.ufmt.preprocessing.utils.DataFile;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -20,6 +17,8 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        
+        
         // TODO code application logic here
 
 //        ExpressionParser expressionParser = new ExpressionParser();
