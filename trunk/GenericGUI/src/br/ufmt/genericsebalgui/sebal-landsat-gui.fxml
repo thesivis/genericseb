@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="anchorPane" prefHeight="680.1326904296875" prefWidth="672.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="br.ufmt.genericsebalgui.SEBALLandSatGUIController">
+  <children>
+    <TableView fx:id="constanteTable" disable="false" editable="true" layoutX="23.0" layoutY="69.0" prefHeight="163.0" prefWidth="534.0" tableMenuButtonVisible="false">
+      <columns>
+        <TableColumn editable="true" onEditCommit="#editTableAction" prefWidth="267.0" text="%variable" />
+        <TableColumn editable="true" onEditCommit="#editTableDoubleAction" prefWidth="267.0" text="%value" />
+      </columns>
+    </TableView>
+    <Label fx:id="nomeArquivoLabel" layoutX="69.0" layoutY="29.0" prefWidth="488.0" text="Label" wrapText="false" />
+    <Label fx:id="arquivoLabel" layoutX="14.0" layoutY="29.0" text="%file" />
+    <Button fx:id="uploadButton" layoutX="564.0" layoutY="27.0" mnemonicParsing="false" onAction="#uploadButtonAction" text="%upload" />
+    <TableView fx:id="headerTable" editable="true" layoutX="23.0" layoutY="253.0" prefHeight="147.0" prefWidth="534.0" tableMenuButtonVisible="false">
+      <columns>
+        <TableColumn editable="true" maxWidth="5000.0" minWidth="10.0" onEditCommit="#editTableAction" prefWidth="534.0" text="%equation" />
+      </columns>
+    </TableView>
+    <TableView fx:id="bodyTable" editable="true" layoutX="23.0" layoutY="422.0" prefHeight="200.0" prefWidth="534.0">
+      <columns>
+        <TableColumn editable="true" onEditCommit="#editTableAction" prefWidth="534.0" text="%equation" />
+      </columns>
+    </TableView>
+    <Button fx:id="runButton" layoutX="520.0" layoutY="641.0" mnemonicParsing="false" onAction="#runButtonAction" prefWidth="100.0" styleClass="btn, executar" text="%execute" />
+    <Button fx:id="addConstante" contentDisplay="LEFT" layoutX="564.0" layoutY="106.0" mnemonicParsing="false" onAction="#addConstanteAction" prefWidth="100.0" styleClass="add, btn" text="%add" />
+    <Button fx:id="removeConstante" layoutX="564.0" layoutY="141.0" mnemonicParsing="false" onAction="#removeConstanteAction" prefWidth="100.0" styleClass="remove, btn" text="%remove" />
+    <Button fx:id="addHeader" layoutX="564.0" layoutY="287.0" mnemonicParsing="false" onAction="#addHeaderAction" prefWidth="100.0" styleClass="add, btn" text="%add" />
+    <Button fx:id="removeHeader" layoutX="564.0" layoutY="327.0" mnemonicParsing="false" onAction="#removeHeaderAction" styleClass="remove, btn" text="%remove" />
+    <Button fx:id="addBody" layoutX="564.0" layoutY="462.0" mnemonicParsing="false" onAction="#addBodyAction" prefWidth="100.0" styleClass="add, btn" text="%add" />
+    <Button fx:id="removeBody" layoutX="564.0" layoutY="501.0" mnemonicParsing="false" onAction="#removeBodyAction" prefWidth="100.0" styleClass="remove, btn" text="%remove" />
+  </children>
+  <stylesheets>
+    <URL value="@../../../resource/style.css" />
+  </stylesheets>
+</AnchorPane>

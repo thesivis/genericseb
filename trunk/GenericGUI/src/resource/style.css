@@ -1,0 +1,35 @@
+/* 
+    Document   : style
+    Created on : 17/01/2014, 14:32:41
+    Author     : raphael
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+root { 
+    display: block;
+}
+
+.root {
+    -fx-background-color: #c0c0c0;
+    -fx-background-radius: 5;
+    -fx-padding: 10;
+}
+
+.btn {
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: left;
+    -fx-padding: 5 10 5 25;
+}
+
+.add {          
+    -fx-background-image: url('../../../resource/add.png');
+}
+
+.remove {          
+    -fx-background-image: url('../../../resource/delete.png');
+}
+
+.executar {          
+    -fx-background-image: url('../../../resource/executar.png');
+}

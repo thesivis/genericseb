@@ -1,0 +1,34 @@
+<header>
+dr = 1.0 + 0.033 * cos(julianDay * 2 * pi / 365)
+cosZ = cos(((90.0 - Z) * pi) / 180.0)
+declinacaoSolar = radians(23.45 * sin(radians(360.0 * (julianDay - 80) / 365)))
+anguloHorarioNascerSol = acos(-tan(pi * latitude / 180.0) * tan(declinacaoSolar))
+rad_solar_toa = 24.0 * 60.0 * 0.082 * dr * (anguloHorarioNascerSol * sin(pi * latitude / 180.0) * sin(declinacaoSolar) + cos(pi * latitude / 180.0) * cos(declinacaoSolar) * sin(anguloHorarioNascerSol)) / pi
+Rg_24h_mj = 0.0864 * Rg_24h
+transmissividade24h = Rg_24h_mj / rad_solar_toa
+ea = (0.61078 * exp(17.269 * Ta / (237.3 + Ta))) * UR / 100
+W = 0.14 * ea * P + 2.1
+transmissividade = 0.35 + 0.627 * exp((-0.00146 * P / (Kt * cosZ)) - 0.075 * pow((W / cosZ), 0.4))
+emissivityAtm = 0.625 * pow((1000.0 * ea / (Ta + T0)), 0.131)
+SWd = (S * cosZ * cosZ) / (1.085 * cosZ + 10.0 * ea * (2.7 + cosZ) * 0.001 + 0.2)
+LWdAtm = emissivityAtm * StefanBoltzman * (pow(Ta + T0, 4))
+<body>
+rad_espectral = coef_calib_a + ((coef_calib_b - coef_calib_a) / 255.0) * pixel
+reflectancia = (pi * rad_espectral) / (irrad_espectral * cosZ * dr)
+O_albedo = (sumBandas - reflectanciaAtmosfera) / (transmissividade * transmissividade)
+O_NDVI = (bandaRefletida4 - bandaRefletida3) / (bandaRefletida4 + bandaRefletida3)
+O_SAVI = ((1.0 + L) * (bandaRefletida4 - bandaRefletida3)) / (L + bandaRefletida4 + bandaRefletida3)
+O_IAF = (-ln((0.69 - SAVI) / 0.59) / 0.91)
+O_IAF_(SAVI <= 0.1) = 0
+O_IAF_(SAVI >= 0.687) = 6
+O_emissividadeNB = 0.97 + 0.0033 * IAF
+O_emissividadeNB_(IAF >= 3) = 0.98
+O_emissividadeNB_(NDVI <= 0) = 0.99
+O_emissivity = 0.95 + 0.01 * IAF
+O_emissivity_(IAF >= 3) = 0.98
+O_emissivity_(NDVI <= 0) = 0.985
+O_Ts = K2/ln(((emissividadeNB * K1) / banda6) + 1.0)
+O_LWd = emissivity * StefanBoltzman * (pow(Ts, 4))
+O_Rn = ((1.0 - albedo) * SWd) + (emissivity * (LWdAtm) - LWd)
+O_G0 = Rn * (((Ts - T0) / albedo) * (0.0038 * albedo + 0.0074 * albedo * albedo) * (1.0 - 0.98 * pow(NDVI, 4)))
+index = (0.5) * ((2.0 * bandaRefletida4 + 1) - sqrt((pow((2 * bandaRefletida4 + 1), 2) - 8 * (bandaRefletida4 - bandaRefletida3))))
