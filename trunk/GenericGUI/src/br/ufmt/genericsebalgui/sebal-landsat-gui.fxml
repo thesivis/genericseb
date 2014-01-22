@@ -7,10 +7,10 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane id="anchorPane" prefHeight="672.0" prefWidth="1024.0" xmlns:fx="http://javafx.com/fxml/" xmlns="http://javafx.com/javafx/2.2" fx:controller="br.ufmt.genericsebalgui.SEBALLandSatGUIController">
+<AnchorPane id="anchorPane" prefHeight="672.0" prefWidth="1024.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="br.ufmt.genericsebalgui.SEBALLandSatGUIController">
   <children>
     <Button fx:id="runButton" layoutX="910.0" layoutY="630.0" mnemonicParsing="false" onAction="#runButtonAction" prefWidth="100.0" styleClass="btn, executar" text="%execute" />
-    <TabPane fx:id="tabPane"  layoutX="1.0" layoutY="27.0" prefHeight="600.0" prefWidth="1024.0" tabClosingPolicy="UNAVAILABLE">
+    <TabPane fx:id="tabPane" layoutX="1.0" layoutY="27.0" prefHeight="600.0" prefWidth="1024.0" tabClosingPolicy="UNAVAILABLE">
       <tabs>
         <Tab text="%constant">
           <content>
@@ -63,7 +63,8 @@
         </Tab>
       </tabs>
     </TabPane>
-    <ProgressBar fx:id="progressBar"  disable="false" layoutX="292.0" layoutY="10.0" prefWidth="200.0" progress="0.0" visible="true"  />
+    <ProgressBar fx:id="progressBar" disable="false" layoutX="292.0" layoutY="10.0" prefWidth="200.0" progress="-1.0" visible="false" />
+    <Label layoutX="14.0" layoutY="6.0" prefWidth="237.0" text="%title.landsat5.sebal" />
   </children>
   <stylesheets>
     <URL value="@../../../resource/style.css" />
