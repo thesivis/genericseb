@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +37,7 @@ import java.util.logging.Logger;
  */
 public class LandSat {
 
-    public List<DataFile> preprocessing(String pathToOriginalTiff, double[][] calibration, double[] parameterAlbedo, int julianDay, float Z, float reflectanciaAtmosfera, float P, float UR, float Ta, float Kt, float L, float K1, float K2, float S, float StefanBoltzman, float latitude, float Rg_24h, float Uref) {
+    public List<DataFile> preprocessing(String pathToOriginalTiff, String equations, double[][] calibration, double[] parameterAlbedo, int julianDay, float Z, float reflectanciaAtmosfera, float P, float UR, float Ta, float Kt, float L, float K1, float K2, float S, float StefanBoltzman, float latitude, float Rg_24h, float Uref) {
 
         File tiff = new File(pathToOriginalTiff);
         if (tiff.exists() && tiff.getName().endsWith(".tif")) {
@@ -87,7 +88,7 @@ public class LandSat {
                         Map<String, double[]> constVetor = new HashMap<>();
                         constVetor.put("parameterAlbedo", parameterAlbedo);
 
-                        BufferedReader bur = new BufferedReader(new FileReader(System.getProperty("user.dir") + "/source/landsat.prop"));
+                        BufferedReader bur = new BufferedReader(new StringReader(equations));
                         String linha = bur.readLine();
 
                         StringBuilder header = new StringBuilder();
@@ -409,13 +410,13 @@ public class LandSat {
                         pw = new PrintWriter(name);
                         pw.println(coef[0]);
                         pw.close();
-                        ret.add(new DataFile(ParameterEnum.A, new File(name)));
+                        ret.add(new DataFile("A", new File(name)));
 
                         name = parent + ParameterEnum.B.getFileName();
                         pw = new PrintWriter(name);
                         pw.println(coef[1]);
                         pw.close();
-                        ret.add(new DataFile(ParameterEnum.B, new File(name)));
+                        ret.add(new DataFile("B", new File(name)));
 
                         name = parent + ParameterEnum.COORDENATES.getFileName();
                         pw = new PrintWriter(name);
@@ -424,7 +425,7 @@ public class LandSat {
                         pw.println("X Cold:" + xCold);
                         pw.println("Y Cold:" + yCold);
                         pw.close();
-                        ret.add(new DataFile(ParameterEnum.COORDENATES, new File(name)));
+                        ret.add(new DataFile("COORDENATES", new File(name)));
 
                         return ret;
                     } else {
@@ -806,7 +807,7 @@ public class LandSat {
         return true;
     }
 
-    public List<DataFile> preprocessingLandSat5(String path, int julianDay, float Z, float P, float UR, float Ta, float latitude, float Rg_24h, float Uref) {
+    public List<DataFile> preprocessingLandSat5(String path, String equations, int julianDay, float Z, float P, float UR, float Ta, float latitude, float Rg_24h, float Uref) {
 
         double[][] calibration = new double[][]{
             {-1.52f, 193.0f, 1957.0f},
@@ -826,7 +827,7 @@ public class LandSat {
         float S = 1367.0f;
         float StefanBoltzman = (float) (5.67 * Math.pow(10, -8));
 
-        List<DataFile> ret = preprocessing(path, calibration, parameterAlbedo, julianDay, Z, reflectancaAtmosfera, P, UR, Ta, Kt, L, K1, K2, S, StefanBoltzman, latitude, Rg_24h, Uref);
+        List<DataFile> ret = preprocessing(path, equations, calibration, parameterAlbedo, julianDay, Z, reflectancaAtmosfera, P, UR, Ta, Kt, L, K1, K2, S, StefanBoltzman, latitude, Rg_24h, Uref);
 
         return ret;
     }
