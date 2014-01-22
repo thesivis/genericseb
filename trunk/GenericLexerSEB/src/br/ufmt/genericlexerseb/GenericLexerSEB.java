@@ -6,8 +6,9 @@
 package br.ufmt.genericlexerseb;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -27,8 +28,8 @@ public class GenericLexerSEB {
 
         BufferedReader bur = null;
         try {
-            String path = GenericLexerSEB.class.getResource("/functions/functions.csv").getPath();
-            bur = new BufferedReader(new FileReader(path));
+            URL path = GenericLexerSEB.class.getResource("/functions/functions.csv");
+            bur = new BufferedReader(new InputStreamReader(path.openStream()));
             String line = bur.readLine();
 
             String vet[];
