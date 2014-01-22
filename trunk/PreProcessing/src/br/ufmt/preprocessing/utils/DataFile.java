@@ -13,13 +13,13 @@ import java.io.File;
  */
 public class DataFile {
 
-    private ParameterEnum parameter;
+    private String parameter;
     private File file;
 
     public DataFile() {
     }
 
-    public DataFile(ParameterEnum parameter, File file) {
+    public DataFile(String parameter, File file) {
         this.parameter = parameter;
         this.file = file;
     }
@@ -32,11 +32,11 @@ public class DataFile {
         this.file = file;
     }
 
-    public ParameterEnum getParameter() {
+    public String getParameter() {
         return parameter;
     }
 
-    public void setParameter(ParameterEnum parameter) {
+    public void setParameter(String parameter) {
         this.parameter = parameter;
     }
 }

@@ -7,10 +7,24 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane xmlns:fx="http://javafx.com/fxml" id="AnchorPane" prefHeight="680.1326904296875" prefWidth="672.0" styleClass="mainFxmlClass" xmlns="http://javafx.com/javafx/2.2" fx:controller="br.ufmt.genericgui.GenericGUIController">
+<AnchorPane id="AnchorPane" prefHeight="700" prefWidth="1024" styleClass="mainFxmlClass" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="br.ufmt.genericgui.GenericGUIController">
   <children>
-    <AnchorPane fx:id="panelMenu" layoutX="0.0" layoutY="24.0" prefHeight="20.0" prefWidth="672.0" />
-    <AnchorPane fx:id="panel" layoutX="0.0" layoutY="24.0" prefHeight="646.0" prefWidth="672.0" />
+    <MenuBar fx:id="menuBar" layoutX="0.0" layoutY="0.0" prefWidth="1024">
+      <menus>
+        <Menu mnemonicParsing="false" text="%algorithm">
+          <items>
+            <MenuItem mnemonicParsing="false" onAction="#landSatSebalAction" text="%landsatsebal" />
+          </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="%language">
+          <items>
+            <MenuItem mnemonicParsing="false" onAction="#brAction" text="%brazil" />
+            <MenuItem mnemonicParsing="false" onAction="#enAction" text="%english" />
+          </items>
+        </Menu>
+      </menus>
+    </MenuBar>
+    <AnchorPane fx:id="panel" layoutX="0.0" layoutY="24.0" prefHeight="748" prefWidth="1024" />
   </children>
   <stylesheets>
     <URL value="@../../../resource/style.css" />

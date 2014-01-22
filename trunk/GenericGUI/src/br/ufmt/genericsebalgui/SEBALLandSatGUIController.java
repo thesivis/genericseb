@@ -5,11 +5,17 @@
 package br.ufmt.genericsebalgui;
 
 import br.ufmt.genericgui.Main;
+import br.ufmt.utils.AlertDialog;
 import br.ufmt.utils.Constante;
 import br.ufmt.utils.EditingCell;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -44,16 +50,30 @@ public class SEBALLandSatGUIController implements Initializable {
     private TableView<Constante> headerTable;
     @FXML
     private TableView<Constante> bodyTable;
+    private File image;
 
     @FXML
     private void runButtonAction(ActionEvent event) {
+        boolean run = true;
+        if(image == null){
+            new AlertDialog(Main.screen, bundle.getString("error.image")).showAndWait();
+            run = false;
+        }
+        if(bodyTable.getItems().isEmpty()){
+            new AlertDialog(Main.screen, bundle.getString("error.equation")).showAndWait();
+            run = false;
+        }
+        
+        if(run){
+            
+        }
     }
 
     @FXML
     private void uploadButtonAction(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(bundle.getString("file.chooser.title"));
-        File image = fileChooser.showOpenDialog(Main.screen);
+        image = fileChooser.showOpenDialog(Main.screen);
         if (image != null) {
             nomeArquivoLabel.setText(image.getPath());
         }
@@ -153,6 +173,35 @@ public class SEBALLandSatGUIController implements Initializable {
         tc.setCellFactory(cellFactoryString);
         tc.setCellValueFactory(new PropertyValueFactory<Constante, String>("nome"));
 
+        constanteTable.getItems().add(new Constante("julianDay", 248.0));
+        constanteTable.getItems().add(new Constante("Z", 50.24));
+        constanteTable.getItems().add(new Constante("latitude", -16.56));
+        constanteTable.getItems().add(new Constante("Rg_24h", 243.949997));
+        constanteTable.getItems().add(new Constante("Uref", 0.92071358));
+        constanteTable.getItems().add(new Constante("P", 299.3));
+        constanteTable.getItems().add(new Constante("UR", 36.46));
+        constanteTable.getItems().add(new Constante("Ta", 32.74));
+
+        try {
+            BufferedReader bur = new BufferedReader(new FileReader(System.getProperty("user.dir") + "/source/landsat.prop"));
+            String linha = bur.readLine();
+
+            if (linha.equals("<header>")) {
+                linha = bur.readLine();
+                while (!linha.equals("<body>")) {
+                    headerTable.getItems().add(new Constante(linha, 0.0));
+                    linha = bur.readLine();
+                }
+            }
+
+            linha = bur.readLine();
+            while (linha != null) {
+                bodyTable.getItems().add(new Constante(linha, 0.0));
+                linha = bur.readLine();
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(SEBALLandSatGUIController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     private void removeSelecteds(TableView table) {

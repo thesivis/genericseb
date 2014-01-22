@@ -28,9 +28,24 @@ public class GenericGUIController implements Initializable {
     private ResourceBundle bundle;
     @FXML
     private AnchorPane panel;
-    @FXML
-    private AnchorPane panelMenu;
-    private boolean first = true;
+
+    /**
+     * Initializes the controller class.
+     */
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        // TODO
+        bundle = rb;
+
+//        try {
+//            Parent root = FXMLLoader.load(Main.class.getResource("/br/ufmt/genericgui/menubar.fxml"), bundle);
+//            panelMenu.getChildren().clear();
+//            panelMenu.getChildren().add(root);
+//        } catch (IOException ex) {
+//            Logger.getLogger(GenericGUIController.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+
+    }
 
     @FXML
     private void landSatSebalAction(ActionEvent event) {
@@ -48,37 +63,12 @@ public class GenericGUIController implements Initializable {
         changeLanguage("en");
     }
 
-    /**
-     * Initializes the controller class.
-     */
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        // TODO
-        bundle = rb;
-
-        if (first) {
-            try {
-                Parent root = FXMLLoader.load(Main.class.getResource("/br/ufmt/genericgui/menubar.fxml"), bundle);
-                panelMenu.getChildren().clear();
-                panelMenu.getChildren().add(root);
-                first = false;
-            } catch (IOException ex) {
-                Logger.getLogger(GenericGUIController.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-
-    }
-
     private void changeContent(String xml) {
         try {
             if (xml != null && !xml.isEmpty()) {
                 Parent root = FXMLLoader.load(Main.class.getResource(xml), bundle);
                 panel.getChildren().clear();
                 panel.getChildren().add(root);
-
-                root = FXMLLoader.load(Main.class.getResource("/br/ufmt/genericgui/menubar.fxml"), bundle);
-                panelMenu.getChildren().clear();
-                panelMenu.getChildren().add(root);
             }
         } catch (IOException ex) {
             Logger.getLogger(GenericGUIController.class.getName()).log(Level.SEVERE, null, ex);
@@ -89,7 +79,7 @@ public class GenericGUIController implements Initializable {
         Main.locale = new Locale(language);
         ResourceBundle rb = ResourceBundle.getBundle("br.ufmt.bundles.lang", Main.locale);
         bundle = rb;
-//        Main.reload();
+        Main.reload();
         changeContent(screen);
     }
 }

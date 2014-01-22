@@ -74,7 +74,7 @@ public class SebalCUDA extends SebalGPU {
                         structure.setVector(true);
                         structure.setIndex(vet[2]);
                     }
-                    linha = lexer.analyse(equations.get(ParameterEnum.valueOf(vet[1])), structure, mapStructure, LanguageType.OPENCL) + ";";
+                    linha = lexer.analyse(equations.get(vet[1]), structure, mapStructure, LanguageType.CUDA) + ";";
                     mapStructure.put(structure.getToken(), structure);
                 }
                 codigo.append(linha + "\n");

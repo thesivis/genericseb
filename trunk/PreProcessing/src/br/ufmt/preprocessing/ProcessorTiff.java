@@ -156,19 +156,19 @@ public class ProcessorTiff {
                         enc.encode(rasterResp, model);
                         fos.close();
                         Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterResp);
-                        ret.add(new DataFile(ParameterEnum.valueOf(string), new File(pathTiff)));
+                        ret.add(new DataFile(string, new File(pathTiff)));
                     }else{
                         pathTiff = parent + "A.dat";
                         PrintWriter pw = new PrintWriter(pathTiff);
                         pw.print(vet[0]);
                         pw.close();
-                        ret.add(new DataFile(ParameterEnum.A, new File(pathTiff)));
+                        ret.add(new DataFile("A", new File(pathTiff)));
                         
                         pathTiff = parent + "B.dat";
                         pw = new PrintWriter(pathTiff);
                         pw.print(vet[1]);
                         pw.close();
-                        ret.add(new DataFile(ParameterEnum.A, new File(pathTiff)));
+                        ret.add(new DataFile("B", new File(pathTiff)));
                     }
                 }
 

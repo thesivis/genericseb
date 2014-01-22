@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 public abstract class Sebal {
 
     protected long tempo;
-    public static HashMap<ParameterEnum, String> equations = new HashMap<>();
+    public static HashMap<String, String> equations = new HashMap<>();
 
     static {
         verifyEquations();
@@ -92,7 +92,7 @@ public abstract class Sebal {
                 variables.add(vet[0]);
                 try {
                     ex.evaluateExpr(line, variables);
-                    equations.put(ParameterEnum.valueOf(vet[0]), line);
+                    equations.put(vet[0], line);
                 } catch (IllegalArgumentException e) {
 //                    System.out.println("Equation is wrong: " + line);
                     System.out.println(e.getMessage());
