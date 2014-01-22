@@ -242,6 +242,7 @@ public class SEBALLandSatGUIController implements Initializable {
             @Override
             protected Object call() throws Exception {
 
+                progressBar.setVisible(true);
                 progressBar.setProgress(-1);
                 tabPane.setDisable(true);
                 boolean run = true;
@@ -334,7 +335,6 @@ public class SEBALLandSatGUIController implements Initializable {
 
                             updateMessage(bundle.getString("execution.sucess"));
 
-                            System.out.println("FIM");
                         } catch (IOException ex) {
                             Logger.getLogger(LandSat.class.getName()).log(Level.SEVERE, null, ex);
                         }
@@ -343,7 +343,7 @@ public class SEBALLandSatGUIController implements Initializable {
                         throw new TiffNotFoundException();
                     }
                 }
-                progressBar.setProgress(0);
+                progressBar.setVisible(false);
 
                 tabPane.setDisable(false);
                 return null;
