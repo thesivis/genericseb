@@ -1342,6 +1342,7 @@ public class GenericSEB {
                     + "\n"
                     + "        indexMin = Double.MAX_VALUE;\n"
                     + "        tMin = Double.MAX_VALUE;\n");
+            equations.add(index);
         }
         
         for (int i = 0; i < equations.size(); i++) {
@@ -1375,7 +1376,7 @@ public class GenericSEB {
         boolean rad_espectral = false;
         String ident;
 
-        equations.add(index);
+        
         for (int i = 0; i < equations.size(); i++) {
 //            terms = vet[i].split("=");
             eq = equations.get(i);
