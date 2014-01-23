@@ -169,12 +169,12 @@ public class SEBALLandSatGUIController implements Initializable {
                 return new EditingCell(bundle);
             }
         };
-        
+
         Callback<TableColumn, TableCell> cellFactoryEquation =
                 new Callback<TableColumn, TableCell>() {
             @Override
             public TableCell call(TableColumn p) {
-                return new EditingCell(bundle,EditingCell.EQUATION);
+                return new EditingCell(bundle, EditingCell.EQUATION);
             }
         };
 
@@ -331,8 +331,12 @@ public class SEBALLandSatGUIController implements Initializable {
                                 Map<String, double[]> constVetor = new HashMap<>();
                                 constVetor.put("parameterAlbedo", parameterAlbedo);
 
-                                ProcessorTiff processorTiff = new ProcessorTiff(LanguageType.JAVA);
-                                ret = processorTiff.execute(header.toString(), body.toString(), path, nameParameters, variables, constVetor, constMatrix);
+                                try {
+                                    ProcessorTiff processorTiff = new ProcessorTiff(LanguageType.JAVA);
+                                    ret = processorTiff.execute(header.toString(), body.toString(), path, nameParameters, variables, constVetor, constMatrix);
+                                } catch (Exception ex) {
+                                    new AlertDialog(Main.screen,ex.getMessage()).showAndWait();
+                                }
 
                                 System.out.println("End");
                             } else {
