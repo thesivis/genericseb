@@ -169,6 +169,14 @@ public class SEBALLandSatGUIController implements Initializable {
                 return new EditingCell(bundle);
             }
         };
+        
+        Callback<TableColumn, TableCell> cellFactoryEquation =
+                new Callback<TableColumn, TableCell>() {
+            @Override
+            public TableCell call(TableColumn p) {
+                return new EditingCell(bundle,EditingCell.EQUATION);
+            }
+        };
 
 
         TableColumn tc = (TableColumn) constanteTable.getColumns().get(0);
@@ -180,11 +188,11 @@ public class SEBALLandSatGUIController implements Initializable {
         tc.setCellFactory(cellFactory);
 
         tc = (TableColumn) headerTable.getColumns().get(0);
-        tc.setCellFactory(cellFactoryString);
+        tc.setCellFactory(cellFactoryEquation);
         tc.setCellValueFactory(new PropertyValueFactory<Constante, String>("nome"));
 
         tc = (TableColumn) bodyTable.getColumns().get(0);
-        tc.setCellFactory(cellFactoryString);
+        tc.setCellFactory(cellFactoryEquation);
         tc.setCellValueFactory(new PropertyValueFactory<Constante, String>("nome"));
 
         constanteTable.getItems().add(new Constante("julianDay", 248.0));
