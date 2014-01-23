@@ -130,6 +130,9 @@ public class ExpressionParser {
     }
 
     private boolean isVariable(String variable) throws IllegalArgumentException {
+        if(!variable.matches("[aA-zZ_](\\w+)?")){
+             throw new IllegalArgumentException("Variable '" + variable + "' sintax wrong!");
+        }
         if (variables.isEmpty() || variable.equals(",")) {
             return true;
         }
@@ -274,8 +277,8 @@ public class ExpressionParser {
         OPERATORS.put(">=", new int[]{0, LEFT_ASSOC, 2});
         OPERATORS.put("==", new int[]{0, LEFT_ASSOC, 2});
         OPERATORS.put("!=", new int[]{0, LEFT_ASSOC, 2});
-        OPERATORS.put("||", new int[]{0, LEFT_ASSOC, 2});
-        OPERATORS.put("&&", new int[]{0, LEFT_ASSOC, 2});
+        OPERATORS.put("||", new int[]{-10, LEFT_ASSOC, 2});
+        OPERATORS.put("&&", new int[]{-10, LEFT_ASSOC, 2});
 
         StringBuilder together = new StringBuilder();
         for (int i = 0; i < input.length - 1; i++) {

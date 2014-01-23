@@ -8,11 +8,8 @@ import br.ufmt.genericlexerseb.ExpressionParser;
 import br.ufmt.genericlexerseb.GenericLexerSEB;
 import br.ufmt.genericlexerseb.LanguageType;
 import br.ufmt.genericlexerseb.Structure;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -20,7 +17,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,7 +24,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.text.Utilities;
 
 /**
  *
