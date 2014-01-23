@@ -109,7 +109,11 @@ public class LandSat {
                         }
 
                         ProcessorTiff processorTiff = new ProcessorTiff(LanguageType.JAVA);
-                        ret = processorTiff.execute(header.toString(), body.toString(), pathToOriginalTiff, nameParameters, variables, constVetor, constMatrix);
+                        try {
+                            ret = processorTiff.execute(header.toString(), body.toString(), pathToOriginalTiff, nameParameters, variables, constVetor, constMatrix);
+                        } catch (Exception ex) {
+                            Logger.getLogger(LandSat.class.getName()).log(Level.SEVERE, null, ex);
+                        }
 
                         System.out.println("End");
                     } else {

@@ -23,7 +23,7 @@ public class Main {
     public static void main(String[] args) {
         // TODO code application logic here
 
-        String eq = "Ts=K2/ln((emissividadeNB*K1/banda6)+1.0)";
+        String eq = "transmissividade = 0.35 + 0.627 * exp((-0.00146 * P / (Kt * cosZ)) - 0.075 * pow((W / cosZ), 0.4))";
         
         List<String> variables = new ArrayList<>();
         variables.add("Ts");
@@ -36,7 +36,7 @@ public class Main {
 //        eq = "(-1.0 + 2.123)*(2*a/b)-sqrt(5.0+6)";
 //        eq = "-2*ln(2)-(a-(b^-2))";
         
-        ExpressionParser ex = new ExpressionParser(variables);
+        ExpressionParser ex = new ExpressionParser();
 //        System.out.println(Arrays.toString(ret.toArray()));
 //        Object[] t = (Object[])ret.toArray();
 //        String[] a = ExpressionParser.tokenize(eq);

@@ -58,7 +58,7 @@ public class ProcessorTiff {
         this.language = language;
     }
 
-    public List<DataFile> execute(String header, String body, String pathProcessorTiff, String[] nameParameters, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) {
+    public List<DataFile> execute(String header, String body, String pathProcessorTiff, String[] nameParameters, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) throws Exception {
         File tiff = new File(pathProcessorTiff);
         if (tiff.exists() && tiff.getName().endsWith(".tif")) {
             SeekableStream s = null;
@@ -108,9 +108,11 @@ public class ProcessorTiff {
                         idx++;
                     }
                 }
+                System.out.println("Executing");
                 GenericSEB g = new GenericSEB(language);
                 Map<String, double[]> datas = g.execute(header, body, parameters, constants, constantsVetor, constantsMatrix);
 
+                System.out.println("Executed");
                 FileOutputStream fos;
                 WritableRaster rasterResp;
 

@@ -113,7 +113,9 @@ public class ExpressionParser {
 
     public ExpressionParser(List<String> variables, boolean debug) {
         this.debug = debug;
-        this.variables.addAll(variables);
+        if (variables != null) {
+            this.variables.addAll(variables);
+        }
     }
 
     private boolean isOperator(String token) {
@@ -130,11 +132,11 @@ public class ExpressionParser {
     }
 
     private boolean isVariable(String variable) throws IllegalArgumentException {
-        if(!variable.matches("[aA-zZ_](\\w+)?")){
-             throw new IllegalArgumentException("Variable '" + variable + "' sintax wrong!");
-        }
         if (variables.isEmpty() || variable.equals(",")) {
             return true;
+        }
+        if (!variable.matches("[aA-zZ_](\\w+)?")) {
+            throw new IllegalArgumentException("Variable '" + variable + "' sintax wrong!");
         }
         if (!variables.contains(variable)) {
             throw new IllegalArgumentException("Variable '" + variable + "' doesn't exist!");
@@ -216,7 +218,9 @@ public class ExpressionParser {
             }
             for (String token : tokens) {
                 if (!isOperator(token)) {
-                    stack.push(token);
+                    if (!token.equals(",")) {
+                        stack.push(token);
+                    }
                 } else {
 
                     int[] op = OPERATORS.get(token);

@@ -45,7 +45,7 @@ public class GenericSEB {
         this(LanguageType.JAVA);
     }
 
-    public boolean verifyEquations(String forms, List<String> variables, boolean verifyIF) {
+    public boolean verifyEquations(String forms, List<String> variables, boolean verifyIF) throws Exception {
 
         if (verifyIF) {
             equations = new ArrayList<>();
@@ -83,7 +83,9 @@ public class GenericSEB {
                     vet[0] = vet[0].substring(0, vet[0].indexOf("_("));
 //                    System.out.println(ifTest + " " + vet[0]);
                     try {
-                        ex.evaluateExprIf(ifTest, variables);
+                        if (!ex.evaluateExprIf(ifTest, variables)) {
+                            throw new Exception("Equation " + ifTest + " is wrong!");
+                        }
                         if (verifyIF) {
                             equation.setCondition(ex.getOutput());
                         }
@@ -110,7 +112,9 @@ public class GenericSEB {
             }
             variables.add(vet[0]);
             try {
-                ex.evaluateExpr(line, variables);
+                if (!ex.evaluateExpr(line, variables)) {
+                    throw new Exception("Equation " + line + " is wrong!");
+                }
 
             } catch (IllegalArgumentException e) {
 //                    System.out.println("Equation is wrong: " + line);
@@ -165,11 +169,11 @@ public class GenericSEB {
         return variables;
     }
 
-    public Map<String, double[]> execute(String header, String body, Map<String, double[]> parameters, Map<String, Double> constants) {
+    public Map<String, double[]> execute(String header, String body, Map<String, double[]> parameters, Map<String, Double> constants) throws Exception {
         return execute(header, body, parameters, constants, null, null);
     }
 
-    public Map<String, double[]> execute(String header, String body, Map<String, double[]> parameters, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) {
+    public Map<String, double[]> execute(String header, String body, Map<String, double[]> parameters, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) throws Exception {
 
         Map<String, double[]> ret = new HashMap<>();
         String source = null;
@@ -240,7 +244,7 @@ public class GenericSEB {
         return null;
     }
 
-    private String generateCUDA(String header, String body, Map<String, double[]> parameters, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) {
+    private String generateCUDA(String header, String body, Map<String, double[]> parameters, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) throws Exception {
 
         List<String> variables = getVariables();
         ExpressionParser ex = new ExpressionParser();
@@ -720,7 +724,7 @@ public class GenericSEB {
         return source.toString();
     }
 
-    private String generateOpenCL(String header, String body, Map<String, double[]> parameters, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) {
+    private String generateOpenCL(String header, String body, Map<String, double[]> parameters, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) throws Exception {
         List<String> variables = getVariables();
         ExpressionParser ex = new ExpressionParser();
 
@@ -1181,7 +1185,7 @@ public class GenericSEB {
         return source.toString();
     }
 
-    private String generateJava(String header, String body, Map<String, double[]> parameters, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) {
+    private String generateJava(String header, String body, Map<String, double[]> parameters, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) throws Exception {
         List<String> variables = getVariables();
         ExpressionParser ex = new ExpressionParser();
 
@@ -1273,6 +1277,7 @@ public class GenericSEB {
         for (int i = 0; i < vet.length; i++) {
             structure = new Structure();
             structure.setToken(vet[i].split("=")[0]);
+            System.out.println(structure.getToken());
             source.append("        double ").append(lexer.analyse(vet[i], structure, null, LanguageType.JAVA)).append(";\n\n");
         }
         source.append("\n");
@@ -1322,10 +1327,11 @@ public class GenericSEB {
                 }
             }
         }
+        System.out.println("Verify");
         verifyEquations(header, variables, false);
         verifyEquations(body, variables, true);
-        
-        
+
+
         if (index != null) {
             source.append("        double tMax, tMin;\n"
                     + "        double indexMax, indexMin, index;\n"
@@ -1339,7 +1345,7 @@ public class GenericSEB {
                     + "        tMin = Double.MAX_VALUE;\n");
             equations.add(index);
         }
-        
+
         for (int i = 0; i < equations.size(); i++) {
             eq = equations.get(i);
             switch (eq.getTerm()) {
@@ -1371,7 +1377,7 @@ public class GenericSEB {
         boolean rad_espectral = false;
         String ident;
 
-        
+
         for (int i = 0; i < equations.size(); i++) {
 //            terms = vet[i].split("=");
             eq = equations.get(i);
@@ -1643,12 +1649,16 @@ public class GenericSEB {
                 + "index = (0.5) * ((2.0 * bandaRefletida4 + 1) - sqrt((pow((2 * bandaRefletida4 + 1), 2) - 8 * (bandaRefletida4 - bandaRefletida3))))";
 
         GenericSEB g = new GenericSEB(LanguageType.JAVA);
-        g.execute(header, body, parameters, constants, constVetor, constMatrix);
+        try {
+            g.execute(header, body, parameters, constants, constVetor, constMatrix);
+        } catch (Exception ex) {
+            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public static void calculaAB(double[] coeficientes, double Rn_hot, double G_hot, double Uref, double SAVI_hot, double Ts_hot, double Ts_cold) {
 
-        double z0m =Math.exp(-5.809f + 5.62f * SAVI_hot);
+        double z0m = Math.exp(-5.809f + 5.62f * SAVI_hot);
 
         double U_star = (Constants.k * Uref / Math.log(Constants.z200 / z0m));
 
@@ -1678,13 +1688,13 @@ public class GenericSEB {
 
             H = Constants.p * Constants.cp * (b + a * (Ts_hot - Constants.T0)) / r_ah;
 
-            L =  (-(Constants.p * Constants.cp * U_star * U_star * U_star * (Ts_hot)) / (Constants.k * Constants.g * H));
+            L = (-(Constants.p * Constants.cp * U_star * U_star * U_star * (Ts_hot)) / (Constants.k * Constants.g * H));
 
             tm_200 = Psim(L);
             th_2 = Psih(Constants.z2, L);
             th_0_1 = Psih(Constants.z1, L);
 
-            U_star =  (Constants.k * Uref / (Math.log(Constants.z200 / z0m) - tm_200));
+            U_star = (Constants.k * Uref / (Math.log(Constants.z200 / z0m) - tm_200));
             r_ah_anterior = r_ah;
             r_ah = ((Math.log(Constants.z2 / Constants.z1) - th_2 + th_0_1) / (U_star * Constants.k));
 
