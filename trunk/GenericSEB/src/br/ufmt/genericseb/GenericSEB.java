@@ -1277,7 +1277,6 @@ public class GenericSEB {
         for (int i = 0; i < vet.length; i++) {
             structure = new Structure();
             structure.setToken(vet[i].split("=")[0]);
-            System.out.println(structure.getToken());
             source.append("        double ").append(lexer.analyse(vet[i], structure, null, LanguageType.JAVA)).append(";\n\n");
         }
         source.append("\n");
