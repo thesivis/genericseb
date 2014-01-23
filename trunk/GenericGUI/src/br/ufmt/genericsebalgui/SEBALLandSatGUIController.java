@@ -210,6 +210,8 @@ public class SEBALLandSatGUIController implements Initializable {
         constanteTable.getItems().add(new Constante("K2", 1260.56));
         constanteTable.getItems().add(new Constante("S", 1367.0));
         constanteTable.getItems().add(new Constante("StefanBoltzman", (5.67 * Math.pow(10, -8))));
+        constanteTable.getItems().add(new Constante("Tao_24h", 0.63));
+
 
         try {
             BufferedReader bur = new BufferedReader(new FileReader(System.getProperty("user.dir") + "/source/landsat.prop"));
@@ -335,7 +337,7 @@ public class SEBALLandSatGUIController implements Initializable {
                                     ProcessorTiff processorTiff = new ProcessorTiff(LanguageType.JAVA);
                                     ret = processorTiff.execute(header.toString(), body.toString(), path, nameParameters, variables, constVetor, constMatrix);
                                 } catch (Exception ex) {
-                                    new AlertDialog(Main.screen,ex.getMessage()).showAndWait();
+                                    new AlertDialog(Main.screen, ex.getMessage()).showAndWait();
                                 }
 
                                 System.out.println("End");
