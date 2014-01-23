@@ -37,7 +37,7 @@ import java.util.logging.Logger;
  */
 public class LandSat {
 
-    public List<DataFile> preprocessing(String pathToOriginalTiff, String equations, double[][] calibration, double[] parameterAlbedo, int julianDay, float Z, float reflectanciaAtmosfera, float P, float UR, float Ta, float Kt, float L, float K1, float K2, float S, float StefanBoltzman, float latitude, float Rg_24h, float Uref) {
+    public List<DataFile> preprocessing(String pathToOriginalTiff, String equations, double[][] calibration, double[] parameterAlbedo, int julianDay, float Z, float reflectanciaAtmosfera, float P, float UR, float Ta, float Kt, float L, float K1, float K2, float S, float StefanBoltzman, float latitude, float Rg_24h, float Uref, float Tao_24h) {
 
         File tiff = new File(pathToOriginalTiff);
         if (tiff.exists() && tiff.getName().endsWith(".tif")) {
@@ -78,6 +78,7 @@ public class LandSat {
                         variables.put("latitude", (double) latitude);
                         variables.put("Rg_24h", (double) Rg_24h);
                         variables.put("Uref", (double) Uref);
+                        variables.put("Tao_24h", (double) Tao_24h);
 
 
                         String[] nameParameters = new String[]{"pixel1", "pixel2", "pixel3", "pixel4", "pixel5", "pixel6", "pixel7"};
@@ -811,7 +812,7 @@ public class LandSat {
         return true;
     }
 
-    public List<DataFile> preprocessingLandSat5(String path, String equations, int julianDay, float Z, float P, float UR, float Ta, float latitude, float Rg_24h, float Uref) {
+    public List<DataFile> preprocessingLandSat5(String path, String equations, int julianDay, float Z, float P, float UR, float Ta, float latitude, float Rg_24h, float Uref, float Tao_24h) {
 
         double[][] calibration = new double[][]{
             {-1.52f, 193.0f, 1957.0f},
@@ -831,7 +832,7 @@ public class LandSat {
         float S = 1367.0f;
         float StefanBoltzman = (float) (5.67 * Math.pow(10, -8));
 
-        List<DataFile> ret = preprocessing(path, equations, calibration, parameterAlbedo, julianDay, Z, reflectancaAtmosfera, P, UR, Ta, Kt, L, K1, K2, S, StefanBoltzman, latitude, Rg_24h, Uref);
+        List<DataFile> ret = preprocessing(path, equations, calibration, parameterAlbedo, julianDay, Z, reflectancaAtmosfera, P, UR, Ta, Kt, L, K1, K2, S, StefanBoltzman, latitude, Rg_24h, Uref, Tao_24h);
 
         return ret;
     }

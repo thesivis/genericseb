@@ -176,14 +176,96 @@ public class GenericSEB {
     public Map<String, double[]> execute(String header, String body, Map<String, double[]> parameters, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) throws Exception {
 
         Map<String, double[]> ret = new HashMap<>();
+        Map<String, double[]> firstRet = null;
         String source = null;
 
+
+        StringBuilder newBodyWithIndex = new StringBuilder();
+        StringBuilder newBodyWithoutIndex = new StringBuilder();
+
+        String vet[];
+        String vets[] = body.split("\n");
+        boolean hasIndex = false;
+
+        String line;
+        for (int i = 0; i < vets.length; i++) {
+            line = vets[i];
+
+            line = line.replaceAll("[ ]+", "");
+            if (line.contains(")=")) {
+                vet = line.split("[)]=");
+                vet[0] += ")";
+            } else {
+                vet = line.split("=");
+            }
+            if (vet[0].startsWith("O_")) {
+                vet[0] = vet[0].substring(2);
+            }
+            if (vet[0].contains("_(")) {
+                vet[0] = vet[0].substring(0, vet[0].indexOf("_("));
+            }
+
+            if (!hasIndex) {
+                newBodyWithIndex.append(vets[i]).append("\n");
+                if (vets[i].startsWith("O_")) {
+                    newBodyWithoutIndex.append(vets[i].substring(2)).append("\n");
+                } else if (!vet[0].equals("index")) {
+                    newBodyWithoutIndex.append(vets[i]).append("\n");
+                }
+            } else {
+                newBodyWithoutIndex.append(vets[i]).append("\n");
+            }
+
+            if (vet[0].equals("index")) {
+                hasIndex = true;
+            }
+        }
+//        System.out.println(newBodyWithIndex.toString());
+//        System.out.println("--------------------");
+//        System.out.println(newBodyWithoutIndex.toString());
+//        System.exit(1);
+
         if (language.equals(LanguageType.CUDA)) {
+            if (hasIndex) {
+                throw new Exception("Index not yet implemented with CUDA");
+            }
             source = generateCUDA(header, body, parameters, constants, constantsVetor, constantsMatrix);
         } else if (language.equals(LanguageType.OPENCL)) {
+            if (hasIndex) {
+                throw new Exception("Index not yet implemented with OpenCL");
+            }
             source = generateOpenCL(header, body, parameters, constants, constantsVetor, constantsMatrix);
         } else {
-            source = generateJava(header, body, parameters, constants, constantsVetor, constantsMatrix);
+            String exec = body;
+            if (hasIndex) {
+                firstRet = new HashMap<>();
+                source = generateJava(header, newBodyWithIndex.toString(), parameters, constants, constantsVetor, constantsMatrix);
+                Object instanced = compile(source, "Equation");
+                try {
+                    Method method = instanced.getClass().getDeclaredMethod("execute", classes);
+                    firstRet = (Map<String, double[]>) method.invoke(instanced, pars);
+                    constants.put("a", firstRet.get("coef")[0]);
+                    constants.put("b", firstRet.get("coef")[1]);
+                } catch (NoSuchMethodException ex1) {
+                    Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+                } catch (SecurityException ex1) {
+                    Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+                } catch (IllegalAccessException ex1) {
+                    Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+                } catch (IllegalArgumentException ex1) {
+                    Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+                } catch (InvocationTargetException ex1) {
+                    Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+                exec = newBodyWithoutIndex.toString();
+                pars = null;
+                classes = null;
+                equations.clear();
+                index = null;
+            }
+//            System.out.println("Exec:" + exec);
+//            System.exit(1);
+            source = generateJava(header, exec, parameters, constants, constantsVetor, constantsMatrix);
         }
 
 //        System.out.println(source);
@@ -193,6 +275,9 @@ public class GenericSEB {
         try {
             Method method = instanced.getClass().getDeclaredMethod("execute", classes);
             ret = (Map<String, double[]>) method.invoke(instanced, pars);
+            if (hasIndex) {
+                ret.putAll(firstRet);
+            }
         } catch (NoSuchMethodException ex1) {
             Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
         } catch (SecurityException ex1) {
@@ -1333,7 +1418,7 @@ public class GenericSEB {
 
         if (index != null) {
             source.append("        double tMax, tMin;\n"
-                    + "        double indexMax, indexMin, index;\n"
+                    + "        double indexMax, indexMin;\n"
                     + "        double RnHot = 0, GHot = 0;\n"
                     + "        double SAVI_hot = 0;\n"
                     + "\n"

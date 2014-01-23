@@ -53,7 +53,7 @@ public class Main {
         float P = 99.3f;
         float UR = 36.46f;
         float Ta = 32.74f;
-//        float Tao_24h = 0.63f;
+        float Tao_24h = 0.63f;
         StringBuilder equations = new StringBuilder();
 
 
@@ -68,6 +68,6 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        List<DataFile> datas2 = land.preprocessingLandSat5(path, equations.toString(), julianDay, Z, P, UR, Ta, latitude, Rg_24h, Uref);
+        List<DataFile> datas2 = land.preprocessingLandSat5(path, equations.toString(), julianDay, Z, P, UR, Ta, latitude, Rg_24h, Uref,Tao_24h);
     }
 }
