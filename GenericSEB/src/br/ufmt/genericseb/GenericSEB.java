@@ -92,14 +92,14 @@ public class GenericSEB {
                     String ifTest = vet[0].substring(vet[0].indexOf("_(") + 2, vet[0].length() - 1);
                     vet[0] = vet[0].substring(0, vet[0].indexOf("_("));
 //                    System.out.println(ifTest + " " + vet[0]);
-                    
+
                     try {
                         if (!ex.evaluateExprIf(ifTest, variables)) {
                             throw new Exception("Equation " + ifTest + " is wrong!");
                         }
                         if (verifyIF) {
                             ifTest = lexer.analyse(ifTest, language);
-                            
+
                             equation.setCondition(ex.tokenizeIf(ifTest));
                         }
                     } catch (IllegalArgumentException e) {
@@ -1352,8 +1352,8 @@ public class GenericSEB {
                 source.append("        double ").append(string).append(" = ").append(constants.get(string)).append("f;\n");
                 variables.add(string);
             }
+            source.append("\n");
         }
-        source.append("\n");
 
         StringBuilder vf;
         boolean albedo = false;
@@ -1370,8 +1370,8 @@ public class GenericSEB {
                     albedo = true;
                 }
             }
+            source.append("\n");
         }
-        source.append("\n");
 
         if (constantsMatrix != null) {
             for (String string : constantsMatrix.keySet()) {
@@ -1395,20 +1395,24 @@ public class GenericSEB {
                 }
                 source.append("        double[][] ").append(string).append(" = new double[][]{").append(vf.toString()).append("};\n");
             }
+            source.append("\n");
         }
-        source.append("\n");
 
-        String[] vet = header.split("\n");
+        String[] vet;
+
         GenericLexerSEB lexer = new GenericLexerSEB();
         Structure structure;
 
-        //COLOCANDO AS FORMULAS DO CABECALHOS
-        for (int i = 0; i < vet.length; i++) {
-            structure = new Structure();
-            structure.setToken(vet[i].split("=")[0]);
-            source.append("        double ").append(lexer.analyse(vet[i], structure, null, LanguageType.JAVA)).append(";\n\n");
+        if (header != null && !header.isEmpty()) {
+             vet = header.split("\n");
+            //COLOCANDO AS FORMULAS DO CABECALHOS
+            for (int i = 0; i < vet.length; i++) {
+                structure = new Structure();
+                structure.setToken(vet[i].split("=")[0]);
+                source.append("        double ").append(lexer.analyse(vet[i], structure, null, LanguageType.JAVA)).append(";\n\n");
+            }
+            source.append("\n");
         }
-        source.append("\n");
 
         //DECLARANDO OS VETORES QUE SERAO RETORNADOS
         vet = body.split("\n");
