@@ -88,52 +88,59 @@ public class GenericCSVController extends GenericController {
 
                     File csv = file;
                     if (csv.exists() && csv.getName().endsWith(".csv")) {
-                        ArrayList<List<Double>> datas = new ArrayList<>();
-                        int tam = columnsTable.getItems().size();
-                        int size = 0;
-                        for (int i = 0; i < tam; i++) {
-                            datas.add(new ArrayList<Double>());
-                        }
-                        line = bur.readLine();
-                        String[] vet;
-                        while (line != null) {
-                            vet = line.split(delimiter);
-                            for (int i = 0; i < vet.length; i++) {
-                                datas.get(i).add(Double.parseDouble(vet[i]));
+                        try {
+                            ArrayList<List<Double>> datas = new ArrayList<>();
+                            int tam = columnsTable.getItems().size();
+                            int size = 0;
+                            for (int i = 0; i < tam; i++) {
+                                datas.add(new ArrayList<Double>());
                             }
                             line = bur.readLine();
-                        }
-                        bur.close();
-
-                        Map<String, double[]> parameters = new HashMap<>();
-
-                        double[] d;
-                        for (int i = 0; i < tam; i++) {
-                            d = new double[datas.get(i).size()];
-                            size = datas.get(i).size();
-                            for (int j = 0; j < d.length; j++) {
-                                d[j] = datas.get(i).get(j);
+                            String[] vet;
+                            while (line != null) {
+                                vet = line.split(delimiter);
+//                            System.out.println("Line:"+line);
+                                for (int i = 0; i < vet.length; i++) {
+                                    datas.get(i).add(Double.parseDouble(vet[i]));
+                                }
+                                line = bur.readLine();
                             }
-                            parameters.put(columnsTable.getItems().get(i).getNome(), d);
-                        }
+                            bur.close();
 
-                        GenericSEB g = new GenericSEB(LanguageType.JAVA);
-                        Map<String, double[]> datum = g.execute(header.toString(), body.toString(), parameters, constants);
+                            Map<String, double[]> parameters = new HashMap<>();
 
-                        PrintWriter pw = new PrintWriter(file.getParent() + "/" + file.getName().substring(0, file.getName().length() - 3) + "Resp.csv");
-
-                        Set<String> keys = datum.keySet();
-                        StringBuilder newLine;
-                        for (int i = 0; i < size; i++) {
-                            newLine = new StringBuilder();
-                            for (String string : keys) {
-                                newLine.append(datum.get(string)[i]).append(";");
+                            double[] d;
+                            for (int i = 0; i < tam; i++) {
+                                d = new double[datas.get(i).size()];
+                                size = datas.get(i).size();
+                                for (int j = 0; j < d.length; j++) {
+                                    d[j] = datas.get(i).get(j);
+                                }
+                                System.out.println("Par:" + columnsTable.getItems().get(i).getNome());
+                                parameters.put(columnsTable.getItems().get(i).getNome(), d);
                             }
-                            pw.println(newLine.toString().substring(0, newLine.toString().length() - 1));
+
+                            GenericSEB g = new GenericSEB(LanguageType.JAVA);
+                            Map<String, double[]> datum = g.execute(header.toString(), body.toString(), parameters, constants);
+
+                            PrintWriter pw = new PrintWriter(file.getParent() + "/" + file.getName().substring(0, file.getName().length() - 3) + "Resp.csv");
+
+                            Set<String> keys = datum.keySet();
+                            StringBuilder newLine;
+                            for (int i = 0; i < size; i++) {
+                                newLine = new StringBuilder();
+                                for (String string : keys) {
+                                    newLine.append(datum.get(string)[i]).append(";");
+                                }
+                                pw.println(newLine.toString().substring(0, newLine.toString().length() - 1));
+                            }
+
+                            pw.close();
+
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                            new AlertDialog(Main.screen, ex.getMessage()).showAndWait();
                         }
-
-                        pw.close();
-
                     } else {
                         throw new Exception(bundle.getString("error.csv"));
                     }
@@ -159,8 +166,8 @@ public class GenericCSVController extends GenericController {
         TableColumn tc = (TableColumn) columnsTable.getColumns().get(0);
         tc.setCellValueFactory(new PropertyValueFactory<Constante, String>("nome"));
         tc.setCellFactory(cellFactoryString);
-        
-        
+
+
         constanteTable.getItems().add(new Constante("albedo", 0.4));
         constanteTable.getItems().add(new Constante("razaoInsolacao", 0.05));
         constanteTable.getItems().add(new Constante("latitude", -0.05266));
@@ -170,7 +177,7 @@ public class GenericCSVController extends GenericController {
         constanteTable.getItems().add(new Constante("b3", 0.8));
         constanteTable.getItems().add(new Constante("stefan", 5.6697E-8));
         constanteTable.getItems().add(new Constante("pascal", 133.3224));
-        
+
         try {
             BufferedReader burTrab = new BufferedReader(new FileReader(System.getProperty("user.dir") + "/source/trab.prop"));
             String linha = burTrab.readLine();

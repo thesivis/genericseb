@@ -448,8 +448,9 @@ public class ExpressionParser {
     public static void main(String[] args) {
 
 //        String str = "-2*ln(2)-(a-(b^-2))";
-        String str = "(SAVI != 0)";
+        String str = "mod(nh,100)";
         //String str = "a^-2";  
+//        System.out.println(Maths.mod(100, 30));
         ExpressionParser parser = new ExpressionParser(true);
         boolean result = parser.evaluateExprIf(str);
         System.out.println("result = " + result);

@@ -16,9 +16,9 @@
           <content>
             <AnchorPane id="Content" minHeight="0.0" minWidth="0.0" prefHeight="600.0" prefWidth="1024.0">
               <children>
-                <TableView fx:id="columnsTable" disable="false" editable="false" layoutX="13.0" layoutY="76.0" prefHeight="450.0" prefWidth="500.0" tableMenuButtonVisible="false">
+                <TableView fx:id="columnsTable" disable="false" editable="true" layoutX="13.0" layoutY="76.0" prefHeight="450.0" prefWidth="500.0" tableMenuButtonVisible="false">
                   <columns>
-                    <TableColumn editable="false" maxWidth="5000.0" minWidth="10.0" prefWidth="500.0" text="%variable" />
+                    <TableColumn editable="true" maxWidth="5000.0" minWidth="10.0" prefWidth="500.0" text="%variable" />
                   </columns>
                 </TableView>
                 <Label fx:id="nomeArquivoLabel" layoutX="100.0" layoutY="10.0" prefWidth="800.0" text="Label" wrapText="false" />
