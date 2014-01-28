@@ -111,7 +111,7 @@ public class GenericLexerSEB {
         for (int i = 0; i < terms.length; i++) {
             function = funcs.get(terms[i]);
             if (function != null) {
-                System.out.println("func:" + function);
+//                System.out.println("func:" + function);
                 terms[i] = function;
             } else if (terms[i].equals("~")) {
                 terms[i] = "-";

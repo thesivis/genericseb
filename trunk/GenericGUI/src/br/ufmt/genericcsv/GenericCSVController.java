@@ -116,7 +116,6 @@ public class GenericCSVController extends GenericController {
                                 for (int j = 0; j < d.length; j++) {
                                     d[j] = datas.get(i).get(j);
                                 }
-                                System.out.println("Par:" + columnsTable.getItems().get(i).getNome());
                                 parameters.put(columnsTable.getItems().get(i).getNome(), d);
                             }
 
@@ -127,6 +126,11 @@ public class GenericCSVController extends GenericController {
 
                             Set<String> keys = datum.keySet();
                             StringBuilder newLine;
+                            newLine = new StringBuilder();
+                            for (String string : keys) {
+                                newLine.append(string).append(";");
+                            }
+                            pw.println(newLine.toString().substring(0, newLine.toString().length() - 1));
                             for (int i = 0; i < size; i++) {
                                 newLine = new StringBuilder();
                                 for (String string : keys) {
