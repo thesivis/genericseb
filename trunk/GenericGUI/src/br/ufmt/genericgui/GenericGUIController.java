@@ -52,6 +52,12 @@ public class GenericGUIController implements Initializable {
         screen = "/br/ufmt/genericsebalgui/sebal-landsat-gui.fxml";
         changeContent(screen);
     }
+    
+    @FXML
+    private void csvAction(ActionEvent event) {
+        screen = "/br/ufmt/genericcsv/genericcsv.fxml";
+        changeContent(screen);
+    }
 
     @FXML
     private void brAction(ActionEvent event) {
