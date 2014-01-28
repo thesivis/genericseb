@@ -8,6 +8,7 @@ import br.ufmt.genericgui.GenericController;
 import br.ufmt.genericgui.Main;
 import br.ufmt.genericlexerseb.LanguageType;
 import br.ufmt.genericseb.GenericSEB;
+import br.ufmt.genericsebalgui.SEBALLandSatGUIController;
 import br.ufmt.utils.AlertDialog;
 import br.ufmt.utils.Constante;
 import br.ufmt.utils.EditingCell;
@@ -158,6 +159,38 @@ public class GenericCSVController extends GenericController {
         TableColumn tc = (TableColumn) columnsTable.getColumns().get(0);
         tc.setCellValueFactory(new PropertyValueFactory<Constante, String>("nome"));
         tc.setCellFactory(cellFactoryString);
+        
+        
+        constanteTable.getItems().add(new Constante("albedo", 0.4));
+        constanteTable.getItems().add(new Constante("razaoInsolacao", 0.05));
+        constanteTable.getItems().add(new Constante("latitude", -0.05266));
+        constanteTable.getItems().add(new Constante("a2", 0.5));
+        constanteTable.getItems().add(new Constante("a3", 0.1));
+        constanteTable.getItems().add(new Constante("b2", 0.05));
+        constanteTable.getItems().add(new Constante("b3", 0.8));
+        constanteTable.getItems().add(new Constante("stefan", 5.6697E-8));
+        constanteTable.getItems().add(new Constante("pascal", 133.3224));
+        
+        try {
+            BufferedReader burTrab = new BufferedReader(new FileReader(System.getProperty("user.dir") + "/source/trab.prop"));
+            String linha = burTrab.readLine();
+
+            if (linha.equals("<header>")) {
+                linha = burTrab.readLine();
+                while (!linha.equals("<body>")) {
+                    headerTable.getItems().add(new Constante(linha, 0.0));
+                    linha = burTrab.readLine();
+                }
+            }
+
+            linha = burTrab.readLine();
+            while (linha != null) {
+                bodyTable.getItems().add(new Constante(linha, 0.0));
+                linha = burTrab.readLine();
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(SEBALLandSatGUIController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @Override
