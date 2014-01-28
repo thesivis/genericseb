@@ -273,7 +273,7 @@ public class ExpressionParser {
 //        System.out.println("After:" + str);
         String[] input = tokenize(str);
 
-//        System.out.println(Arrays.toString(input));
+//        System.out.println("asdf:"+Arrays.toString(input));
 
         OPERATORS.put("<", new int[]{0, LEFT_ASSOC, 2});
         OPERATORS.put("<=", new int[]{0, LEFT_ASSOC, 2});
@@ -291,11 +291,19 @@ public class ExpressionParser {
             switch (string) {
                 case "<":
                 case ">":
+                    if (!(input[i + 1].equals("&") || input[i + 1].equals("|") || input[i + 1].equals("="))) {
+                        together.append(" ");
+                    }
                     break;
                 case "&":
                 case "|":
                 case "=":
                     if (!(input[i + 1].equals("&") || input[i + 1].equals("|") || input[i + 1].equals("="))) {
+                        together.append(" ");
+                    }
+                    break;
+                case "!":
+                    if (!(input[i + 1].equals("="))) {
                         together.append(" ");
                     }
                     break;
@@ -440,10 +448,10 @@ public class ExpressionParser {
     public static void main(String[] args) {
 
 //        String str = "-2*ln(2)-(a-(b^-2))";
-        String str = "( 1.0 + 2.123)*(2*a/b)-sqrt(5.0+6)";
+        String str = "(SAVI != 0)";
         //String str = "a^-2";  
         ExpressionParser parser = new ExpressionParser(true);
-        boolean result = parser.evaluateExpr(str);
+        boolean result = parser.evaluateExprIf(str);
         System.out.println("result = " + result);
 
     }
