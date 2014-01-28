@@ -58,6 +58,7 @@ public class GenericSEB {
         ExpressionParser ex = new ExpressionParser();
         String vet[];
         String vets[] = forms.split("\n");
+        GenericLexerSEB lexer = new GenericLexerSEB();
 
         String line;
         for (int i = 0; i < vets.length; i++) {
@@ -70,13 +71,13 @@ public class GenericSEB {
             line = line.replaceAll("[ ]+", "");
             if (line.contains(")=")) {
                 int idx = line.indexOf(")=");
-                while (line.indexOf(")=", idx+1) != -1) {
-                    idx = line.indexOf(")=", idx+1);
+                while (line.indexOf(")=", idx + 1) != -1) {
+                    idx = line.indexOf(")=", idx + 1);
                 }
                 vet = new String[2];
                 vet[0] = line.substring(0, idx) + ")";
                 vet[1] = line.substring(idx + 2);
-                
+
             } else {
                 vet = line.split("=");
             }
@@ -91,12 +92,15 @@ public class GenericSEB {
                     String ifTest = vet[0].substring(vet[0].indexOf("_(") + 2, vet[0].length() - 1);
                     vet[0] = vet[0].substring(0, vet[0].indexOf("_("));
 //                    System.out.println(ifTest + " " + vet[0]);
+                    
                     try {
                         if (!ex.evaluateExprIf(ifTest, variables)) {
                             throw new Exception("Equation " + ifTest + " is wrong!");
                         }
                         if (verifyIF) {
-                            equation.setCondition(ex.getOutput());
+                            ifTest = lexer.analyse(ifTest, language);
+                            
+                            equation.setCondition(ex.tokenizeIf(ifTest));
                         }
                     } catch (IllegalArgumentException e) {
 //                    System.out.println("Equation is wrong: " + line);
@@ -202,8 +206,13 @@ public class GenericSEB {
 
             line = line.replaceAll("[ ]+", "");
             if (line.contains(")=")) {
-                vet = line.split("[)]=");
-                vet[0] += ")";
+                int idx = line.indexOf(")=");
+                while (line.indexOf(")=", idx + 1) != -1) {
+                    idx = line.indexOf(")=", idx + 1);
+                }
+                vet = new String[2];
+                vet[0] = line.substring(0, idx) + ")";
+                vet[1] = line.substring(idx + 2);
             } else {
                 vet = line.split("=");
             }
@@ -657,6 +666,9 @@ public class GenericSEB {
                         }
                     }
                     if (!find) {
+                        if (parameters.get(condition[j]) != null) {
+                            gpuCode.append(" *");
+                        }
                         gpuCode.append(condition[j]);
                         if (condition[j].matches("(-?)[0-9]+[\\.][0-9]+")) {
                             gpuCode.append("f");
@@ -763,25 +775,29 @@ public class GenericSEB {
 
                     for (int j = 0; j < outEquation.length; j++) {
                         String string = outEquation[j];
-                        for (int k = 0; k < i; k++) {
-                            eq2 = equations.get(k);
-                            t = eq2.getTerm().replace(" ", "");
+                        if (parameters.get(string) != null) {
+                            string = " *" + string;
+                        } else {
+                            for (int k = 0; k < i; k++) {
+                                eq2 = equations.get(k);
+                                t = eq2.getTerm().replace(" ", "");
 //                            System.out.println("T:"+t);
 
-                            if (t.equals(string)) {
-                                if (eq2.getIndex() != null) {
-                                    string = " *" + t;
-                                } else {
-                                    string = t;
+                                if (t.equals(string)) {
+                                    if (eq2.getIndex() != null) {
+                                        string = " *" + t;
+                                    } else {
+                                        string = t;
+                                    }
+                                    break;
+                                } else if (string.equals("~")) {
+                                    string = "-";
+                                } else if (t.contains("banda") && t.contains(string)) {
+                                    if (eq2.getIndex() != null) {
+                                        string = " *" + string;
+                                    }
+                                    break;
                                 }
-                                break;
-                            } else if (string.equals("~")) {
-                                string = "-";
-                            } else if (t.contains("banda") && t.contains(string)) {
-                                if (eq2.getIndex() != null) {
-                                    string = " *" + string;
-                                }
-                                break;
                             }
                         }
                         equation += string;
@@ -1139,6 +1155,9 @@ public class GenericSEB {
                     }
                     if (!find) {
                         gpuCode.append(condition[j]);
+                        if (parameters.get(condition[j]) != null) {
+                            gpuCode.append("[idx]");
+                        }
                     }
                     gpuCode.append(" ");
                 }
@@ -1231,26 +1250,30 @@ public class GenericSEB {
 
                     for (int j = 0; j < outEquation.length; j++) {
                         String string = outEquation[j];
-                        for (int k = 0; k < i; k++) {
+                        if (parameters.get(string) != null) {
+                            string = string + "[idx]";
+                        } else {
+                            for (int k = 0; k < i; k++) {
 
-                            eq2 = equations.get(k);
-                            t = eq2.getTerm().replace(" ", "");
+                                eq2 = equations.get(k);
+                                t = eq2.getTerm().replace(" ", "");
 //                            System.out.println("T:"+t);
 
-                            if (t.equals(string)) {
-                                if (eq2.getIndex() != null) {
-                                    string = t + "[idx]";
-                                } else {
-                                    string = t;
+                                if (t.equals(string)) {
+                                    if (eq2.getIndex() != null) {
+                                        string = t + "[idx]";
+                                    } else {
+                                        string = t;
+                                    }
+                                    break;
+                                } else if (string.equals("~")) {
+                                    string = "-";
+                                } else if (t.contains("banda") && t.contains(string)) {
+                                    if (eq2.getIndex() != null) {
+                                        string = string + "[idx]";
+                                    }
+                                    break;
                                 }
-                                break;
-                            } else if (string.equals("~")) {
-                                string = "-";
-                            } else if (t.contains("banda") && t.contains(string)) {
-                                if (eq2.getIndex() != null) {
-                                    string = string + "[idx]";
-                                }
-                                break;
                             }
                         }
                         equation += string;
@@ -1512,6 +1535,9 @@ public class GenericSEB {
                     }
                     if (!find) {
                         source.append(condition[j]);
+                        if (parameters.get(condition[j]) != null) {
+                            source.append("[i]");
+                        }
                         if (condition[j].matches("(-?)[0-9]+[\\.][0-9]+")) {
                             source.append("f");
                         }
@@ -1586,24 +1612,28 @@ public class GenericSEB {
 
                     for (int j = 0; j < outEquation.length; j++) {
                         String string = outEquation[j];
-                        for (int k = 0; k < i; k++) {
-                            eq2 = equations.get(k);
-                            t = eq2.getTerm().replace(" ", "");
+                        if (parameters.get(string) != null) {
+                            string = string + "[i]";
+                        } else {
+                            for (int k = 0; k < i; k++) {
+                                eq2 = equations.get(k);
+                                t = eq2.getTerm().replace(" ", "");
 //                            System.out.println("T:"+t);
-                            if (t.equals(string)) {
-                                if (eq2.getIndex() != null) {
-                                    string = t + "[i]";
-                                } else {
-                                    string = t;
+                                if (t.equals(string)) {
+                                    if (eq2.getIndex() != null) {
+                                        string = t + "[i]";
+                                    } else {
+                                        string = t;
+                                    }
+                                    break;
+                                } else if (string.equals("~")) {
+                                    string = "-";
+                                } else if (t.contains("banda") && t.contains(string)) {
+                                    if (eq2.getIndex() != null) {
+                                        string = string + "[i]";
+                                    }
+                                    break;
                                 }
-                                break;
-                            } else if (string.equals("~")) {
-                                string = "-";
-                            } else if (t.contains("banda") && t.contains(string)) {
-                                if (eq2.getIndex() != null) {
-                                    string = string + "[i]";
-                                }
-                                break;
                             }
                         }
                         equation += string;
@@ -1738,25 +1768,7 @@ public class GenericSEB {
                 + "LWdAtm = emissivityAtm * StefanBoltzman * (pow(Ta + T0, 4))";
 
         String body = "O_nh=0.5\n"
-                + "O_nh_(mod(nh,100) == 30)=nh+0.5\n"
-                + "reflectancia = (pi * rad_espectral) / (irrad_espectral * cosZ * dr)\n"
-                + "O_albedo = (sumBandas - reflectanciaAtmosfera) / (transmissividade * transmissividade)\n"
-                + "O_NDVI = (bandaRefletida4 - bandaRefletida3) / (bandaRefletida4 + bandaRefletida3)\n"
-                + "O_SAVI = ((1.0 + L) * (bandaRefletida4 - bandaRefletida3)) / (L + bandaRefletida4 + bandaRefletida3)\n"
-                + "O_IAF = (-ln((0.69 - SAVI) / 0.59) / 0.91)\n"
-                + "O_IAF_(SAVI <= 0.1) = 0\n"
-                + "O_IAF_(SAVI >= 0.687) = 6\n"
-                + "O_emissividadeNB = 0.97 + 0.0033 * IAF\n"
-                + "O_emissividadeNB_(IAF >= 3) = 0.98\n"
-                + "O_emissividadeNB_(NDVI <= 0) = 0.99\n"
-                + "O_emissivity = 0.95 + 0.01 * IAF\n"
-                + "O_emissivity_(IAF >= 3) = 0.98\n"
-                + "O_emissivity_(NDVI <= 0) = 0.985\n"
-                + "O_Ts = K2/ln(((emissividadeNB * K1) / banda6) + 1.0)\n"
-                + "O_LWd = emissivity * StefanBoltzman * (pow(Ts, 4))\n"
-                + "O_Rn = ((1.0 - albedo) * SWd) + (emissivity * (LWdAtm) - LWd)\n"
-                + "O_G = Rn * (((Ts - T0) / albedo) * (0.0038 * albedo + 0.0074 * albedo * albedo) * (1.0 - 0.98 * pow(NDVI, 4)))\n"
-                + "index = (0.5) * ((2.0 * bandaRefletida4 + 1) - sqrt((pow((2 * bandaRefletida4 + 1), 2) - 8 * (bandaRefletida4 - bandaRefletida3))))";
+                + "O_nh_(mod(nh,100) == 30)=nh+0.5";
 
         GenericSEB g = new GenericSEB(LanguageType.JAVA);
         try {

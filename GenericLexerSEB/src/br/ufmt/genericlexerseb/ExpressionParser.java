@@ -265,6 +265,31 @@ public class ExpressionParser {
     }
 
     public boolean evaluateExprIf(String expr) {
+        String[] input = tokenizeIf(expr);
+
+//        debug = true;
+        String[] output2 = infixToRPN(input);
+//        System.out.println(Arrays.toString(input));
+        if (debug) {
+            for (String token : output2) {
+                System.out.print(token + " ");
+            }
+            System.out.println("");
+        }
+        boolean result = RPNtoDouble(output2);
+
+        OPERATORS.remove("<");
+        OPERATORS.remove("<=");
+        OPERATORS.remove(">");
+        OPERATORS.remove(">=");
+        OPERATORS.remove("==");
+        OPERATORS.remove("!=");
+        OPERATORS.remove("||");
+        OPERATORS.remove("&&");
+        return result;
+    }
+
+    public String[] tokenizeIf(String expr) {
         tokenideIf = true;
         String str = preprocessExpr(expr);
         if (debug) {
@@ -323,27 +348,7 @@ public class ExpressionParser {
         input = (String[]) list.toArray(input);
 //        System.out.println(Arrays.toString(input));
         this.output = input;
-
-//        debug = true;
-        String[] output2 = infixToRPN(input);
-//        System.out.println(Arrays.toString(input));
-        if (debug) {
-            for (String token : output2) {
-                System.out.print(token + " ");
-            }
-            System.out.println("");
-        }
-        boolean result = RPNtoDouble(output2);
-
-        OPERATORS.remove("<");
-        OPERATORS.remove("<=");
-        OPERATORS.remove(">");
-        OPERATORS.remove(">=");
-        OPERATORS.remove("==");
-        OPERATORS.remove("!=");
-        OPERATORS.remove("||");
-        OPERATORS.remove("&&");
-        return result;
+        return input;
     }
 
     public boolean evaluateExprIf(String expr, List<String> variables) {
@@ -448,7 +453,11 @@ public class ExpressionParser {
     public static void main(String[] args) {
 
 //        String str = "-2*ln(2)-(a-(b^-2))";
-        String str = "mod(nh,100)";
+        String str = "nh=mod(1000,100)";
+        GenericLexerSEB g = new GenericLexerSEB();
+        Structure d = new Structure();
+        d.setToken("nh");
+        System.out.println(g.analyse(str, d, null, LanguageType.JAVA));
         //String str = "a^-2";  
 //        System.out.println(Maths.mod(100, 30));
         ExpressionParser parser = new ExpressionParser(true);

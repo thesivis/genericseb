@@ -25,12 +25,12 @@ public class Main {
 
         String eq = "transmissividade = 0.35 + 0.627 * exp((-0.00146 * P / (Kt * cosZ)) - 0.075 * pow((W / cosZ), 0.4))";
         
-        List<String> variables = new ArrayList<>();
-        variables.add("Ts");
-        variables.add("emissividadeNB");
-        variables.add("banda6");
-        variables.add("K2");
-        variables.add("K1");
+//        List<String> variables = new ArrayList<>();
+//        variables.add("Ts");
+//        variables.add("emissividadeNB");
+//        variables.add("banda6");
+//        variables.add("K2");
+//        variables.add("K1");
 
 //        eq = "4*x+5.2024-(logb(x,y)^-z)-300.12";
 //        eq = "(-1.0 + 2.123)*(2*a/b)-sqrt(5.0+6)";

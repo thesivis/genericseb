@@ -57,7 +57,7 @@ public class GenericLexerSEB {
                     functions.put(LanguageType.JAVA, funcs);
                 }
                 funcs.put(vet[0], vet[4]);
-                
+
                 funcs = functions.get(LanguageType.PYTHON);
                 if (funcs == null) {
                     funcs = new HashMap<>();
@@ -79,27 +79,39 @@ public class GenericLexerSEB {
         }
     }
 
+    public String analyse(String equation, LanguageType language) {
+        return analyse(equation, null, null, language);
+    }
+
     public String analyse(String equation, Structure dependent, Map<String, Structure> variables, LanguageType language) {
         ExpressionParser expressionParser = new ExpressionParser();
-        expressionParser.evaluateExpr(equation);
+
+
+        if (dependent != null) {
+            expressionParser.evaluateExpr(equation);
+            if (dependent.isVector()) {
+                if (dependent.getIndex().equalsIgnoreCase("*")) {
+                    equation = "*" + dependent.getToken() + "=";
+                } else {
+                    equation = dependent.getToken() + "[" + dependent.getIndex() + "]" + "=";
+                }
+            } else {
+                equation = dependent.getToken() + "=";
+            }
+        } else {
+            expressionParser.evaluateExprIf(equation);
+            equation = "";
+        }
+
         String[] terms = expressionParser.getOutput();
         String function;
         HashMap<String, String> funcs = functions.get(language);
         Structure independent;
 
-        if (dependent.isVector()) {
-            if (dependent.getIndex().equalsIgnoreCase("*")) {
-                equation = "*" + dependent.getToken() + "=";
-            } else {
-                equation = dependent.getToken() + "[" + dependent.getIndex() + "]" + "=";
-            }
-        } else {
-            equation = dependent.getToken() + "=";
-        }
-
         for (int i = 0; i < terms.length; i++) {
             function = funcs.get(terms[i]);
             if (function != null) {
+                System.out.println("func:" + function);
                 terms[i] = function;
             } else if (terms[i].equals("~")) {
                 terms[i] = "-";
@@ -151,11 +163,11 @@ public class GenericLexerSEB {
 
         StringBuilder t = new StringBuilder("import math\n");
         for (String variable : variables.keySet()) {
-            t.append(variable +"="+variables.get(variable)+"\n");
+            t.append(variable + "=" + variables.get(variable) + "\n");
         }
 
         t.append(equation);
-        t.append("\nres = str("+vet[0]+")\n");
+        t.append("\nres = str(" + vet[0] + ")\n");
         PyObject o = in.eval(in.compile(t.toString()));
         o = in.get(vet[0]);
         return o.asDouble();
