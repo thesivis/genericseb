@@ -6,21 +6,30 @@ package br.ufmt.genericcsv;
 
 import br.ufmt.genericgui.GenericController;
 import br.ufmt.genericgui.Main;
+import br.ufmt.genericlexerseb.LanguageType;
+import br.ufmt.genericseb.GenericSEB;
 import br.ufmt.utils.AlertDialog;
 import br.ufmt.utils.Constante;
+import br.ufmt.utils.EditingCell;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.util.Callback;
 
 /**
  * FXML Controller class
@@ -33,6 +42,7 @@ public class GenericCSVController extends GenericController {
     protected TableView<Constante> columnsTable;
     private BufferedReader bur;
     private String line;
+    private String delimiter = ";";
 
     public GenericCSVController() {
         extensions = new String[]{"*.csv"};
@@ -69,14 +79,60 @@ public class GenericCSVController extends GenericController {
                     for (Constante object : bodyTable.getItems()) {
                         body.append(object.getNome()).append("\n");
                     }
-                    Map<String, Double> variables = new HashMap<>();
+                    Map<String, Double> constants = new HashMap<>();
                     for (Constante object : constanteTable.getItems()) {
-                        variables.put(object.getNome(), object.getValor());
+                        constants.put(object.getNome(), object.getValor());
                     }
 
 
                     File csv = file;
                     if (csv.exists() && csv.getName().endsWith(".csv")) {
+                        ArrayList<List<Double>> datas = new ArrayList<>();
+                        int tam = columnsTable.getItems().size();
+                        int size = 0;
+                        for (int i = 0; i < tam; i++) {
+                            datas.add(new ArrayList<Double>());
+                        }
+                        line = bur.readLine();
+                        String[] vet;
+                        while (line != null) {
+                            vet = line.split(delimiter);
+                            for (int i = 0; i < vet.length; i++) {
+                                datas.get(i).add(Double.parseDouble(vet[i]));
+                            }
+                            line = bur.readLine();
+                        }
+                        bur.close();
+
+                        Map<String, double[]> parameters = new HashMap<>();
+
+                        double[] d;
+                        for (int i = 0; i < tam; i++) {
+                            d = new double[datas.get(i).size()];
+                            size = datas.get(i).size();
+                            for (int j = 0; j < d.length; j++) {
+                                d[j] = datas.get(i).get(j);
+                            }
+                            parameters.put(columnsTable.getItems().get(i).getNome(), d);
+                        }
+
+                        GenericSEB g = new GenericSEB(LanguageType.JAVA);
+                        Map<String, double[]> datum = g.execute(header.toString(), body.toString(), parameters, constants);
+
+                        PrintWriter pw = new PrintWriter(file.getParent() + "/" + file.getName().substring(0, file.getName().length() - 3) + "Resp.csv");
+
+                        Set<String> keys = datum.keySet();
+                        StringBuilder newLine;
+                        for (int i = 0; i < size; i++) {
+                            newLine = new StringBuilder();
+                            for (String string : keys) {
+                                newLine.append(datum.get(string)[i]).append(";");
+                            }
+                            pw.println(newLine.toString().substring(0, newLine.toString().length() - 1));
+                        }
+
+                        pw.close();
+
                     } else {
                         throw new Exception(bundle.getString("error.csv"));
                     }
@@ -92,8 +148,16 @@ public class GenericCSVController extends GenericController {
     @Override
     protected void inicializated() {
         columnsTable.getItems().clear();
+        Callback<TableColumn, TableCell> cellFactoryString =
+                new Callback<TableColumn, TableCell>() {
+            @Override
+            public TableCell call(TableColumn p) {
+                return new EditingCell(bundle);
+            }
+        };
         TableColumn tc = (TableColumn) columnsTable.getColumns().get(0);
         tc.setCellValueFactory(new PropertyValueFactory<Constante, String>("nome"));
+        tc.setCellFactory(cellFactoryString);
     }
 
     @Override
@@ -103,7 +167,6 @@ public class GenericCSVController extends GenericController {
             line = bur.readLine();
             line = line.replaceAll("[ ]+", "");
             line = line.replace("\"", "");
-            String delimiter = ";";
             if (!line.contains(delimiter)) {
                 if (line.contains(",")) {
                     delimiter = ",";
@@ -115,7 +178,7 @@ public class GenericCSVController extends GenericController {
             String[] vet = line.split(delimiter);
             String variable;
             for (int i = 0; i < vet.length; i++) {
-                variable = vet[i].replaceAll("[^\\w]","");
+                variable = vet[i].replaceAll("[^\\w]", "");
                 columnsTable.getItems().add(new Constante(variable, 0.0));
             }
 
