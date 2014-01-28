@@ -47,6 +47,9 @@ public class GenericSEB {
 
     public boolean verifyEquations(String forms, List<String> variables, boolean verifyIF) throws Exception {
 
+        if (forms == null || forms.isEmpty()) {
+            throw new Exception("Equations are empty!");
+        }
         if (verifyIF) {
             equations = new ArrayList<>();
         }
@@ -66,8 +69,14 @@ public class GenericSEB {
 //            System.out.println("Line:" + line);
             line = line.replaceAll("[ ]+", "");
             if (line.contains(")=")) {
-                vet = line.split("[)]=");
-                vet[0] += ")";
+                int idx = line.indexOf(")=");
+                while (line.indexOf(")=", idx+1) != -1) {
+                    idx = line.indexOf(")=", idx+1);
+                }
+                vet = new String[2];
+                vet[0] = line.substring(0, idx) + ")";
+                vet[1] = line.substring(idx + 2);
+                
             } else {
                 vet = line.split("=");
             }
@@ -345,6 +354,7 @@ public class GenericSEB {
         source.append("import java.io.IOException;\n");
         source.append("import java.util.logging.Level;\n");
         source.append("import java.util.logging.Logger;\n");
+        source.append("import br.ufmt.genericlexerseb.Maths;\n");
         source.append("import java.util.List;\n\n");
 
         source.append("public class Equation{\n");
@@ -540,8 +550,12 @@ public class GenericSEB {
                 }
             }
         }
-        verifyEquations(header, variables, false);
-        verifyEquations(body, variables, true);
+        if (header != null && !header.isEmpty()) {
+            verifyEquations(header, variables, false);
+        }
+        if (body != null && !body.isEmpty()) {
+            verifyEquations(body, variables, true);
+        }
         Equation eq;
         for (int i = 0; i < equations.size(); i++) {
             eq = equations.get(i);
@@ -826,6 +840,7 @@ public class GenericSEB {
         source.append("import java.util.logging.Logger;\n");
         source.append("import java.io.BufferedReader;\n");
         source.append("import java.io.FileReader;\n");
+        source.append("import br.ufmt.genericlexerseb.Maths;\n");
         source.append("import java.util.List;\n\n");
 
 
@@ -1019,8 +1034,12 @@ public class GenericSEB {
             }
         }
 
-        verifyEquations(header, variables, false);
-        verifyEquations(body, variables, true);
+        if (header != null && !header.isEmpty()) {
+            verifyEquations(header, variables, false);
+        }
+        if (body != null && !body.isEmpty()) {
+            verifyEquations(body, variables, true);
+        }
         Equation eq;
         for (int i = 0; i < equations.size(); i++) {
             eq = equations.get(i);
@@ -1279,6 +1298,7 @@ public class GenericSEB {
         source.append("import java.util.HashMap;\n");
         source.append("import java.util.Map;\n");
         source.append("import br.ufmt.genericseb.GenericSEB;\n");
+        source.append("import br.ufmt.genericlexerseb.Maths;\n");
 
         source.append("import java.util.List;\n\n");
 
@@ -1293,6 +1313,7 @@ public class GenericSEB {
             vet1 = string;
             pars[size] = parameters.get(string);
             classes[size] = parameters.get(string).getClass();
+            variables.add(string);
             source.append("double[] ").append(string);
             size++;
             if (size < parameters.size()) {
@@ -1412,8 +1433,12 @@ public class GenericSEB {
             }
         }
         System.out.println("Verify");
-        verifyEquations(header, variables, false);
-        verifyEquations(body, variables, true);
+        if (header != null && !header.isEmpty()) {
+            verifyEquations(header, variables, false);
+        }
+        if (body != null && !body.isEmpty()) {
+            verifyEquations(body, variables, true);
+        }
 
 
         if (index != null) {
@@ -1712,7 +1737,8 @@ public class GenericSEB {
                 + "SWd = (S * cosZ * cosZ) / (1.085 * cosZ + 10.0 * ea * (2.7 + cosZ) * 0.001 + 0.2)\n"
                 + "LWdAtm = emissivityAtm * StefanBoltzman * (pow(Ta + T0, 4))";
 
-        String body = "rad_espectral = coef_calib_a + ((coef_calib_b - coef_calib_a) / 255.0) * pixel\n"
+        String body = "O_nh=0.5\n"
+                + "O_nh_(mod(nh,100) == 30)=nh+0.5\n"
                 + "reflectancia = (pi * rad_espectral) / (irrad_espectral * cosZ * dr)\n"
                 + "O_albedo = (sumBandas - reflectanciaAtmosfera) / (transmissividade * transmissividade)\n"
                 + "O_NDVI = (bandaRefletida4 - bandaRefletida3) / (bandaRefletida4 + bandaRefletida3)\n"
