@@ -6,8 +6,8 @@ package br.ufmt.preprocessing;
 
 import br.ufmt.genericlexerseb.LanguageType;
 import br.ufmt.genericseb.GenericSEB;
+import br.ufmt.genericseb.Value;
 import br.ufmt.preprocessing.utils.DataFile;
-import br.ufmt.preprocessing.utils.ParameterEnum;
 import br.ufmt.preprocessing.utils.Utilities;
 import com.sun.media.imageio.plugins.tiff.TIFFDirectory;
 import com.sun.media.imageio.plugins.tiff.TIFFField;
@@ -30,7 +30,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -93,9 +92,9 @@ public class ProcessorTiff {
 
                 double[][] pixel = new double[bands][width * height];
 
-                Map<String, double[]> parameters = new HashMap<>();
+                List<Value> parameters = new ArrayList<>();
                 for (int i = 1; i <= bands; i++) {
-                    parameters.put(nameParameters[i - 1], pixel[i - 1]);
+                    parameters.add(new Value(nameParameters[i - 1], pixel[i - 1]));
                 }
 
                 idx = 0;
