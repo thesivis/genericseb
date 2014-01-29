@@ -69,7 +69,9 @@ import sun.awt.image.SunWritableRaster;
 public class GenericSEBController extends GenericController {
 
     @FXML
-    protected TableView<Image> filesTable;
+    private TableView<Image> filesTable;
+    @FXML
+    private TableView<Constante> calibrationTable;
 
     public GenericSEBController() {
         extensions = new String[]{"*.tiff", "*.tif"};
@@ -141,6 +143,16 @@ public class GenericSEBController extends GenericController {
     @FXML
     protected void removeFileAction(ActionEvent event) {
         removeSelecteds(filesTable);
+    }
+
+    @FXML
+    protected void addCalibrationAction(ActionEvent event) {
+        calibrationTable.getItems().add(new Constante("nome", 0.0, 0.0, 0.0));
+    }
+
+    @FXML
+    protected void removeCalibrationAction(ActionEvent event) {
+        removeSelecteds(calibrationTable);
     }
 
     @Override
@@ -217,8 +229,36 @@ public class GenericSEBController extends GenericController {
                             parameters.add(new Value(image.getValor(), data));
                         }
 
+                        double[][] calibration = new double[calibrationTable.getItems().size()][3];
+                        Constante constante;
+                        double sum = 0;
+                        for (int i = 0; i < calibrationTable.getItems().size(); i++) {
+                            constante = calibrationTable.getItems().get(i);
+                            calibration[i][0] = constante.getValor();
+                            calibration[i][1] = constante.getValor2();
+                            calibration[i][2] = constante.getValor3();
+                            if (calibration[i][2] != 1.0) {
+                                sum += calibration[i][2];
+                            }
+                        }
+
+                        Map<String, double[][]> constMatrix = new HashMap<>();
+                        constMatrix.put("calibration", calibration);
+
+                        double[] parameterAlbedo = new double[calibrationTable.getItems().size()];
+                        for (int i = 0; i < parameterAlbedo.length; i++) {
+                            if (calibration[i][2] != 1.0) {
+                                parameterAlbedo[i] = calibration[i][2] / sum;
+                            } else {
+                                parameterAlbedo[i] = 0.0;
+                            }
+                        }
+
+                        Map<String, double[]> constVetor = new HashMap<>();
+                        constVetor.put("parameterAlbedo", parameterAlbedo);
+
                         GenericSEB g = new GenericSEB(LanguageType.JAVA);
-                        Map<String, double[]> datum = g.execute(header.toString(), body.toString(), parameters, constants);
+                        Map<String, double[]> datum = g.execute(header.toString(), body.toString(), parameters, constants, constVetor, constMatrix);
 
 
                         System.out.println("Executed");
@@ -313,6 +353,9 @@ public class GenericSEBController extends GenericController {
         filesTable.getItems().clear();
         filesTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
+        calibrationTable.getItems().clear();
+        calibrationTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
         Callback<TableColumn, TableCell> cellFactoryString =
                 new Callback<TableColumn, TableCell>() {
             @Override
@@ -320,12 +363,31 @@ public class GenericSEBController extends GenericController {
                 return new EditingCell(bundle);
             }
         };
+
+        Callback<TableColumn, TableCell> cellFactoryDouble =
+                new Callback<TableColumn, TableCell>() {
+            @Override
+            public TableCell call(TableColumn p) {
+                return new EditingCell(bundle, EditingCell.DOUBLE);
+            }
+        };
+
         TableColumn tc = (TableColumn) filesTable.getColumns().get(0);
         tc.setCellValueFactory(new PropertyValueFactory<Image, String>("valor"));
         tc.setCellFactory(cellFactoryString);
 
         tc = (TableColumn) filesTable.getColumns().get(1);
         tc.setCellValueFactory(new PropertyValueFactory<Image, String>("nome"));
+
+        tc = (TableColumn) calibrationTable.getColumns().get(0);
+        tc.setCellValueFactory(new PropertyValueFactory<Image, String>("valor"));
+        tc.setCellFactory(cellFactoryDouble);
+
+        for (int i = 1; i < calibrationTable.getColumns().size(); i++) {
+            tc = (TableColumn) calibrationTable.getColumns().get(i);
+            tc.setCellValueFactory(new PropertyValueFactory<Image, String>("valor" + (i + 1)));
+            tc.setCellFactory(cellFactoryDouble);
+        }
 
         constanteTable.getItems().add(new Constante("julianDay", 248.0));
         constanteTable.getItems().add(new Constante("Z", 50.24));
@@ -344,6 +406,13 @@ public class GenericSEBController extends GenericController {
         constanteTable.getItems().add(new Constante("StefanBoltzman", (5.67 * Math.pow(10, -8))));
         constanteTable.getItems().add(new Constante("Tao_24h", 0.63));
 
+        calibrationTable.getItems().add(new Constante("nome", -1.52, 193.0, 1957.0));
+        calibrationTable.getItems().add(new Constante("nome", -2.84, 365.0, 1826.0));
+        calibrationTable.getItems().add(new Constante("nome", -1.17, 264.0, 1554.0));
+        calibrationTable.getItems().add(new Constante("nome", -1.51, 221.0, 1036.0));
+        calibrationTable.getItems().add(new Constante("nome", -0.37, 30.2, 215.0));
+        calibrationTable.getItems().add(new Constante("nome", 1.2378, 15.303, 1.0));
+        calibrationTable.getItems().add(new Constante("nome", -0.15, 16.5, 80.67));
 
         try {
             BufferedReader bur = new BufferedReader(new FileReader(System.getProperty("user.dir") + "/source/landsat.prop"));
