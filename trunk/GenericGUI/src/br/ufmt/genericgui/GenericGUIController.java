@@ -58,6 +58,12 @@ public class GenericGUIController implements Initializable {
         screen = "/br/ufmt/genericcsv/genericcsv.fxml";
         changeContent(screen);
     }
+    
+    @FXML
+    private void sebAction(ActionEvent event) {
+        screen = "/br/ufmt/genericsebgui/genericseb.fxml";
+        changeContent(screen);
+    }
 
     @FXML
     private void brAction(ActionEvent event) {
