@@ -204,6 +204,7 @@ public class GenericSEBController extends GenericController {
                         double[] data;
                         double[] value = null;
                         int idx;
+                        int l;
 
                         for (int i = 0; i < filesTable.getItems().size(); i++) {
                             image = filesTable.getItems().get(i);
@@ -218,14 +219,15 @@ public class GenericSEBController extends GenericController {
                             }
                             data = new double[size];
                             idx = 0;
+                            l = files.get(image.getFile().getName());
                             for (int j = 0; j < raster.getWidth(); j++) {
                                 for (int k = 0; k < raster.getHeight(); k++) {
                                     value = raster.getPixel(j, k, value);
-                                    data[idx] = value[files.get(image.getFile().getName())];
-                                    files.put(image.getFile().getName(), files.get(image.getFile().getName()) + 1);
+                                    data[idx] = value[l];
                                     idx++;
                                 }
                             }
+                            files.put(image.getFile().getName(), l + 1);
                             parameters.add(new Value(image.getValor(), data));
                         }
 
