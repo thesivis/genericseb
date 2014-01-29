@@ -8,6 +8,7 @@ import br.ufmt.genericgui.GenericController;
 import br.ufmt.genericgui.Main;
 import br.ufmt.genericlexerseb.LanguageType;
 import br.ufmt.genericseb.GenericSEB;
+import br.ufmt.genericseb.Value;
 import br.ufmt.preprocessing.utils.DataFile;
 import br.ufmt.preprocessing.utils.Utilities;
 import br.ufmt.utils.AlertDialog;
@@ -185,7 +186,7 @@ public class GenericSEBController extends GenericController {
                         ImageDecoder decoder = null;
                         Raster raster = null;
                         int size = 0;
-                        Map<String, double[]> parameters = new HashMap<>();
+                        List<Value> parameters = new ArrayList<>();
                         Map<String, Integer> files = new HashMap<>();
 
                         double[] data;
@@ -213,7 +214,7 @@ public class GenericSEBController extends GenericController {
                                     idx++;
                                 }
                             }
-                            parameters.put(image.getValor(), data);
+                            parameters.add(new Value(image.getValor(), data));
                         }
 
                         GenericSEB g = new GenericSEB(LanguageType.JAVA);
