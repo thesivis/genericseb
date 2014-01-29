@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="600.0" styleClass="mainFxmlClass" xmlns:fx="http://javafx.com/fxml" fx:controller="br.ufmt.genericsebgui.GenericSEBController">
+    <children>
+    <Button fx:id="runButton" layoutX="910.0" layoutY="630.0" mnemonicParsing="false" onAction="#runButtonAction" prefWidth="100.0" styleClass="btn, executar" text="%execute" />
+    <TabPane fx:id="tabPane" layoutX="1.0" layoutY="27.0" prefHeight="600.0" prefWidth="1024.0" tabClosingPolicy="UNAVAILABLE">
+      <tabs>
+        <Tab text="%files">
+          <content>
+            <AnchorPane id="Content" minHeight="0.0" minWidth="0.0" prefHeight="600.0" prefWidth="1024.0">
+              <children>
+                <TableView fx:id="filesTable" disable="false" editable="true" layoutX="13.0" layoutY="76.0" prefHeight="450.0" prefWidth="500.0" tableMenuButtonVisible="false">
+                  <columns>
+                    <TableColumn editable="true" maxWidth="5000.0" minWidth="10.0" prefWidth="300.0" text="%variable" />
+                    <TableColumn editable="false" maxWidth="5000.0" minWidth="10.0" prefWidth="200.0" text="%file" />
+                  </columns>
+                </TableView>
+                <Button contentDisplay="LEFT" layoutX="547.0" layoutY="104.0" mnemonicParsing="false" onAction="#addFileAction" prefWidth="100.0" styleClass="add, btn" text="%add" />
+                <Button layoutX="547.0" layoutY="139.0" mnemonicParsing="false" onAction="#removeFileAction" prefWidth="100.0" styleClass="remove, btn" text="%remove" />
+              </children>
+            </AnchorPane>
+          </content>
+        </Tab>
+        <Tab text="%constant">
+          <content>
+            <AnchorPane id="Content" minHeight="0.0" minWidth="0.0" prefHeight="600.0" prefWidth="1024.0">
+              <children>
+                <TableView fx:id="constanteTable" disable="false" editable="true" layoutX="13.0" layoutY="76.0" prefHeight="450.0" prefWidth="500.0" tableMenuButtonVisible="false">
+                  <columns>
+                    <TableColumn editable="true" maxWidth="5000.0" minWidth="10.0" onEditCommit="#editTableAction" prefWidth="300.0" text="%variable" />
+                    <TableColumn editable="true" onEditCommit="#editTableDoubleAction" prefWidth="200.0" text="%value" />
+                  </columns>
+                </TableView>
+                <Button id="addConstante" contentDisplay="LEFT" layoutX="547.0" layoutY="104.0" mnemonicParsing="false" onAction="#addConstanteAction" prefWidth="100.0" styleClass="add, btn" text="%add" />
+                <Button id="removeConstante" layoutX="547.0" layoutY="139.0" mnemonicParsing="false" onAction="#removeConstanteAction" prefWidth="100.0" styleClass="remove, btn" text="%remove" />
+              </children>
+            </AnchorPane>
+          </content>
+        </Tab>
+        <Tab text="%header">
+          <content>
+            <AnchorPane id="Content" minHeight="0.0" minWidth="0.0" prefHeight="600.0" prefWidth="1024.0">
+              <children>
+                <TableView fx:id="headerTable" editable="true" layoutX="14.0" layoutY="9.0" prefHeight="520.0" prefWidth="878.0" tableMenuButtonVisible="false">
+                  <columns>
+                    <TableColumn editable="true" maxWidth="5000.0" minWidth="10.0" onEditCommit="#editTableAction" prefWidth="878.0" text="%equation" />
+                  </columns>
+                </TableView>
+                <Button id="addHeader" layoutX="910.0" layoutY="43.0" mnemonicParsing="false" onAction="#addHeaderAction" prefWidth="100.0" styleClass="add, btn" text="%add" />
+                <Button id="removeHeader" layoutX="910.0" layoutY="83.0" mnemonicParsing="false" onAction="#removeHeaderAction" prefWidth="100.0" styleClass="remove, btn" text="%remove" />
+              </children>
+            </AnchorPane>
+          </content>
+        </Tab>
+        <Tab text="%body">
+          <content>
+            <AnchorPane id="Content" minHeight="0.0" minWidth="0.0" prefHeight="600.0" prefWidth="1024.0">
+              <children>
+                <TableView fx:id="bodyTable" editable="true" layoutX="13.0" layoutY="10.0" prefHeight="520.0" prefWidth="874.0">
+                  <columns>
+                    <TableColumn editable="true" onEditCommit="#editTableAction" prefWidth="874.0" text="%equation" />
+                  </columns>
+                </TableView>
+                <Button id="addBody" layoutX="910.0" layoutY="41.0" mnemonicParsing="false" onAction="#addBodyAction" prefWidth="100.0" styleClass="add, btn" text="%add" />
+                <Button id="removeBody" layoutX="910.0" layoutY="80.0" mnemonicParsing="false" onAction="#removeBodyAction" prefWidth="100.0" styleClass="remove, btn" text="%remove" />
+              </children>
+            </AnchorPane>
+          </content>
+        </Tab>
+      </tabs>
+    </TabPane>
+    <ProgressBar fx:id="progressBar" disable="false" layoutX="292.0" layoutY="10.0" prefWidth="200.0" progress="-1.0" visible="false" />
+    <Label layoutX="14.0" layoutY="6.0" prefWidth="237.0" text="%title.csv" />
+  </children>
+    <stylesheets>
+        <URL value="@../../../resource/style.css"/>
+    </stylesheets>
+</AnchorPane>

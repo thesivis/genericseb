@@ -12,14 +12,15 @@ import javafx.beans.property.SimpleStringProperty;
  *
  * @author raphael
  */
-public class Constante {
-
+public class Image {
     private SimpleStringProperty nome;
-    private SimpleDoubleProperty valor;
+    private SimpleStringProperty valor;
+    private File file;
 
-    public Constante(String nome, Double valor) {
+    public Image(String nome, String valor, File file) {
         this.nome = new SimpleStringProperty(nome);
-        this.valor = new SimpleDoubleProperty(valor);
+        this.valor = new SimpleStringProperty(valor);
+        this.file = file;
     }
 
     public String getNome() {
@@ -30,11 +31,19 @@ public class Constante {
         this.nome.set(nome);
     }
 
-    public Double getValor() {
+    public String getValor() {
         return valor.get();
     }
 
-    public void setValor(Double valor) {
+    public void setValor(String valor) {
         this.valor.set(valor);
+    }
+
+    public File getFile() {
+        return file;
+    }
+
+    public void setFile(File file) {
+        this.file = file;
     }
 }

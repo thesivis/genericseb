@@ -8,7 +8,6 @@ import br.ufmt.genericgui.GenericController;
 import br.ufmt.genericgui.Main;
 import br.ufmt.genericlexerseb.LanguageType;
 import br.ufmt.genericseb.GenericSEB;
-import br.ufmt.genericsebalgui.SEBALLandSatGUIController;
 import br.ufmt.utils.AlertDialog;
 import br.ufmt.utils.Constante;
 import br.ufmt.utils.EditingCell;
@@ -200,7 +199,7 @@ public class GenericCSVController extends GenericController {
                 linha = burTrab.readLine();
             }
         } catch (IOException ex) {
-            Logger.getLogger(SEBALLandSatGUIController.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(GenericCSVController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

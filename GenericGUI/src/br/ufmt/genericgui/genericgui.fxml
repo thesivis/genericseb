@@ -15,6 +15,7 @@
           <items>
             <MenuItem mnemonicParsing="false" onAction="#landSatSebalAction" text="%landsatsebal" />
             <MenuItem mnemonicParsing="false" onAction="#csvAction" text="%menu.csv" />
+            <MenuItem mnemonicParsing="false" onAction="#sebAction" text="%menu.seb" />
           </items>
         </Menu>
         <Menu mnemonicParsing="false" text="%language">
