@@ -74,6 +74,23 @@
             </AnchorPane>
           </content>
         </Tab>
+        <Tab text="%calibration">
+          <content>
+            <AnchorPane id="Content" minHeight="0.0" minWidth="0.0" prefHeight="600.0" prefWidth="1024.0">
+              <children>
+                <TableView fx:id="calibrationTable" disable="false" editable="true" layoutX="13.0" layoutY="76.0" prefHeight="450.0" prefWidth="500.0" tableMenuButtonVisible="false">
+                  <columns>
+                    <TableColumn editable="true" maxWidth="5000.0" minWidth="10.0" prefWidth="300.0" text="%value 1" />
+                    <TableColumn editable="true" maxWidth="5000.0" minWidth="10.0" prefWidth="200.0" text="%value 2" />
+                    <TableColumn editable="true" maxWidth="5000.0" minWidth="10.0" prefWidth="200.0" text="%value 3" />
+                  </columns>
+                </TableView>
+                <Button contentDisplay="LEFT" layoutX="547.0" layoutY="104.0" mnemonicParsing="false" onAction="#addCalibrationAction" prefWidth="100.0" styleClass="add, btn" text="%add" />
+                <Button layoutX="547.0" layoutY="139.0" mnemonicParsing="false" onAction="#removeCalibrationAction" prefWidth="100.0" styleClass="remove, btn" text="%remove" />
+              </children>
+            </AnchorPane>
+          </content>
+        </Tab>
       </tabs>
     </TabPane>
     <ProgressBar fx:id="progressBar" disable="false" layoutX="292.0" layoutY="10.0" prefWidth="200.0" progress="-1.0" visible="false" />
