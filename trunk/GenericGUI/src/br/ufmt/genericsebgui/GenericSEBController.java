@@ -147,7 +147,7 @@ public class GenericSEBController extends GenericController {
 
     @FXML
     protected void addCalibrationAction(ActionEvent event) {
-        calibrationTable.getItems().add(new Constante("nome", 0.0, 0.0, 0.0));
+        calibrationTable.getItems().add(new Constante("nome", 0.0f, 0.0f, 0.0f));
     }
 
     @FXML
@@ -185,7 +185,7 @@ public class GenericSEBController extends GenericController {
                     for (Constante object : bodyTable.getItems()) {
                         body.append(object.getNome()).append("\n");
                     }
-                    Map<String, Double> constants = new HashMap<>();
+                    Map<String, Float> constants = new HashMap<>();
                     for (Constante object : constanteTable.getItems()) {
                         constants.put(object.getNome(), object.getValor());
                     }
@@ -201,8 +201,8 @@ public class GenericSEBController extends GenericController {
                         List<Value> parameters = new ArrayList<>();
                         Map<String, Integer> files = new HashMap<>();
 
-                        double[] data;
-                        double[] value = null;
+                        float[] data;
+                        float[] value = null;
                         int idx;
                         int l;
 
@@ -217,7 +217,7 @@ public class GenericSEBController extends GenericController {
                             if (size == 0) {
                                 size = raster.getWidth() * raster.getHeight();
                             }
-                            data = new double[size];
+                            data = new float[size];
                             idx = 0;
                             l = files.get(image.getFile().getName());
                             for (int j = 0; j < raster.getWidth(); j++) {
@@ -231,9 +231,9 @@ public class GenericSEBController extends GenericController {
                             parameters.add(new Value(image.getValor(), data));
                         }
 
-                        double[][] calibration = new double[calibrationTable.getItems().size()][3];
+                        float[][] calibration = new float[calibrationTable.getItems().size()][3];
                         Constante constante;
-                        double sum = 0;
+                        float sum = 0;
                         for (int i = 0; i < calibrationTable.getItems().size(); i++) {
                             constante = calibrationTable.getItems().get(i);
                             calibration[i][0] = constante.getValor();
@@ -244,23 +244,23 @@ public class GenericSEBController extends GenericController {
                             }
                         }
 
-                        Map<String, double[][]> constMatrix = new HashMap<>();
+                        Map<String, float[][]> constMatrix = new HashMap<>();
                         constMatrix.put("calibration", calibration);
 
-                        double[] parameterAlbedo = new double[calibrationTable.getItems().size()];
+                        float[] parameterAlbedo = new float[calibrationTable.getItems().size()];
                         for (int i = 0; i < parameterAlbedo.length; i++) {
                             if (calibration[i][2] != 1.0) {
                                 parameterAlbedo[i] = calibration[i][2] / sum;
                             } else {
-                                parameterAlbedo[i] = 0.0;
+                                parameterAlbedo[i] = 0.0f;
                             }
                         }
 
-                        Map<String, double[]> constVetor = new HashMap<>();
+                        Map<String, float[]> constVetor = new HashMap<>();
                         constVetor.put("parameterAlbedo", parameterAlbedo);
 
                         GenericSEB g = new GenericSEB(LanguageType.JAVA);
-                        Map<String, double[]> datum = g.execute(header.toString(), body.toString(), parameters, constants, constVetor, constMatrix);
+                        Map<String, float[]> datum = g.execute(header.toString(), body.toString(), parameters, constants, constVetor, constMatrix);
 
 
                         System.out.println("Executed");
@@ -295,7 +295,7 @@ public class GenericSEBController extends GenericController {
 
                         float[] dado;
                         int x, y;
-                        double[] vet;
+                        float[] vet;
                         for (String string : datum.keySet()) {
                             vet = datum.get(string);
                             if (!string.equals("coef")) {
@@ -391,30 +391,30 @@ public class GenericSEBController extends GenericController {
             tc.setCellFactory(cellFactoryDouble);
         }
 
-        constanteTable.getItems().add(new Constante("julianDay", 248.0));
-        constanteTable.getItems().add(new Constante("Z", 50.24));
-        constanteTable.getItems().add(new Constante("latitude", -16.56));
-        constanteTable.getItems().add(new Constante("Rg_24h", 243.949997));
-        constanteTable.getItems().add(new Constante("Uref", 0.92071358));
-        constanteTable.getItems().add(new Constante("P", 299.3));
-        constanteTable.getItems().add(new Constante("UR", 36.46));
-        constanteTable.getItems().add(new Constante("Ta", 32.74));
-        constanteTable.getItems().add(new Constante("reflectanciaAtmosfera", 0.03));
-        constanteTable.getItems().add(new Constante("Kt", 1.0));
-        constanteTable.getItems().add(new Constante("L", 0.1));
-        constanteTable.getItems().add(new Constante("K1", 607.76));
-        constanteTable.getItems().add(new Constante("K2", 1260.56));
-        constanteTable.getItems().add(new Constante("S", 1367.0));
-        constanteTable.getItems().add(new Constante("StefanBoltzman", (5.67 * Math.pow(10, -8))));
-        constanteTable.getItems().add(new Constante("Tao_24h", 0.63));
+        constanteTable.getItems().add(new Constante("julianDay", 248.0f));
+        constanteTable.getItems().add(new Constante("Z", 50.24f));
+        constanteTable.getItems().add(new Constante("latitude", -16.56f));
+        constanteTable.getItems().add(new Constante("Rg_24h", 243.949997f));
+        constanteTable.getItems().add(new Constante("Uref", 0.92071358f));
+        constanteTable.getItems().add(new Constante("P", 299.3f));
+        constanteTable.getItems().add(new Constante("UR", 36.46f));
+        constanteTable.getItems().add(new Constante("Ta", 32.74f));
+        constanteTable.getItems().add(new Constante("reflectanciaAtmosfera", 0.03f));
+        constanteTable.getItems().add(new Constante("Kt", 1.0f));
+        constanteTable.getItems().add(new Constante("L", 0.1f));
+        constanteTable.getItems().add(new Constante("K1", 607.76f));
+        constanteTable.getItems().add(new Constante("K2", 1260.56f));
+        constanteTable.getItems().add(new Constante("S", 1367.0f));
+        constanteTable.getItems().add(new Constante("StefanBoltzman", (float) (5.67 * Math.pow(10, -8))));
+        constanteTable.getItems().add(new Constante("Tao_24h", 0.63f));
 
-        calibrationTable.getItems().add(new Constante("nome", -1.52, 193.0, 1957.0));
-        calibrationTable.getItems().add(new Constante("nome", -2.84, 365.0, 1826.0));
-        calibrationTable.getItems().add(new Constante("nome", -1.17, 264.0, 1554.0));
-        calibrationTable.getItems().add(new Constante("nome", -1.51, 221.0, 1036.0));
-        calibrationTable.getItems().add(new Constante("nome", -0.37, 30.2, 215.0));
-        calibrationTable.getItems().add(new Constante("nome", 1.2378, 15.303, 1.0));
-        calibrationTable.getItems().add(new Constante("nome", -0.15, 16.5, 80.67));
+        calibrationTable.getItems().add(new Constante("nome", -1.52f, 193.0f, 1957.0f));
+        calibrationTable.getItems().add(new Constante("nome", -2.84f, 365.0f, 1826.0f));
+        calibrationTable.getItems().add(new Constante("nome", -1.17f, 264.0f, 1554.0f));
+        calibrationTable.getItems().add(new Constante("nome", -1.51f, 221.0f, 1036.0f));
+        calibrationTable.getItems().add(new Constante("nome", -0.37f, 30.2f, 215.0f));
+        calibrationTable.getItems().add(new Constante("nome", 1.2378f, 15.303f, 1.0f));
+        calibrationTable.getItems().add(new Constante("nome", -0.15f, 16.5f, 80.67f));
 
         try {
             BufferedReader bur = new BufferedReader(new FileReader(System.getProperty("user.dir") + "/source/landsat.prop"));
@@ -423,14 +423,14 @@ public class GenericSEBController extends GenericController {
             if (linha.equals("<header>")) {
                 linha = bur.readLine();
                 while (!linha.equals("<body>")) {
-                    headerTable.getItems().add(new Constante(linha, 0.0));
+                    headerTable.getItems().add(new Constante(linha, 0.0f));
                     linha = bur.readLine();
                 }
             }
 
             linha = bur.readLine();
             while (linha != null) {
-                bodyTable.getItems().add(new Constante(linha, 0.0));
+                bodyTable.getItems().add(new Constante(linha, 0.0f));
                 linha = bur.readLine();
             }
         } catch (IOException ex) {

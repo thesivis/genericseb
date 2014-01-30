@@ -80,7 +80,7 @@ public class GenericCSVController extends GenericController {
                     for (Constante object : bodyTable.getItems()) {
                         body.append(object.getNome()).append("\n");
                     }
-                    Map<String, Double> constants = new HashMap<>();
+                    Map<String, Float> constants = new HashMap<>();
                     for (Constante object : constanteTable.getItems()) {
                         constants.put(object.getNome(), object.getValor());
                     }
@@ -89,11 +89,11 @@ public class GenericCSVController extends GenericController {
                     File csv = file;
                     if (csv.exists() && csv.getName().endsWith(".csv")) {
                         try {
-                            ArrayList<List<Double>> datas = new ArrayList<>();
+                            ArrayList<List<Float>> datas = new ArrayList<>();
                             int tam = columnsTable.getItems().size();
                             int size = 0;
                             for (int i = 0; i < tam; i++) {
-                                datas.add(new ArrayList<Double>());
+                                datas.add(new ArrayList<Float>());
                             }
                             line = bur.readLine();
                             String[] vet;
@@ -101,7 +101,7 @@ public class GenericCSVController extends GenericController {
                                 vet = line.split(delimiter);
 //                            System.out.println("Line:"+line);
                                 for (int i = 0; i < vet.length; i++) {
-                                    datas.get(i).add(Double.parseDouble(vet[i]));
+                                    datas.get(i).add(Float.parseFloat(vet[i]));
                                 }
                                 line = bur.readLine();
                             }
@@ -109,9 +109,9 @@ public class GenericCSVController extends GenericController {
 
                             List<Value> parameters = new ArrayList<>();
 
-                            double[] d;
+                            float[] d;
                             for (int i = 0; i < tam; i++) {
-                                d = new double[datas.get(i).size()];
+                                d = new float[datas.get(i).size()];
                                 size = datas.get(i).size();
                                 for (int j = 0; j < d.length; j++) {
                                     d[j] = datas.get(i).get(j);
@@ -120,7 +120,7 @@ public class GenericCSVController extends GenericController {
                             }
 
                             GenericSEB g = new GenericSEB(LanguageType.JAVA);
-                            Map<String, double[]> datum = g.execute(header.toString(), body.toString(), parameters, constants);
+                            Map<String, float[]> datum = g.execute(header.toString(), body.toString(), parameters, constants);
 
                             PrintWriter pw = new PrintWriter(file.getParent() + "/" + file.getName().substring(0, file.getName().length() - 3) + "Resp.csv");
 
@@ -172,15 +172,15 @@ public class GenericCSVController extends GenericController {
         tc.setCellFactory(cellFactoryString);
 
 
-        constanteTable.getItems().add(new Constante("albedo", 0.4));
-        constanteTable.getItems().add(new Constante("razaoInsolacao", 0.05));
-        constanteTable.getItems().add(new Constante("latitude", -0.05266));
-        constanteTable.getItems().add(new Constante("a2", 0.5));
-        constanteTable.getItems().add(new Constante("a3", 0.1));
-        constanteTable.getItems().add(new Constante("b2", 0.05));
-        constanteTable.getItems().add(new Constante("b3", 0.8));
-        constanteTable.getItems().add(new Constante("stefan", 5.6697E-8));
-        constanteTable.getItems().add(new Constante("pascal", 133.3224));
+        constanteTable.getItems().add(new Constante("albedo", 0.4f));
+        constanteTable.getItems().add(new Constante("razaoInsolacao", 0.05f));
+        constanteTable.getItems().add(new Constante("latitude", -0.05266f));
+        constanteTable.getItems().add(new Constante("a2", 0.5f));
+        constanteTable.getItems().add(new Constante("a3", 0.1f));
+        constanteTable.getItems().add(new Constante("b2", 0.05f));
+        constanteTable.getItems().add(new Constante("b3", 0.8f));
+        constanteTable.getItems().add(new Constante("stefan", 5.6697E-8f));
+        constanteTable.getItems().add(new Constante("pascal", 133.3224f));
 
         try {
             BufferedReader burTrab = new BufferedReader(new FileReader(System.getProperty("user.dir") + "/source/trab.prop"));
@@ -189,14 +189,14 @@ public class GenericCSVController extends GenericController {
             if (linha.equals("<header>")) {
                 linha = burTrab.readLine();
                 while (!linha.equals("<body>")) {
-                    headerTable.getItems().add(new Constante(linha, 0.0));
+                    headerTable.getItems().add(new Constante(linha, 0.0f));
                     linha = burTrab.readLine();
                 }
             }
 
             linha = burTrab.readLine();
             while (linha != null) {
-                bodyTable.getItems().add(new Constante(linha, 0.0));
+                bodyTable.getItems().add(new Constante(linha, 0.0f));
                 linha = burTrab.readLine();
             }
         } catch (IOException ex) {
@@ -223,7 +223,7 @@ public class GenericCSVController extends GenericController {
             String variable;
             for (int i = 0; i < vet.length; i++) {
                 variable = vet[i].replaceAll("[^\\w]", "");
-                columnsTable.getItems().add(new Constante(variable, 0.0));
+                columnsTable.getItems().add(new Constante(variable, 0.0f));
             }
 
         } catch (IOException ex) {

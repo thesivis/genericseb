@@ -44,7 +44,7 @@ public class Main {
 //        System.exit(1);
 
         LandSat land = new LandSat();
-        String path = "/media/raphael/DISK/Faculdade/Doutorado/Artigos/EnviromentModelingSoftware/GPUSensoriamento/TIFF/rppn.tif";
+        String path = "/home/raphael/Google/GenericGUI/tiffgrande.tif";
         int julianDay = 248;
         float Z = 50.24f;
         float latitude = -16.56f;
@@ -68,6 +68,7 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
 
+//        double[][] pixel = new double[7][53931915];
         List<DataFile> datas2 = land.preprocessingLandSat5(path, equations.toString(), julianDay, Z, P, UR, Ta, latitude, Rg_24h, Uref,Tao_24h);
     }
 }
