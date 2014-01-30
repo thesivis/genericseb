@@ -37,7 +37,7 @@ import java.util.logging.Logger;
  */
 public class LandSat {
 
-    public List<DataFile> preprocessing(String pathToOriginalTiff, String equations, double[][] calibration, double[] parameterAlbedo, int julianDay, float Z, float reflectanciaAtmosfera, float P, float UR, float Ta, float Kt, float L, float K1, float K2, float S, float StefanBoltzman, float latitude, float Rg_24h, float Uref, float Tao_24h) {
+    public List<DataFile> preprocessing(String pathToOriginalTiff, String equations, float[][] calibration, float[] parameterAlbedo, int julianDay, float Z, float reflectanciaAtmosfera, float P, float UR, float Ta, float Kt, float L, float K1, float K2, float S, float StefanBoltzman, float latitude, float Rg_24h, float Uref, float Tao_24h) {
 
         File tiff = new File(pathToOriginalTiff);
         if (tiff.exists() && tiff.getName().endsWith(".tif")) {
@@ -62,31 +62,31 @@ public class LandSat {
 
                     if (bands == 7) {
 
-                        Map<String, Double> variables = new HashMap<>();
-                        variables.put("julianDay", (double) julianDay);
-                        variables.put("Z", (double) Z);
-                        variables.put("reflectanciaAtmosfera", (double) reflectanciaAtmosfera);
-                        variables.put("P", (double) P);
-                        variables.put("UR", (double) UR);
-                        variables.put("Ta", (double) Ta);
-                        variables.put("Kt", (double) Kt);
-                        variables.put("L", (double) L);
-                        variables.put("K1", (double) K1);
-                        variables.put("K2", (double) K2);
-                        variables.put("S", (double) S);
-                        variables.put("StefanBoltzman", (double) StefanBoltzman);
-                        variables.put("latitude", (double) latitude);
-                        variables.put("Rg_24h", (double) Rg_24h);
-                        variables.put("Uref", (double) Uref);
-                        variables.put("Tao_24h", (double) Tao_24h);
+                        Map<String, Float> variables = new HashMap<>();
+                        variables.put("julianDay", (float) julianDay);
+                        variables.put("Z", (float) Z);
+                        variables.put("reflectanciaAtmosfera", (float) reflectanciaAtmosfera);
+                        variables.put("P", (float) P);
+                        variables.put("UR", (float) UR);
+                        variables.put("Ta", (float) Ta);
+                        variables.put("Kt", (float) Kt);
+                        variables.put("L", (float) L);
+                        variables.put("K1", (float) K1);
+                        variables.put("K2", (float) K2);
+                        variables.put("S", (float) S);
+                        variables.put("StefanBoltzman", (float) StefanBoltzman);
+                        variables.put("latitude", (float) latitude);
+                        variables.put("Rg_24h", (float) Rg_24h);
+                        variables.put("Uref", (float) Uref);
+                        variables.put("Tao_24h", (float) Tao_24h);
 
 
                         String[] nameParameters = new String[]{"pixel1", "pixel2", "pixel3", "pixel4", "pixel5", "pixel6", "pixel7"};
 
-                        Map<String, double[][]> constMatrix = new HashMap<>();
+                        Map<String, float[][]> constMatrix = new HashMap<>();
                         constMatrix.put("calibration", calibration);
 
-                        Map<String, double[]> constVetor = new HashMap<>();
+                        Map<String, float[]> constVetor = new HashMap<>();
                         constVetor.put("parameterAlbedo", parameterAlbedo);
 
                         BufferedReader bur = new BufferedReader(new StringReader(equations));
@@ -219,7 +219,7 @@ public class LandSat {
 
                         float banda4, banda3;
 
-                        double[] valor = null;
+                        float[] valor = null;
                         int idx = 0;
                         int k = 0;
 
@@ -458,7 +458,7 @@ public class LandSat {
     }
 
     private boolean hasDiferenceTsAround(Raster raster, int i, int j, float calibration[][], float cosZ, float dr, float L, float K1, float K2, float Ts) {
-        double[] dado = null;
+        float[] dado = null;
         if (j > 0 && i > 0 && j < (raster.getHeight() - 1) && i < (raster.getWidth() - 1)) {
             dado = raster.getPixel(i, j - 1, dado);
             if (!hasDiferenceTs(calibration, cosZ, dr, L, K1, K2, dado, Ts)) {
@@ -489,7 +489,7 @@ public class LandSat {
         return true;
     }
 
-    private boolean hasDiferenceTs(float calibration[][], float cosZ, float dr, float L, float K1, float K2, double[] pixels, float Ts) {
+    private boolean hasDiferenceTs(float calibration[][], float cosZ, float dr, float L, float K1, float K2, float[] pixels, float Ts) {
 
         float calibracao;
         float reflectancia;
@@ -549,7 +549,7 @@ public class LandSat {
     }
 
     private boolean hasDiferenceMSAVIAround(Raster raster, int i, int j, float calibration[][], float cosZ, float dr, float mSAVI) {
-        double[] dado = null;
+        float[] dado = null;
         dado = raster.getPixel(i, j - 1, dado);
         if (!hasDiferenceMSAVI(calibration, cosZ, dr, dado, mSAVI)) {
             dado = raster.getPixel(i, j + 1, dado);
@@ -578,7 +578,7 @@ public class LandSat {
         return true;
     }
 
-    private boolean hasDiferenceMSAVI(float calibration[][], float cosZ, float dr, double[] pixels, float mSAVI) {
+    private boolean hasDiferenceMSAVI(float calibration[][], float cosZ, float dr, float[] pixels, float mSAVI) {
 
         int k = 2;
 
@@ -606,7 +606,7 @@ public class LandSat {
     }
 
     private boolean hasDiferenceSAVIAround(Raster raster, int i, int j, float calibration[][], float cosZ, float dr, float L, float SAVI) {
-        double[] dado = null;
+        float[] dado = null;
         dado = raster.getPixel(i, j - 1, dado);
         if (!hasDiferenceSAVI(calibration, cosZ, dr, L, dado, SAVI)) {
             dado = raster.getPixel(i, j + 1, dado);
@@ -635,7 +635,7 @@ public class LandSat {
         return true;
     }
 
-    private boolean hasDiferenceSAVI(float calibration[][], float cosZ, float dr, float L, double[] pixels, float SAVI) {
+    private boolean hasDiferenceSAVI(float calibration[][], float cosZ, float dr, float L, float[] pixels, float SAVI) {
 
         float calibracao;
         float reflectancia;
@@ -672,7 +672,7 @@ public class LandSat {
     }
 
     private boolean hasDiferenceNVDIAround(Raster raster, int i, int j, float calibration[][], float cosZ, float dr, float NVDI) {
-        double[] dado = null;
+        float[] dado = null;
         dado = raster.getPixel(i, j - 1, dado);
         if (!hasDiferenceNVDI(calibration, cosZ, dr, dado, NVDI)) {
             dado = raster.getPixel(i, j + 1, dado);
@@ -701,7 +701,7 @@ public class LandSat {
         return true;
     }
 
-    private boolean hasDiferenceNVDI(float calibration[][], float cosZ, float dr, double[] pixels, float NDVI) {
+    private boolean hasDiferenceNVDI(float calibration[][], float cosZ, float dr, float[] pixels, float NDVI) {
 
         float calibracao;
         float reflectancia;
@@ -738,7 +738,7 @@ public class LandSat {
     }
 
     private boolean hasDiferenceIAFAround(Raster raster, int i, int j, float calibration[][], float cosZ, float dr, float L, float IAF) {
-        double[] dado = null;
+        float[] dado = null;
         dado = raster.getPixel(i, j - 1, dado);
         if (!hasDiferenceIAF(calibration, cosZ, dr, L, dado, IAF)) {
             dado = raster.getPixel(i, j + 1, dado);
@@ -767,7 +767,7 @@ public class LandSat {
         return true;
     }
 
-    private boolean hasDiferenceIAF(float calibration[][], float cosZ, float dr, float L, double[] pixels, float IAF) {
+    private boolean hasDiferenceIAF(float calibration[][], float cosZ, float dr, float L, float[] pixels, float IAF) {
 
         float calibracao;
         float reflectancia;
@@ -814,7 +814,7 @@ public class LandSat {
 
     public List<DataFile> preprocessingLandSat5(String path, String equations, int julianDay, float Z, float P, float UR, float Ta, float latitude, float Rg_24h, float Uref, float Tao_24h) {
 
-        double[][] calibration = new double[][]{
+        float[][] calibration = new float[][]{
             {-1.52f, 193.0f, 1957.0f},
             {-2.84f, 365.0f, 1826.0f},
             {-1.17f, 264.0f, 1554.0f},
@@ -823,7 +823,7 @@ public class LandSat {
             {1.2378f, 15.303f, 1.0f},
             {-0.15f, 16.5f, 80.67f}};
 
-        double[] parameterAlbedo = new double[]{0.293f, 0.274f, 0.233f, 0.157f, 0.033f, 0.0f, 0.011f};
+        float[] parameterAlbedo = new float[]{0.293f, 0.274f, 0.233f, 0.157f, 0.033f, 0.0f, 0.011f};
         float reflectancaAtmosfera = 0.03f;
         float Kt = 1.0f;
         float L = 0.1f;
@@ -837,7 +837,7 @@ public class LandSat {
         return ret;
     }
 
-    private boolean calcule(double[] valor) {
+    private boolean calcule(float[] valor) {
         for (int i = 0; i < valor.length; i++) {
             if (valor[i] == 0.0f) {
                 return false;

@@ -50,7 +50,7 @@ import sun.awt.image.SunWritableRaster;
  */
 public class ProcessorTiff {
 
-    private int MAX = 400000000;
+    private int MAX = 700000000;
     private LanguageType language = LanguageType.JAVA;
 
     public ProcessorTiff() {
@@ -97,7 +97,8 @@ public class ProcessorTiff {
                 int totalPixels = size * bands;
                 int total = totalPixels;
 
-                System.out.println(width * height);
+                System.out.println(totalPixels);
+                System.out.println(size);
                 float[][] pixel = new float[bands][width * height];
 
                 List<Value> parameters = new ArrayList<>();
@@ -127,18 +128,40 @@ public class ProcessorTiff {
                 for (int i = 0; i < lines.length; i++) {
                     String string = lines[i];
                     executed = false;
-                    System.out.println("String:"+string);
+//                    System.out.println("String:"+string);
                     if (string.startsWith("O_")) {
                         without.append(string.substring(2));
                         String var = string.substring(2);
                         if (var.contains("_(")) {
                             var = var.substring(0, var.indexOf("_("));
+                        } else {
+                            var = var.substring(0, var.indexOf("="));
                         }
+                        var = var.replaceAll("[ ]+", "");
                         if (outputs.add(var)) {
-                            if (totalPixels + size < MAX) {
-                                exec.append(string);
+//                            System.out.println("var:" + var + ":");
+                            exec.append(string);
+                            if (total + 2 * size < MAX) {
                                 total = total + size;
                             } else {
+                                for (int j = i + 1; j < lines.length; j++) {
+                                    String string2 = lines[j];
+                                    
+                                    var = string2.substring(2);
+                                    if (var.contains("_(")) {
+                                        var = var.substring(0, var.indexOf("_("));
+                                    } else {
+                                        var = var.substring(0, var.indexOf("="));
+                                    }
+                                    var = var.replaceAll("[ ]+", "");
+                                    if (outputs.contains(var)) {
+                                        without.append("\n").append(string2.substring(2));
+                                        exec.append("\n").append(string2);
+                                        i = j;
+                                    }else{
+                                        break;
+                                    }
+                                }
                                 total = totalPixels;
                                 execute(tiff, raster, model, imageReader, allTiffFields, ret, header, without, exec, parameters, constants, constantsVetor, constantsMatrix);
                                 executed = true;
@@ -176,6 +199,8 @@ public class ProcessorTiff {
     private void execute(File tiff, Raster raster, ColorModel model, ImageReader imageReader, TIFFField[] allTiffFields, List<DataFile> ret, String header, StringBuilder without, StringBuilder exec, List<Value> parameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) {
         try {
             System.out.println("Executing:" + exec.toString());
+//            System.out.println("Whito:" + without.toString());
+//            System.out.println();
 
             GenericSEB g = new GenericSEB(language);
             Map<String, float[]> datas = g.execute(header, exec.toString(), parameters, constants, constantsVetor, constantsMatrix);
