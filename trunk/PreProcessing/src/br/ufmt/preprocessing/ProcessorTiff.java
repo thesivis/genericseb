@@ -50,7 +50,7 @@ import sun.awt.image.SunWritableRaster;
  */
 public class ProcessorTiff {
 
-    private int MAX = 700000000;
+    private int MAX = 600000000;
     private LanguageType language = LanguageType.JAVA;
 
     public ProcessorTiff() {
