@@ -30,9 +30,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -48,6 +50,7 @@ import sun.awt.image.SunWritableRaster;
  */
 public class ProcessorTiff {
 
+    private int MAX = 400000000;
     private LanguageType language = LanguageType.JAVA;
 
     public ProcessorTiff() {
@@ -57,7 +60,7 @@ public class ProcessorTiff {
         this.language = language;
     }
 
-    public List<DataFile> execute(String header, String body, String pathProcessorTiff, String[] nameParameters, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) throws Exception {
+    public List<DataFile> execute(String header, String body, String pathProcessorTiff, String[] nameParameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
         File tiff = new File(pathProcessorTiff);
         if (tiff.exists() && tiff.getName().endsWith(".tif")) {
             SeekableStream s = null;
@@ -74,7 +77,7 @@ public class ProcessorTiff {
                 int width = raster.getWidth();
                 int height = raster.getHeight();
 
-                double[] valor = null;
+                float[] valor = null;
                 int idx;
                 int k = 0;
 
@@ -90,13 +93,19 @@ public class ProcessorTiff {
 
                 System.out.println("Calculating ");
 
-                double[][] pixel = new double[bands][width * height];
+                int size = width * height;
+                int totalPixels = size * bands;
+                int total = totalPixels;
+
+                System.out.println(width * height);
+                float[][] pixel = new float[bands][width * height];
 
                 List<Value> parameters = new ArrayList<>();
                 for (int i = 1; i <= bands; i++) {
                     parameters.add(new Value(nameParameters[i - 1], pixel[i - 1]));
                 }
 
+                System.out.println("Creating datas");
                 idx = 0;
                 for (int j = 0; j < width; j++) {
                     for (int i = 0; i < height; i++) {
@@ -107,85 +116,140 @@ public class ProcessorTiff {
                         idx++;
                     }
                 }
-                System.out.println("Executing");
-                GenericSEB g = new GenericSEB(language);
-                Map<String, double[]> datas = g.execute(header, body, parameters, constants, constantsVetor, constantsMatrix);
+                System.out.println("Configuring Execution");
 
-                System.out.println("Executed");
-                FileOutputStream fos;
-                WritableRaster rasterResp;
-
-                BandedSampleModel mppsm;
-                DataBufferFloat dataBuffer;
-                TIFFEncodeParam encParam = null;
-                ImageEncoder enc;
-
-                String parent = tiff.getParent() + "/OutputParameters/";
-                File dir = new File(parent);
-                dir.mkdirs();
-                String pathTiff;
-
-                float[] dado;
-                int x, y;
-                System.out.println("Width:" + width);
-                System.out.println("height:" + height);
-                double[] vet;
                 List<DataFile> ret = new ArrayList<>();
-                for (String string : datas.keySet()) {
-                    vet = datas.get(string);
-                    if (!string.equals("coef")) {
-
-                        pathTiff = parent + string + ".tif";
-                        mppsm = new BandedSampleModel(DataBuffer.TYPE_FLOAT, raster.getWidth(), raster.getHeight(), 1);
-                        dataBuffer = new DataBufferFloat(raster.getWidth() * raster.getHeight());
-                        rasterResp = new SunWritableRaster(mppsm, dataBuffer, new Point(0, 0));
-                        fos = new FileOutputStream(pathTiff);
-
-                        for (int i = 0; i < vet.length; i++) {
-                            dado = new float[]{(float) vet[i]};
-                            x = i % width;
-                            y = i / width;
-                            try {
-                                rasterResp.setPixel(x, y, dado);
-                            } catch (java.lang.ArrayIndexOutOfBoundsException ex) {
-                                System.out.println("i:" + i + " X:" + x + " Y: " + y);
-                                System.exit(1);
-                            }
+                String[] lines = body.split("\n");
+                Set<String> outputs = new HashSet<>();
+                StringBuilder without = new StringBuilder();
+                StringBuilder exec = new StringBuilder();
+                boolean executed = false;
+                for (int i = 0; i < lines.length; i++) {
+                    String string = lines[i];
+                    executed = false;
+                    System.out.println("String:"+string);
+                    if (string.startsWith("O_")) {
+                        without.append(string.substring(2));
+                        String var = string.substring(2);
+                        if (var.contains("_(")) {
+                            var = var.substring(0, var.indexOf("_("));
                         }
-
-                        enc = ImageCodec.createImageEncoder("tiff", fos, encParam);
-                        enc.encode(rasterResp, model);
-                        fos.close();
-                        Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterResp);
-                        ret.add(new DataFile(string, new File(pathTiff)));
-                    }else{
-                        pathTiff = parent + "A.dat";
-                        PrintWriter pw = new PrintWriter(pathTiff);
-                        pw.print(vet[0]);
-                        pw.close();
-                        ret.add(new DataFile("A", new File(pathTiff)));
-                        
-                        pathTiff = parent + "B.dat";
-                        pw = new PrintWriter(pathTiff);
-                        pw.print(vet[1]);
-                        pw.close();
-                        ret.add(new DataFile("B", new File(pathTiff)));
+                        if (outputs.add(var)) {
+                            if (totalPixels + size < MAX) {
+                                exec.append(string);
+                                total = total + size;
+                            } else {
+                                total = totalPixels;
+                                execute(tiff, raster, model, imageReader, allTiffFields, ret, header, without, exec, parameters, constants, constantsVetor, constantsMatrix);
+                                executed = true;
+                            }
+                        } else {
+                            exec.append(string);
+                        }
+                    } else {
+                        if (!string.startsWith("index")) {
+                            without.append(string);
+                        }
+                        exec.append(string);
                     }
+                    if (!string.startsWith("index")) {
+                        without.append("\n");
+                    }
+                    exec.append("\n");
                 }
 
+                if (!executed) {
+                    execute(tiff, raster, model, imageReader, allTiffFields, ret, header, without, exec, parameters, constants, constantsVetor, constantsMatrix);
+                }
+
+                s.close();
                 return ret;
 
 
             } catch (IOException ex) {
                 Logger.getLogger(ProcessorTiff.class.getName()).log(Level.SEVERE, null, ex);
-            } finally {
-                try {
-                    s.close();
-                } catch (IOException ex) {
-                    Logger.getLogger(ProcessorTiff.class.getName()).log(Level.SEVERE, null, ex);
-                }
             }
         }
         return null;
+    }
+
+    private void execute(File tiff, Raster raster, ColorModel model, ImageReader imageReader, TIFFField[] allTiffFields, List<DataFile> ret, String header, StringBuilder without, StringBuilder exec, List<Value> parameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) {
+        try {
+            System.out.println("Executing:" + exec.toString());
+
+            GenericSEB g = new GenericSEB(language);
+            Map<String, float[]> datas = g.execute(header, exec.toString(), parameters, constants, constantsVetor, constantsMatrix);
+
+            exec.delete(0, exec.length());
+            exec.append(without.toString());
+
+            System.out.println("Executed");
+            FileOutputStream fos;
+            WritableRaster rasterResp;
+
+            BandedSampleModel mppsm;
+            DataBufferFloat dataBuffer;
+            TIFFEncodeParam encParam = null;
+            ImageEncoder enc;
+
+            String parent = tiff.getParent() + "/OutputParameters/";
+            File dir = new File(parent);
+            dir.mkdirs();
+            String pathTiff;
+
+            float[] dado;
+            int x, y;
+            int width = raster.getWidth();
+            int height = raster.getHeight();
+            System.out.println("Width:" + width);
+            System.out.println("height:" + height);
+            float[] vet;
+
+            for (String resp : datas.keySet()) {
+                vet = datas.get(resp);
+                if (!resp.equals("coef")) {
+
+                    pathTiff = parent + resp + ".tif";
+                    mppsm = new BandedSampleModel(DataBuffer.TYPE_FLOAT, raster.getWidth(), raster.getHeight(), 1);
+                    dataBuffer = new DataBufferFloat(raster.getWidth() * raster.getHeight());
+                    rasterResp = new SunWritableRaster(mppsm, dataBuffer, new Point(0, 0));
+                    fos = new FileOutputStream(pathTiff);
+
+                    for (int j = 0; j < vet.length; j++) {
+                        dado = new float[]{(float) vet[j]};
+                        x = j % width;
+                        y = j / width;
+                        try {
+                            rasterResp.setPixel(x, y, dado);
+                        } catch (java.lang.ArrayIndexOutOfBoundsException ex) {
+                            System.out.println("i:" + j + " X:" + x + " Y: " + y);
+                            System.exit(1);
+                        }
+                    }
+
+                    enc = ImageCodec.createImageEncoder("tiff", fos, encParam);
+                    enc.encode(rasterResp, model);
+                    fos.close();
+                    Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterResp);
+                    ret.add(new DataFile(resp, new File(pathTiff)));
+                } else {
+                    pathTiff = parent + "A.dat";
+                    PrintWriter pw = new PrintWriter(pathTiff);
+                    pw.print(vet[0]);
+                    pw.close();
+                    ret.add(new DataFile("A", new File(pathTiff)));
+                    constants.put("a", vet[0]);
+
+                    pathTiff = parent + "B.dat";
+                    pw = new PrintWriter(pathTiff);
+                    pw.print(vet[1]);
+                    constants.put("b", vet[1]);
+                    pw.close();
+                    ret.add(new DataFile("B", new File(pathTiff)));
+                }
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(ProcessorTiff.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

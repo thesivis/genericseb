@@ -11,12 +11,12 @@ package br.ufmt.genericseb;
 public class Value {
     
     private String name;
-    private double[] data;
+    private float[] data;
 
     public Value() {
     }
 
-    public Value(String name, double[] data) {
+    public Value(String name, float[] data) {
         this.name = name;
         this.data = data;
     }
@@ -29,11 +29,11 @@ public class Value {
         this.name = name;
     }
 
-    public double[] getData() {
+    public float[] getData() {
         return data;
     }
 
-    public void setData(double[] data) {
+    public void setData(float[] data) {
         this.data = data;
     }
     

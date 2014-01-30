@@ -91,7 +91,7 @@ public class EditingCell extends TableCell<Disposer.Record, Object> {
                     switch (type) {
                         case DOUBLE:
                             if (textField.getText().matches("(-?)[0-9]+([\\.][0-9]+)?")) {
-                                commitEdit(Double.parseDouble(textField.getText()));
+                                commitEdit(Float.parseFloat(textField.getText()));
                             } else {
                                 new AlertDialog(Main.screen, bundle.getString("error.number")).showAndWait();
                             }

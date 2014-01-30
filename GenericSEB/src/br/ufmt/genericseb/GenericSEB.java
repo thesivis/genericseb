@@ -184,14 +184,14 @@ public class GenericSEB {
         return variables;
     }
 
-    public Map<String, double[]> execute(String header, String body, List<Value> parameters, Map<String, Double> constants) throws Exception {
+    public Map<String, float[]> execute(String header, String body, List<Value> parameters, Map<String, Float> constants) throws Exception {
         return execute(header, body, parameters, constants, null, null);
     }
 
-    public Map<String, double[]> execute(String header, String body, List<Value> parameters, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) throws Exception {
+    public Map<String, float[]> execute(String header, String body, List<Value> parameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
 
-        Map<String, double[]> ret = new HashMap<>();
-        Map<String, double[]> firstRet = null;
+        Map<String, float[]> ret = new HashMap<>();
+        Map<String, float[]> firstRet = null;
         String source = null;
 
 
@@ -263,7 +263,7 @@ public class GenericSEB {
                 Object instanced = compile(source, "Equation");
                 try {
                     Method method = instanced.getClass().getDeclaredMethod("execute", classes);
-                    firstRet = (Map<String, double[]>) method.invoke(instanced, pars);
+                    firstRet = (Map<String, float[]>) method.invoke(instanced, pars);
                     constants.put("a", firstRet.get("coef")[0]);
                     constants.put("b", firstRet.get("coef")[1]);
                 } catch (NoSuchMethodException ex1) {
@@ -294,7 +294,7 @@ public class GenericSEB {
         Object instanced = compile(source, "Equation");
         try {
             Method method = instanced.getClass().getDeclaredMethod("execute", classes);
-            ret = (Map<String, double[]>) method.invoke(instanced, pars);
+            ret = (Map<String, float[]>) method.invoke(instanced, pars);
             if (hasIndex) {
                 ret.putAll(firstRet);
             }
@@ -349,7 +349,7 @@ public class GenericSEB {
         return null;
     }
 
-    private String generateCUDA(String header, String body, List<Value> parametersList, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) throws Exception {
+    private String generateCUDA(String header, String body, List<Value> parametersList, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
 
         List<String> variables = getVariables();
         ExpressionParser ex = new ExpressionParser();
@@ -370,10 +370,10 @@ public class GenericSEB {
 
         source.append("public class Equation{\n");
 
-        source.append("    public Map<String, double[]> execute(");
+        source.append("    public Map<String, float[]> execute(");
         int size = 0;
         String vet1 = null;
-        Map<String,String> parameters = new HashMap<>();
+        Map<String, String> parameters = new HashMap<>();
         pars = new Object[parametersList.size()];
         classes = new Class[parametersList.size()];
         List<Integer> numbers = new ArrayList<>();
@@ -389,7 +389,7 @@ public class GenericSEB {
             }
             pars[size] = value.getData();
             classes[size] = value.getData().getClass();
-            source.append("double[] ").append(string);
+            source.append("float[] ").append(string);
             size++;
             if (size < parametersList.size()) {
                 source.append(",");
@@ -397,7 +397,7 @@ public class GenericSEB {
         }
         source.append("){\n\n");
 
-        source.append("        Map<String, double[]> ret = new HashMap<>();\n\n");
+        source.append("        Map<String, float[]> ret = new HashMap<>();\n\n");
         source.append("        List<ParameterGPU> par = new ArrayList<ParameterGPU>();\n\n");
 
         boolean first = true;
@@ -425,7 +425,7 @@ public class GenericSEB {
                     vector = vet[i].startsWith("O_rad_espectral");
                     for (int j = 0; j < numbers.size(); j++) {
                         if (vector) {
-                            source.append("        double[] banda").append(numbers.get(j)).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        float[] banda").append(numbers.get(j)).append(" = new float[").append(vet1).append(".length];\n");
                             source.append("        par.add(new ParameterGPU(banda").append(numbers.get(j)).append(",true,true));\n");
                             source.append("        ret.put(\"banda").append(numbers.get(j)).append("\",banda").append(numbers.get(j)).append(");\n\n");
                         }
@@ -439,7 +439,7 @@ public class GenericSEB {
                     for (int j = 0; j < numbers.size(); j++) {
                         variables.add("bandaRefletida" + numbers.get(j));
                         if (vector) {
-                            source.append("        double[] bandaRefletida").append(numbers.get(j)).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        float[] bandaRefletida").append(numbers.get(j)).append(" = new float[").append(vet1).append(".length];\n");
                             source.append("        par.add(new ParameterGPU(bandaRefletida").append(numbers.get(j)).append(",true,true));\n");
                             source.append("        ret.put(\"bandaRefletida").append(numbers.get(j)).append("\",bandaRefletida").append(numbers.get(j)).append(");\n\n");
                         }
@@ -467,12 +467,12 @@ public class GenericSEB {
         vet = header.split("\n");
         GenericLexerSEB lexer = new GenericLexerSEB();
         Structure structure;
-        Map<String, Double> vars = new HashMap<>();
+        Map<String, Float> vars = new HashMap<>();
         vars.putAll(constants);
         vars.putAll(Constants.variables);
 
         //COLOCANDO AS FORMULAS DO CABECALHOS
-        double res;
+        float res;
         for (int i = 0; i < vet.length; i++) {
             structure = new Structure();
             structure.setToken(vet[i].split("=")[0].replace(" ", ""));
@@ -489,13 +489,13 @@ public class GenericSEB {
         boolean albedo = false;
         if (constantsVetor != null) {
             for (String string : constantsVetor.keySet()) {
-                double[] doubleVet = constantsVetor.get(string);
+                float[] floatVet = constantsVetor.get(string);
                 vf = new StringBuilder();
-                for (int i = 0; i < doubleVet.length - 1; i++) {
-                    vf.append(doubleVet[i]).append("f,");
+                for (int i = 0; i < floatVet.length - 1; i++) {
+                    vf.append(floatVet[i]).append("f,");
                 }
-                vf.append(doubleVet[doubleVet.length - 1] + "f");
-                gpuCode.append("    __constant__ double ").append(string).append("[] = {").append(vf.toString()).append("};\n");
+                vf.append(floatVet[floatVet.length - 1] + "f");
+                gpuCode.append("    __constant__ float ").append(string).append("[] = {").append(vf.toString()).append("};\n");
                 if (string.equals("parameterAlbedo")) {
                     albedo = true;
                 }
@@ -505,19 +505,19 @@ public class GenericSEB {
 
         if (constantsMatrix != null) {
             for (String string : constantsMatrix.keySet()) {
-                double[][] doubleVet = constantsMatrix.get(string);
-                for (int i = 0; i < doubleVet.length; i++) {
+                float[][] floatVet = constantsMatrix.get(string);
+                for (int i = 0; i < floatVet.length; i++) {
                     vf = new StringBuilder();
                     vf.append("{");
                     if (string.equals("calibration")) {
-                        gpuCode.append("    __constant__ double ").append(string + (numbers.get(i))).append("[] = ");
+                        gpuCode.append("    __constant__ float ").append(string + (numbers.get(i))).append("[] = ");
                     } else {
-                        gpuCode.append("    __constant__ double ").append(string + (i + 1)).append("[] = ");
+                        gpuCode.append("    __constant__ float ").append(string + (i + 1)).append("[] = ");
                     }
-                    for (int j = 0; j < doubleVet[0].length - 1; j++) {
-                        vf.append(doubleVet[i][j]).append(",");
+                    for (int j = 0; j < floatVet[0].length - 1; j++) {
+                        vf.append(floatVet[i][j]).append("f,");
                     }
-                    vf.append(doubleVet[i][doubleVet[0].length - 1]);
+                    vf.append(floatVet[i][floatVet[0].length - 1]).append("f");
                     vf.append("};\n");
                     gpuCode.append(vf.toString());
                 }
@@ -534,8 +534,8 @@ public class GenericSEB {
 
         gpuCode.append("    __device__ void execute_sub(\n");
         for (String string : parameters.keySet()) {
-            gpuCode.append("        double ").append(string).append(",\n");
-            gpuCodeBody.append("        double * ").append(string).append(",\n");
+            gpuCode.append("        float ").append(string).append(",\n");
+            gpuCodeBody.append("        float * ").append(string).append(",\n");
             variables.add(string);
         }
         gpuCode.append("\n");
@@ -551,8 +551,8 @@ public class GenericSEB {
                 }
                 for (int j = 0; j < numbers.size(); j++) {
                     if (vector) {
-                        gpuCode.append("        double * banda").append(numbers.get(j));
-                        gpuCodeBody.append("        double * banda").append(numbers.get(j)).append(",\n");
+                        gpuCode.append("        float * banda").append(numbers.get(j));
+                        gpuCodeBody.append("        float * banda").append(numbers.get(j)).append(",\n");
                         variables.add("banda" + numbers.get(j));
                         if (i + 1 < vet.length && j + 1 < numbers.size()) {
                             gpuCode.append(",");
@@ -564,8 +564,8 @@ public class GenericSEB {
                 vector = vet[i].startsWith("O_reflectancia");
                 for (int j = 0; j < numbers.size(); j++) {
                     if (vector) {
-                        gpuCode.append("        double * bandaRefletida").append(numbers.get(j));
-                        gpuCodeBody.append("        double * bandaRefletida").append(numbers.get(j)).append(",\n");
+                        gpuCode.append("        float * bandaRefletida").append(numbers.get(j));
+                        gpuCodeBody.append("        float * bandaRefletida").append(numbers.get(j)).append(",\n");
                         variables.add("bandaRefletida" + numbers.get(j));
                         if (i + 1 < vet.length && j + 1 < numbers.size()) {
                             gpuCode.append(",");
@@ -594,15 +594,15 @@ public class GenericSEB {
                     if (variablesDeclared.add(eq.getTerm())) {
                         if (eq.getIndex() != null) {
                             term = eq.getTerm();
-                            gpuCode.append("        double * ").append(term);
-                            gpuCodeBody.append("        double * ").append(term).append(",\n");
+                            gpuCode.append("        float * ").append(term);
+                            gpuCodeBody.append("        float * ").append(term).append(",\n");
                             if (i + 1 < vet.length) {
                                 gpuCode.append(",");
                             }
                             gpuCode.append("\n");
 
 
-                            source.append("        double[] ").append(term).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        float[] ").append(term).append(" = new float[").append(vet1).append(".length];\n");
                             source.append("        par.add(new ParameterGPU(").append(term).append(",true,true));\n");
                             source.append("        ret.put(\"").append(term).append("\",").append(term).append(");\n\n");
 
@@ -699,11 +699,11 @@ public class GenericSEB {
                 case "rad_espectral":
                 case "O_rad_espectral":
                     if (albedo) {
-                        gpuCode.append("        double sumBandas = 0;\n");
+                        gpuCode.append("        float sumBandas = 0.0f;\n");
                     }
                     for (int j = 0; j < numbers.size(); j++) {
                         equation = eq.getTerm() + "=" + eq.getForm();
-                        equation = ident + "        " + ((eq.getIndex() != null) ? "" : "double ") + lexer.analyse(equation, structure, null, language) + ";\n";
+                        equation = ident + "        " + ((eq.getIndex() != null) ? "" : "float ") + lexer.analyse(equation, structure, null, language) + ";\n";
                         equation = equation.replace("coef_calib_a", "calibration" + (numbers.get(j)) + "[0]");
                         equation = equation.replace("coef_calib_b", "calibration" + (numbers.get(j)) + "[1]");
                         equation = equation.replace("pixel", "pixel" + (numbers.get(j)));
@@ -733,7 +733,7 @@ public class GenericSEB {
                     for (int j = 0; j < numbers.size(); j++) {
 
                         equation = eq.getTerm() + "=" + eq.getForm();
-                        equation = ident + "        " + ((eq.getIndex() != null) ? "" : "double ") + lexer.analyse(equation, structure, null, language) + ";\n";
+                        equation = ident + "        " + ((eq.getIndex() != null) ? "" : "float ") + lexer.analyse(equation, structure, null, language) + ";\n";
                         equation = equation.replace("coef_calib_a", "calibration" + (numbers.get(j)) + "[0]");
                         equation = equation.replace("coef_calib_b", "calibration" + (numbers.get(j)) + "[1]");
                         equation = equation.replace("pixel", "pixel" + (numbers.get(j)) + "[i]");
@@ -855,7 +855,7 @@ public class GenericSEB {
         return source.toString();
     }
 
-    private String generateOpenCL(String header, String body, List<Value> parametersList, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) throws Exception {
+    private String generateOpenCL(String header, String body, List<Value> parametersList, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
         List<String> variables = getVariables();
         ExpressionParser ex = new ExpressionParser();
 
@@ -879,10 +879,10 @@ public class GenericSEB {
 
         source.append("public class Equation{\n");
 
-        source.append("    public Map<String, double[]> execute(");
+        source.append("    public Map<String, float[]> execute(");
         int size = 0;
         String vet1 = null;
-        Map<String,String> parameters = new HashMap<>();
+        Map<String, String> parameters = new HashMap<>();
         pars = new Object[parametersList.size()];
         classes = new Class[parametersList.size()];
         List<Integer> numbers = new ArrayList<>();
@@ -899,7 +899,7 @@ public class GenericSEB {
             vet1 = string;
             pars[size] = value.getData();
             classes[size] = value.getData().getClass();
-            source.append("double[] ").append(string);
+            source.append("float[] ").append(string);
             size++;
             if (size < parametersList.size()) {
                 source.append(",");
@@ -907,7 +907,7 @@ public class GenericSEB {
         }
         source.append("){\n\n");
 
-        source.append("        Map<String, double[]> ret = new HashMap<>();\n\n");
+        source.append("        Map<String, float[]> ret = new HashMap<>();\n\n");
         source.append("        List<ParameterGPU> par = new ArrayList<ParameterGPU>();\n\n");
 
         boolean first = true;
@@ -936,7 +936,7 @@ public class GenericSEB {
                     vector = vet[i].startsWith("O_rad_espectral");
                     for (int j = 0; j < numbers.size(); j++) {
                         if (vector) {
-                            source.append("        double[] banda").append(numbers.get(j)).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        float[] banda").append(numbers.get(j)).append(" = new float[").append(vet1).append(".length];\n");
                             source.append("        par.add(new ParameterGPU(banda").append(numbers.get(j)).append(",true,true));\n");
                             source.append("        ret.put(\"banda").append(numbers.get(j)).append("\",banda").append(numbers.get(j)).append(");\n\n");
                         }
@@ -948,7 +948,7 @@ public class GenericSEB {
                         for (int j = 0; j < numbers.size(); j++) {
                             variables.add("bandaRefletida" + numbers.get(j));
                             if (vector) {
-                                source.append("        double[] bandaRefletida").append(numbers.get(j)).append(" = new double[").append(vet1).append(".length];\n");
+                                source.append("        float[] bandaRefletida").append(numbers.get(j)).append(" = new float[").append(vet1).append(".length];\n");
                                 source.append("        par.add(new ParameterGPU(bandaRefletida").append(numbers.get(j)).append(",true,true));\n");
                                 source.append("        ret.put(\"bandaRefletida").append(numbers.get(j)).append("\",bandaRefletida").append(numbers.get(j)).append(");\n\n");
                             }
@@ -981,12 +981,12 @@ public class GenericSEB {
         vet = header.split("\n");
         GenericLexerSEB lexer = new GenericLexerSEB();
         Structure structure;
-        Map<String, Double> vars = new HashMap<>();
+        Map<String, Float> vars = new HashMap<>();
         vars.putAll(constants);
         vars.putAll(Constants.variables);
 
         //COLOCANDO AS FORMULAS DO CABECALHOS
-        double res;
+        float res;
         for (int i = 0; i < vet.length; i++) {
             structure = new Structure();
             structure.setToken(vet[i].split("=")[0].replace(" ", ""));
@@ -1003,13 +1003,13 @@ public class GenericSEB {
         boolean albedo = false;
         if (constantsVetor != null) {
             for (String string : constantsVetor.keySet()) {
-                double[] doubleVet = constantsVetor.get(string);
+                float[] floatVet = constantsVetor.get(string);
                 vf = new StringBuilder();
-                for (int i = 0; i < doubleVet.length - 1; i++) {
-                    vf.append(doubleVet[i]).append("f,");
+                for (int i = 0; i < floatVet.length - 1; i++) {
+                    vf.append(floatVet[i]).append("f,");
                 }
-                vf.append(doubleVet[doubleVet.length - 1] + "f");
-                gpuCode.append("    __constant double ").append(string).append("[] = {").append(vf.toString()).append("};\n");
+                vf.append(floatVet[floatVet.length - 1] + "f");
+                gpuCode.append("    __constant float ").append(string).append("[] = {").append(vf.toString()).append("};\n");
                 if (string.equals("parameterAlbedo")) {
                     albedo = true;
                 }
@@ -1019,19 +1019,19 @@ public class GenericSEB {
 
         if (constantsMatrix != null) {
             for (String string : constantsMatrix.keySet()) {
-                double[][] doubleVet = constantsMatrix.get(string);
-                for (int i = 0; i < doubleVet.length; i++) {
+                float[][] floatVet = constantsMatrix.get(string);
+                for (int i = 0; i < floatVet.length; i++) {
                     vf = new StringBuilder();
                     vf.append("{");
                     if (string.equals("calibration")) {
-                        gpuCode.append("    __constant double ").append(string + (numbers.get(i))).append("[] = ");
+                        gpuCode.append("    __constant float ").append(string + (numbers.get(i))).append("[] = ");
                     } else {
-                        gpuCode.append("    __constant double ").append(string + (i + 1)).append("[] = ");
+                        gpuCode.append("    __constant float ").append(string + (i + 1)).append("[] = ");
                     }
-                    for (int j = 0; j < doubleVet[0].length - 1; j++) {
-                        vf.append(doubleVet[i][j]).append(",");
+                    for (int j = 0; j < floatVet[0].length - 1; j++) {
+                        vf.append(floatVet[i][j]).append("f,");
                     }
-                    vf.append(doubleVet[i][doubleVet[0].length - 1]);
+                    vf.append(floatVet[i][floatVet[0].length - 1]).append("f");
                     vf.append("};\n");
                     gpuCode.append(vf.toString());
                 }
@@ -1048,8 +1048,8 @@ public class GenericSEB {
 
         gpuCode.append("    void execute_sub(\n");
         for (String string : parameters.keySet()) {
-            gpuCode.append("        double ").append(string).append(",\n");
-            gpuCodeBody.append("        __global double * ").append(string).append(",\n");
+            gpuCode.append("        float ").append(string).append(",\n");
+            gpuCodeBody.append("        __global float * ").append(string).append(",\n");
             variables.add(string);
         }
         gpuCode.append("\n");
@@ -1064,8 +1064,8 @@ public class GenericSEB {
                 }
                 for (int j = 0; j < numbers.size(); j++) {
                     if (vector) {
-                        gpuCode.append("        __global double * banda").append(numbers.get(j)).append(",\n");
-                        gpuCodeBody.append("        __global double * banda").append(numbers.get(j)).append(",\n");
+                        gpuCode.append("        __global float * banda").append(numbers.get(j)).append(",\n");
+                        gpuCodeBody.append("        __global float * banda").append(numbers.get(j)).append(",\n");
                     }
                     variables.add("banda" + numbers.get(j));
                 }
@@ -1073,8 +1073,8 @@ public class GenericSEB {
                 vector = vet[i].startsWith("O_reflectancia");
                 for (int j = 0; j < numbers.size(); j++) {
                     if (vector) {
-                        gpuCode.append("        __global double * bandaRefletida").append(numbers.get(j)).append(",\n");
-                        gpuCodeBody.append("        __global double * bandaRefletida").append(numbers.get(j)).append(",\n");
+                        gpuCode.append("        __global float * bandaRefletida").append(numbers.get(j)).append(",\n");
+                        gpuCodeBody.append("        __global float * bandaRefletida").append(numbers.get(j)).append(",\n");
                     }
                     variables.add("bandaRefletida" + numbers.get(j));
                 }
@@ -1100,11 +1100,11 @@ public class GenericSEB {
                     if (variablesDeclared.add(eq.getTerm())) {
                         if (eq.getIndex() != null) {
                             term = eq.getTerm();
-                            gpuCode.append("        __global double * ").append(term).append(",\n");
-                            gpuCodeBody.append("        __global double * ").append(term).append(",\n");
+                            gpuCode.append("        __global float * ").append(term).append(",\n");
+                            gpuCodeBody.append("        __global float * ").append(term).append(",\n");
                             variables.add(term);
 
-                            source.append("        double[] ").append(term).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        float[] ").append(term).append(" = new float[").append(vet1).append(".length];\n");
                             source.append("        par.add(new ParameterGPU(").append(term).append(",true,true));\n");
                             source.append("        ret.put(\"").append(term).append("\",").append(term).append(");\n\n");
 
@@ -1189,6 +1189,9 @@ public class GenericSEB {
                         if (parameters.get(condition[j]) != null) {
                             gpuCode.append("[idx]");
                         }
+                        if (condition[j].matches("(-?)[0-9]+[\\.][0-9]+")) {
+                            gpuCode.append("f");
+                        }
                     }
                     gpuCode.append(" ");
                 }
@@ -1199,12 +1202,12 @@ public class GenericSEB {
                 case "rad_espectral":
                 case "O_rad_espectral":
                     if (albedo) {
-                        gpuCode.append("        double sumBandas = 0;\n");
+                        gpuCode.append("        float sumBandas = 0.0f;\n");
                     }
                     for (int j = 0; j < numbers.size(); j++) {
 
                         equation = eq.getTerm() + "=" + eq.getForm();
-                        equation = ident + "        " + ((eq.getIndex() != null) ? "" : "double ") + lexer.analyse(equation, structure, null, language) + ";\n";
+                        equation = ident + "        " + ((eq.getIndex() != null) ? "" : "float ") + lexer.analyse(equation, structure, null, language) + ";\n";
                         equation = equation.replace("coef_calib_a", "calibration" + (numbers.get(j)) + "[0]");
                         equation = equation.replace("coef_calib_b", "calibration" + (numbers.get(j)) + "[1]");
                         equation = equation.replace("pixel", "pixel" + (numbers.get(j)));
@@ -1230,7 +1233,7 @@ public class GenericSEB {
                     for (int j = 0; j < numbers.size(); j++) {
 
                         equation = eq.getTerm() + "=" + eq.getForm();
-                        equation = ident + "        " + ((eq.getIndex() != null) ? "" : "double ") + lexer.analyse(equation, structure, null, language) + ";\n";
+                        equation = ident + "        " + ((eq.getIndex() != null) ? "" : "float ") + lexer.analyse(equation, structure, null, language) + ";\n";
                         equation = equation.replace("coef_calib_a", "calibration" + (numbers.get(j)) + "[0]");
                         equation = equation.replace("coef_calib_b", "calibration" + (numbers.get(j)) + "[1]");
                         equation = equation.replace("pixel", "pixel" + (numbers.get(j)) + "[i]");
@@ -1343,7 +1346,7 @@ public class GenericSEB {
         return source.toString();
     }
 
-    private String generateJava(String header, String body, List<Value> parametersList, Map<String, Double> constants, Map<String, double[]> constantsVetor, Map<String, double[][]> constantsMatrix) throws Exception {
+    private String generateJava(String header, String body, List<Value> parametersList, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
         List<String> variables = getVariables();
         ExpressionParser ex = new ExpressionParser();
 
@@ -1358,10 +1361,10 @@ public class GenericSEB {
 
         source.append("public class Equation{\n");
 
-        source.append("    public Map<String, double[]> execute(");
+        source.append("    public Map<String, float[]> execute(");
         int size = 0;
         String vet1 = null;
-        Map<String,String> parameters = new HashMap<>();
+        Map<String, String> parameters = new HashMap<>();
         pars = new Object[parametersList.size()];
         classes = new Class[parametersList.size()];
         List<Integer> numbers = new ArrayList<>();
@@ -1379,7 +1382,7 @@ public class GenericSEB {
             pars[size] = value.getData();
             classes[size] = value.getData().getClass();
             variables.add(string);
-            source.append("double[] ").append(string);
+            source.append("float[] ").append(string);
             size++;
             if (size < parametersList.size()) {
                 source.append(",");
@@ -1387,11 +1390,11 @@ public class GenericSEB {
         }
         source.append("){\n\n");
 
-        source.append("        Map<String, double[]> ret = new HashMap<>();\n\n");
+        source.append("        Map<String, float[]> ret = new HashMap<>();\n\n");
 
         if (constants != null) {
             for (String string : constants.keySet()) {
-                source.append("        double ").append(string).append(" = ").append(constants.get(string)).append("f;\n");
+                source.append("        float ").append(string).append(" = ").append(constants.get(string)).append("f;\n");
                 variables.add(string);
             }
             source.append("\n");
@@ -1401,13 +1404,13 @@ public class GenericSEB {
         boolean albedo = false;
         if (constantsVetor != null) {
             for (String string : constantsVetor.keySet()) {
-                double[] doubleVet = constantsVetor.get(string);
+                float[] floatVet = constantsVetor.get(string);
                 vf = new StringBuilder();
-                for (int i = 0; i < doubleVet.length - 1; i++) {
-                    vf.append(doubleVet[i]).append(",");
+                for (int i = 0; i < floatVet.length - 1; i++) {
+                    vf.append(floatVet[i]).append("f,");
                 }
-                vf.append(doubleVet[doubleVet.length - 1]);
-                source.append("        double[] ").append(string).append(" = new double[]{").append(vf.toString()).append("};\n");
+                vf.append(floatVet[floatVet.length - 1]).append("f");
+                source.append("        float[] ").append(string).append(" = new float[]{").append(vf.toString()).append("};\n");
                 if (string.equals("parameterAlbedo")) {
                     albedo = true;
                 }
@@ -1417,16 +1420,16 @@ public class GenericSEB {
 
         if (constantsMatrix != null) {
             for (String string : constantsMatrix.keySet()) {
-                double[][] doubleVet = constantsMatrix.get(string);
+                float[][] floatVet = constantsMatrix.get(string);
                 vf = new StringBuilder();
-                for (int i = 0; i < doubleVet.length; i++) {
+                for (int i = 0; i < floatVet.length; i++) {
                     vf.append("{");
-                    for (int j = 0; j < doubleVet[0].length - 1; j++) {
-                        vf.append(doubleVet[i][j]).append(",");
+                    for (int j = 0; j < floatVet[0].length - 1; j++) {
+                        vf.append(floatVet[i][j]).append("f,");
                     }
-                    vf.append(doubleVet[i][doubleVet[0].length - 1]);
+                    vf.append(floatVet[i][floatVet[0].length - 1]).append("f");
                     vf.append("}\n            ");
-                    if (i + 1 < doubleVet.length) {
+                    if (i + 1 < floatVet.length) {
                         vf.append(",");
                     }
                 }
@@ -1435,7 +1438,7 @@ public class GenericSEB {
                     variables.add("coef_calib_b");
                     variables.add("irrad_espectral");
                 }
-                source.append("        double[][] ").append(string).append(" = new double[][]{").append(vf.toString()).append("};\n");
+                source.append("        float[][] ").append(string).append(" = new float[][]{").append(vf.toString()).append("};\n");
             }
             source.append("\n");
         }
@@ -1451,7 +1454,7 @@ public class GenericSEB {
             for (int i = 0; i < vet.length; i++) {
                 structure = new Structure();
                 structure.setToken(vet[i].split("=")[0]);
-                source.append("        double ").append(lexer.analyse(vet[i], structure, null, LanguageType.JAVA)).append(";\n\n");
+                source.append("        float ").append(lexer.analyse(vet[i], structure, null, LanguageType.JAVA)).append(";\n\n");
             }
             source.append("\n");
         }
@@ -1468,19 +1471,19 @@ public class GenericSEB {
                     variables.add("pixel");
                     vector = vet[i].startsWith("O_rad_espectral");
                     if (albedo) {
-                        source.append("        double sumBandas = 0.0;\n");
+                        source.append("        float sumBandas = 0.0f;\n");
                         variables.add("sumBandas");
                     }
                     if (vector) {
                         for (int j = 0; j < numbers.size(); j++) {
-                            source.append("        double[] banda").append(numbers.get(j)).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        float[] banda").append(numbers.get(j)).append(" = new float[").append(vet1).append(".length];\n");
                             source.append("        ret.put(\"banda").append(numbers.get(j)).append("\",banda").append(numbers.get(j)).append(");\n\n");
                             variables.add("banda" + numbers.get(j));
                         }
                     } else {
                         for (int j = 0; j < numbers.size(); j++) {
                             variables.add("banda" + numbers.get(j));
-                            source.append("        double banda").append(numbers.get(j)).append(" = 0;\n");
+                            source.append("        float banda").append(numbers.get(j)).append(" = 0.0f;\n");
                         }
                     }
                 }
@@ -1490,13 +1493,13 @@ public class GenericSEB {
                     if (vector) {
                         for (int j = 0; j < numbers.size(); j++) {
                             variables.add("bandaRefletida" + j);
-                            source.append("        double[] bandaRefletida").append(numbers.get(j)).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        float[] bandaRefletida").append(numbers.get(j)).append(" = new float[").append(vet1).append(".length];\n");
                             source.append("        ret.put(\"bandaRefletida").append(numbers.get(j)).append("\",bandaRefletida").append(numbers.get(j)).append(");\n\n");
                         }
                     } else {
                         for (int j = 0; j < numbers.size(); j++) {
                             variables.add("bandaRefletida" + j);
-                            source.append("        double bandaRefletida").append(numbers.get(j)).append(" = 0;\n");
+                            source.append("        float bandaRefletida").append(numbers.get(j)).append(" = 0.0f;\n");
                         }
                     }
                 }
@@ -1510,18 +1513,17 @@ public class GenericSEB {
             verifyEquations(body, variables, true);
         }
 
-
         if (index != null) {
-            source.append("        double tMax, tMin;\n"
-                    + "        double indexMax, indexMin;\n"
-                    + "        double RnHot = 0, GHot = 0;\n"
-                    + "        double SAVI_hot = 0;\n"
+            source.append("        float tMax, tMin;\n"
+                    + "        float indexMax, indexMin;\n"
+                    + "        float RnHot = 0.0f, GHot = 0.0f;\n"
+                    + "        float SAVI_hot = 0.0f;\n"
                     + "\n"
-                    + "        tMax = 0;\n"
-                    + "        indexMax = 0;\n"
+                    + "        tMax = 0.0f;\n"
+                    + "        indexMax = 0.0f;\n"
                     + "\n"
-                    + "        indexMin = Double.MAX_VALUE;\n"
-                    + "        tMin = Double.MAX_VALUE;\n");
+                    + "        indexMin = Float.MAX_VALUE;\n"
+                    + "        tMin = Float.MAX_VALUE;\n");
             equations.add(index);
         }
 
@@ -1536,10 +1538,10 @@ public class GenericSEB {
                 default:
                     if (variablesDeclared.add(eq.getTerm())) {
                         if (eq.getIndex() != null) {
-                            source.append("        double[] ").append(eq.getTerm()).append(" = new double[").append(vet1).append(".length];\n");
+                            source.append("        float[] ").append(eq.getTerm()).append(" = new float[").append(vet1).append(".length];\n");
                             source.append("        ret.put(\"").append(eq.getTerm()).append("\",").append(eq.getTerm()).append(");\n\n");
                         } else {
-                            source.append("        double ").append(eq.getTerm()).append(" = 0;\n");
+                            source.append("        float ").append(eq.getTerm()).append(" = 0;\n");
                         }
                     }
                     break;
@@ -1742,7 +1744,7 @@ public class GenericSEB {
         source.append("        }\n");
 
         if (index != null) {
-            source.append("        double[] coef = new double[2];\n"
+            source.append("        float[] coef = new float[2];\n"
                     + "        GenericSEB.calculaAB(coef, RnHot, GHot, Uref, SAVI_hot, tMax, tMin);\n");
             source.append("        ret.put(\"coef\",coef);\n\n");
         }
@@ -1759,46 +1761,46 @@ public class GenericSEB {
         // TODO code application logic here
 
         List<Value> parameters = new ArrayList<>();
-        parameters.add(new Value("pixel21", new double[]{1.0, 2.0}));
-        parameters.add(new Value("pixel3", new double[]{1.0, 2.0}));
-        parameters.add(new Value("pixel4", new double[]{1.0, 2.0}));
-        parameters.add(new Value("pixel5", new double[]{1.0, 2.0}));
-        parameters.add(new Value("pixel6", new double[]{1.0, 2.0}));
-        parameters.add(new Value("pixel7", new double[]{1.0, 2.0}));
-        parameters.add(new Value("pixel8", new double[]{1.0, 2.0}));
+        parameters.add(new Value("pixel21", new float[]{1.0f, 2.0f}));
+        parameters.add(new Value("pixel3", new float[]{1.0f, 2.0f}));
+        parameters.add(new Value("pixel4", new float[]{1.0f, 2.0f}));
+        parameters.add(new Value("pixel5", new float[]{1.0f, 2.0f}));
+        parameters.add(new Value("pixel6", new float[]{1.0f, 2.0f}));
+        parameters.add(new Value("pixel7", new float[]{1.0f, 2.0f}));
+        parameters.add(new Value("pixel8", new float[]{1.0f, 2.0f}));
 
 
-        Map<String, Double> constants = new HashMap<>();
-        constants.put("reflectanciaAtmosfera", 0.03);
-        constants.put("Kt", 1.0);
-        constants.put("L", 0.1);
-        constants.put("K1", 607.76);
-        constants.put("K2", 1260.56);
-        constants.put("S", 1367.0);
-        constants.put("StefanBoltzman", (5.67 * Math.pow(10, -8)));
-        constants.put("julianDay", 248.0);
-        constants.put("Z", 50.24);
-        constants.put("P", 99.3);
-        constants.put("UR", 36.46);
-        constants.put("Ta", 32.74);
-        constants.put("latitude", -16.56);
-        constants.put("Rg_24h", 243.949997);
-        constants.put("Uref", 0.92071358);
-        constants.put("Tao_24h", 0.63);
+        Map<String, Float> constants = new HashMap<>();
+        constants.put("reflectanciaAtmosfera", 0.03f);
+        constants.put("Kt", 1.0f);
+        constants.put("L", 0.1f);
+        constants.put("K1", 607.76f);
+        constants.put("K2", 1260.56f);
+        constants.put("S", 1367.0f);
+        constants.put("StefanBoltzman", (float) (5.67 * Math.pow(10, -8)));
+        constants.put("julianDay", 248.0f);
+        constants.put("Z", 50.24f);
+        constants.put("P", 99.3f);
+        constants.put("UR", 36.46f);
+        constants.put("Ta", 32.74f);
+        constants.put("latitude", -16.56f);
+        constants.put("Rg_24h", 243.949997f);
+        constants.put("Uref", 0.92071358f);
+        constants.put("Tao_24h", 0.63f);
 
-        Map<String, double[][]> constMatrix = new HashMap<>();
+        Map<String, float[][]> constMatrix = new HashMap<>();
 
-        constMatrix.put("calibration", new double[][]{
-            {-1.52, 193.0, 1957.0},
-            {-2.84, 365.0, 1826.0},
-            {-1.17, 264.0, 1554.0},
-            {-1.51, 221.0, 1036.0},
-            {-0.37, 30.2, 215.0},
-            {1.2378, 15.303, 1.0},
-            {-0.15, 16.5, 80.67}});
+        constMatrix.put("calibration", new float[][]{
+            {-1.52f, 193.0f, 1957.0f},
+            {-2.84f, 365.0f, 1826.0f},
+            {-1.17f, 264.0f, 1554.0f},
+            {-1.51f, 221.0f, 1036.0f},
+            {-0.37f, 30.2f, 215.0f},
+            {1.2378f, 15.303f, 1.0f},
+            {-0.15f, 16.5f, 80.67f}});
 
-        Map<String, double[]> constVetor = new HashMap<>();
-        constVetor.put("parameterAlbedo", new double[]{0.293, 0.274, 0.233, 0.157, 0.033, 0.0, 0.011});
+        Map<String, float[]> constVetor = new HashMap<>();
+        constVetor.put("parameterAlbedo", new float[]{0.293f, 0.274f, 0.233f, 0.157f, 0.033f, 0.0f, 0.011f});
 
         String header = "dr = 1.0 + 0.033 * cos(julianDay * 2 * pi / 365)\n"
                 + "cosZ = cos(((90.0 - Z) * pi) / 180.0)\n"
@@ -1852,29 +1854,29 @@ public class GenericSEB {
         }
     }
 
-    public static void calculaAB(double[] coeficientes, double Rn_hot, double G_hot, double Uref, double SAVI_hot, double Ts_hot, double Ts_cold) {
+    public static void calculaAB(float[] coeficientes, float Rn_hot, float G_hot, float Uref, float SAVI_hot, float Ts_hot, float Ts_cold) {
 
-        double z0m = Math.exp(-5.809f + 5.62f * SAVI_hot);
+        float z0m = (float) Math.exp(-5.809f + 5.62f * SAVI_hot);
 
-        double U_star = (Constants.k * Uref / Math.log(Constants.z200 / z0m));
+        float U_star = (float) (Constants.k * Uref / Math.log(Constants.z200 / z0m));
 
-        double r_ah = (Math.log(Constants.z2 / Constants.z1) / (U_star * Constants.k));
+        float r_ah = (float) (Math.log(Constants.z2 / Constants.z1) / (U_star * Constants.k));
 
-        double H_hot = Rn_hot - G_hot;
+        float H_hot = Rn_hot - G_hot;
 
-        double a = 0.0f;
-        double b = 0.0f;
+        float a = 0.0f;
+        float b = 0.0f;
 
-        double L;
+        float L;
 
-        double tm_200;
-        double th_2;
-        double th_0_1;
+        float tm_200;
+        float th_2;
+        float th_0_1;
 
-        double errorH = 10.0f;
+        float errorH = 10.0f;
         int step = 1;
-        double r_ah_anterior;
-        double H = H_hot;
+        float r_ah_anterior;
+        float H = H_hot;
 
         while (errorH > Constants.MaxAllowedError && step < 100) {
 
@@ -1884,15 +1886,15 @@ public class GenericSEB {
 
             H = Constants.p * Constants.cp * (b + a * (Ts_hot - Constants.T0)) / r_ah;
 
-            L = (-(Constants.p * Constants.cp * U_star * U_star * U_star * (Ts_hot)) / (Constants.k * Constants.g * H));
+            L = (float) (-(Constants.p * Constants.cp * U_star * U_star * U_star * (Ts_hot)) / (Constants.k * Constants.g * H));
 
             tm_200 = Psim(L);
             th_2 = Psih(Constants.z2, L);
             th_0_1 = Psih(Constants.z1, L);
 
-            U_star = (Constants.k * Uref / (Math.log(Constants.z200 / z0m) - tm_200));
+            U_star = (float) (Constants.k * Uref / (Math.log(Constants.z200 / z0m) - tm_200));
             r_ah_anterior = r_ah;
-            r_ah = ((Math.log(Constants.z2 / Constants.z1) - th_2 + th_0_1) / (U_star * Constants.k));
+            r_ah = (float) ((Math.log(Constants.z2 / Constants.z1) - th_2 + th_0_1) / (U_star * Constants.k));
 
             errorH = Math.abs(((r_ah - r_ah_anterior) * 100) / r_ah);
 
@@ -1905,15 +1907,15 @@ public class GenericSEB {
 
     }
 
-    protected static double X(double Zref_m, double L) {
+    protected static float X(float Zref_m, float L) {
         return (float) (Math.sqrt(Math.sqrt((1.0f - 16.0f * Zref_m / L))));
     }
 
-    protected static double Psim(double L) {
+    protected static float Psim(float L) {
         if (L < 0.0f) {
             /* unstable */
-            double x200 = X(200, L);
-            return (2.0f * Math.log((1.0f + x200) / 2.0f) + Math.log((1.0f + x200 * x200) / (2.0f)) - 2.0f * Math.atan(x200) + 0.5f * Math.PI);
+            float x200 = X(200, L);
+            return (float) (2.0f * Math.log((1.0f + x200) / 2.0f) + Math.log((1.0f + x200 * x200) / (2.0f)) - 2.0f * Math.atan(x200) + 0.5f * Math.PI);
         } else if (L > 0.0f) {
             /* stable */
             return (-5 * (2 / L));
@@ -1922,11 +1924,11 @@ public class GenericSEB {
         }
     }
 
-    protected static double Psih(double Zref_h, double L) {
+    protected static float Psih(float Zref_h, float L) {
         if (L < 0.0f) {
             /* unstable */
-            double x = X(Zref_h, L);
-            return (2.0f * Math.log((1.0f + x * x) / 2.0f));
+            float x = X(Zref_h, L);
+            return (float) (2.0f * Math.log((1.0f + x * x) / 2.0f));
         } else if (L > 0.0f) {
             /* stable */
             return (-5 * (2 / L));

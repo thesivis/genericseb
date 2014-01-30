@@ -73,7 +73,7 @@ public class SEBALLandSatGUIController extends GenericController {
                     for (Constante object : bodyTable.getItems()) {
                         body.append(object.getNome()).append("\n");
                     }
-                    Map<String, Double> variables = new HashMap<>();
+                    Map<String, Float> variables = new HashMap<>();
                     for (Constante object : constanteTable.getItems()) {
                         variables.put(object.getNome(), object.getValor());
                     }
@@ -100,7 +100,7 @@ public class SEBALLandSatGUIController extends GenericController {
 
                             if (bands == 7) {
 
-                                double[][] calibration = new double[][]{
+                                float[][] calibration = new float[][]{
                                     {-1.52f, 193.0f, 1957.0f},
                                     {-2.84f, 365.0f, 1826.0f},
                                     {-1.17f, 264.0f, 1554.0f},
@@ -109,10 +109,10 @@ public class SEBALLandSatGUIController extends GenericController {
                                     {1.2378f, 15.303f, 1.0f},
                                     {-0.15f, 16.5f, 80.67f}};
 
-//                        double[] parameterAlbedo = new double[]{0.293f, 0.274f, 0.233f, 0.157f, 0.033f, 0.0f, 0.011f};
-                                double[] parameterAlbedo = new double[7];
+//                        float[] parameterAlbedo = new float[]{0.293f, 0.274f, 0.233f, 0.157f, 0.033f, 0.0f, 0.011f};
+                                float[] parameterAlbedo = new float[7];
 
-                                double sum = 0;
+                                float sum = 0;
                                 for (int i = 0; i < calibration.length; i++) {
                                     sum += calibration[i][2];
                                 }
@@ -123,10 +123,10 @@ public class SEBALLandSatGUIController extends GenericController {
 
                                 String[] nameParameters = new String[]{"pixel1", "pixel2", "pixel3", "pixel4", "pixel5", "pixel6", "pixel7"};
 
-                                Map<String, double[][]> constMatrix = new HashMap<>();
+                                Map<String, float[][]> constMatrix = new HashMap<>();
                                 constMatrix.put("calibration", calibration);
 
-                                Map<String, double[]> constVetor = new HashMap<>();
+                                Map<String, float[]> constVetor = new HashMap<>();
                                 constVetor.put("parameterAlbedo", parameterAlbedo);
 
                                 try {
@@ -163,22 +163,22 @@ public class SEBALLandSatGUIController extends GenericController {
 
     @Override
     protected void inicializated() {
-        constanteTable.getItems().add(new Constante("julianDay", 248.0));
-        constanteTable.getItems().add(new Constante("Z", 50.24));
-        constanteTable.getItems().add(new Constante("latitude", -16.56));
-        constanteTable.getItems().add(new Constante("Rg_24h", 243.949997));
-        constanteTable.getItems().add(new Constante("Uref", 0.92071358));
-        constanteTable.getItems().add(new Constante("P", 299.3));
-        constanteTable.getItems().add(new Constante("UR", 36.46));
-        constanteTable.getItems().add(new Constante("Ta", 32.74));
-        constanteTable.getItems().add(new Constante("reflectanciaAtmosfera", 0.03));
-        constanteTable.getItems().add(new Constante("Kt", 1.0));
-        constanteTable.getItems().add(new Constante("L", 0.1));
-        constanteTable.getItems().add(new Constante("K1", 607.76));
-        constanteTable.getItems().add(new Constante("K2", 1260.56));
-        constanteTable.getItems().add(new Constante("S", 1367.0));
-        constanteTable.getItems().add(new Constante("StefanBoltzman", (5.67 * Math.pow(10, -8))));
-        constanteTable.getItems().add(new Constante("Tao_24h", 0.63));
+        constanteTable.getItems().add(new Constante("julianDay", 248.0f));
+        constanteTable.getItems().add(new Constante("Z", 50.24f));
+        constanteTable.getItems().add(new Constante("latitude", -16.56f));
+        constanteTable.getItems().add(new Constante("Rg_24h", 243.949997f));
+        constanteTable.getItems().add(new Constante("Uref", 0.92071358f));
+        constanteTable.getItems().add(new Constante("P", 299.3f));
+        constanteTable.getItems().add(new Constante("UR", 36.46f));
+        constanteTable.getItems().add(new Constante("Ta", 32.74f));
+        constanteTable.getItems().add(new Constante("reflectanciaAtmosfera", 0.03f));
+        constanteTable.getItems().add(new Constante("Kt", 1.0f));
+        constanteTable.getItems().add(new Constante("L", 0.1f));
+        constanteTable.getItems().add(new Constante("K1", 607.76f));
+        constanteTable.getItems().add(new Constante("K2", 1260.56f));
+        constanteTable.getItems().add(new Constante("S", 1367.0f));
+        constanteTable.getItems().add(new Constante("StefanBoltzman", (float) (5.67 * Math.pow(10, -8))));
+        constanteTable.getItems().add(new Constante("Tao_24h", 0.63f));
 
 
         try {
@@ -188,14 +188,14 @@ public class SEBALLandSatGUIController extends GenericController {
             if (linha.equals("<header>")) {
                 linha = bur.readLine();
                 while (!linha.equals("<body>")) {
-                    headerTable.getItems().add(new Constante(linha, 0.0));
+                    headerTable.getItems().add(new Constante(linha, 0.0f));
                     linha = bur.readLine();
                 }
             }
 
             linha = bur.readLine();
             while (linha != null) {
-                bodyTable.getItems().add(new Constante(linha, 0.0));
+                bodyTable.getItems().add(new Constante(linha, 0.0f));
                 linha = bur.readLine();
             }
         } catch (IOException ex) {

@@ -68,7 +68,7 @@ public abstract class GenericController implements Initializable {
 
     @FXML
     protected void addConstanteAction(ActionEvent event) {
-        constanteTable.getItems().add(new Constante("nome", 0.0));
+        constanteTable.getItems().add(new Constante("nome", 0.0f));
     }
 
     @FXML
@@ -78,7 +78,7 @@ public abstract class GenericController implements Initializable {
 
     @FXML
     protected void addHeaderAction(ActionEvent event) {
-        headerTable.getItems().add(new Constante("equacao", 0.0));
+        headerTable.getItems().add(new Constante("equacao", 0.0f));
     }
 
     @FXML
@@ -88,7 +88,7 @@ public abstract class GenericController implements Initializable {
 
     @FXML
     protected void addBodyAction(ActionEvent event) {
-        bodyTable.getItems().add(new Constante("equacao", 0.0));
+        bodyTable.getItems().add(new Constante("equacao", 0.0f));
     }
 
     @FXML
@@ -107,7 +107,7 @@ public abstract class GenericController implements Initializable {
     }
 
     @FXML
-    protected void editTableDoubleAction(TableColumn.CellEditEvent<Constante, Double> t) {
+    protected void editTableDoubleAction(TableColumn.CellEditEvent<Constante, Float> t) {
         Constante editado = ((Constante) t.getTableView().getItems().get(
                 t.getTablePosition().getRow()));
 
@@ -157,7 +157,7 @@ public abstract class GenericController implements Initializable {
         tc.setCellFactory(cellFactoryString);
 
         tc = (TableColumn) constanteTable.getColumns().get(1);
-        tc.setCellValueFactory(new PropertyValueFactory<Constante, Double>("valor"));
+        tc.setCellValueFactory(new PropertyValueFactory<Constante, Float>("valor"));
         tc.setCellFactory(cellFactory);
 
         tc = (TableColumn) headerTable.getColumns().get(0);

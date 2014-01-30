@@ -97,6 +97,9 @@ public class GenericLexerSEB {
                 }
             } else {
                 equation = dependent.getToken() + "=";
+                if (language.equals(LanguageType.JAVA)) {
+                    equation += " (float)(";
+                }
             }
         } else {
             expressionParser.evaluateExprIf(equation);
@@ -135,6 +138,9 @@ public class GenericLexerSEB {
             }
             equation += terms[i];
         }
+        if (dependent != null && language.equals(LanguageType.JAVA)) {
+            equation += ")";
+        }
 
 
 //        System.out.println(equation);
@@ -156,7 +162,7 @@ public class GenericLexerSEB {
         return o.asDouble();
     }
 
-    public double getResults(String equation, Map<String, Double> variables) {
+    public float getResults(String equation, Map<String, Float> variables) {
         PythonInterpreter in = new PythonInterpreter();
         String[] vet = equation.split("=");
         vet[0] = vet[0].replace(" ", "");
@@ -170,6 +176,6 @@ public class GenericLexerSEB {
         t.append("\nres = str(" + vet[0] + ")\n");
         PyObject o = in.eval(in.compile(t.toString()));
         o = in.get(vet[0]);
-        return o.asDouble();
+        return (float) o.asDouble();
     }
 }

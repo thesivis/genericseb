@@ -4,8 +4,7 @@
  */
 package br.ufmt.utils;
 
-import java.io.File;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleFloatProperty;
 import javafx.beans.property.SimpleStringProperty;
 
 /**
@@ -15,19 +14,19 @@ import javafx.beans.property.SimpleStringProperty;
 public class Constante {
 
     private SimpleStringProperty nome;
-    private SimpleDoubleProperty valor;
-    private SimpleDoubleProperty valor2;
-    private SimpleDoubleProperty valor3;
+    private SimpleFloatProperty valor;
+    private SimpleFloatProperty valor2;
+    private SimpleFloatProperty valor3;
 
-    public Constante(String nome, Double valor) {
+    public Constante(String nome, Float valor) {
         this.nome = new SimpleStringProperty(nome);
-        this.valor = new SimpleDoubleProperty(valor);
+        this.valor = new SimpleFloatProperty(valor);
     }
 
-    public Constante(String nome, Double valor, Double valor2, Double valor3) {
+    public Constante(String nome, Float valor, Float valor2, Float valor3) {
         this(nome, valor);
-        this.valor2 = new SimpleDoubleProperty(valor2);
-        this.valor3 = new SimpleDoubleProperty(valor3);
+        this.valor2 = new SimpleFloatProperty(valor2);
+        this.valor3 = new SimpleFloatProperty(valor3);
     }
 
     public String getNome() {
@@ -38,27 +37,27 @@ public class Constante {
         this.nome.set(nome);
     }
 
-    public Double getValor() {
+    public Float getValor() {
         return valor.get();
     }
 
-    public void setValor(Double valor) {
+    public void setValor(Float valor) {
         this.valor.set(valor);
     }
 
-    public Double getValor2() {
+    public Float getValor2() {
         return valor2.get();
     }
 
-    public void setValor2(Double valor) {
+    public void setValor2(Float valor) {
         this.valor2.set(valor);
     }
 
-    public Double getValor3() {
+    public Float getValor3() {
         return valor3.get();
     }
 
-    public void setValor3(Double valor) {
+    public void setValor3(Float valor) {
         this.valor3.set(valor);
     }
 }
