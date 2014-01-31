@@ -15,6 +15,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
+import javafx.scene.control.Menu;
 import javafx.scene.layout.AnchorPane;
 
 /**
@@ -28,6 +29,8 @@ public class GenericGUIController implements Initializable {
     private ResourceBundle bundle;
     @FXML
     private AnchorPane panel;
+    @FXML
+    private Menu menuFile;
     private GenericController genericController;
 
     /**
@@ -97,6 +100,7 @@ public class GenericGUIController implements Initializable {
                 panel.getChildren().clear();
                 panel.getChildren().add(root);
                 genericController = fxmlLoader.getController();
+                menuFile.setVisible(true);
             }
         } catch (IOException ex) {
             Logger.getLogger(GenericGUIController.class.getName()).log(Level.SEVERE, null, ex);
