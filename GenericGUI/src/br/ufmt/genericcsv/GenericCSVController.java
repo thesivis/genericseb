@@ -173,41 +173,6 @@ public class GenericCSVController extends GenericController {
         TableColumn tc = (TableColumn) columnsTable.getColumns().get(0);
         tc.setCellValueFactory(new PropertyValueFactory<Constante, String>("nome"));
         tc.setCellFactory(cellFactoryString);
-
-        File trab = new File(System.getProperty("user.dir") + "/source/trab.prop");
-        if (trab.exists()) {
-
-            constanteTable.getItems().add(new Constante("albedo", 0.4f));
-            constanteTable.getItems().add(new Constante("razaoInsolacao", 0.05f));
-            constanteTable.getItems().add(new Constante("latitude", -0.05266f));
-            constanteTable.getItems().add(new Constante("a2", 0.5f));
-            constanteTable.getItems().add(new Constante("a3", 0.1f));
-            constanteTable.getItems().add(new Constante("b2", 0.05f));
-            constanteTable.getItems().add(new Constante("b3", 0.8f));
-            constanteTable.getItems().add(new Constante("stefan", 5.6697E-8f));
-            constanteTable.getItems().add(new Constante("pascal", 133.3224f));
-
-            try {
-                BufferedReader burTrab = new BufferedReader(new FileReader(trab));
-                String linha = burTrab.readLine();
-
-                if (linha.equals("<header>")) {
-                    linha = burTrab.readLine();
-                    while (!linha.equals("<body>")) {
-                        headerTable.getItems().add(new Constante(linha, 0.0f));
-                        linha = burTrab.readLine();
-                    }
-                }
-
-                linha = burTrab.readLine();
-                while (linha != null) {
-                    bodyTable.getItems().add(new Constante(linha, 0.0f));
-                    linha = burTrab.readLine();
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(GenericCSVController.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
     }
 
     @Override
