@@ -212,8 +212,10 @@ public class GenericCSVController extends GenericController {
                 line = bur.readLine();
                 while (line != null && (!line.equals("<header>") && !line.equals("<body>"))) {
                     vet = line.split("=");
-                    if (vet[1].matches("(-?)[0-9]+([\\.][0-9]+)?")) {
+                    try {
                         constanteTable.getItems().add(new Constante(vet[0], Float.parseFloat(vet[1])));
+                    } catch (NumberFormatException ex) {
+                        ex.printStackTrace();
                     }
                     line = bur.readLine();
                 }
