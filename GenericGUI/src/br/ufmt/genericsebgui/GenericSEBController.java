@@ -33,6 +33,7 @@ import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -538,12 +539,86 @@ public class GenericSEBController extends GenericController {
     }
 
     @Override
-    public void open() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void open(File file) {
+        try {
+            BufferedReader bur = new BufferedReader(new FileReader(file));
+            String line = bur.readLine();
+            if (line != null && line.equals("<constant>")) {
+                String[] vet;
+                line = bur.readLine();
+                while (line != null && (!line.equals("<calibration>") && !line.equals("<header>") && !line.equals("<body>"))) {
+                    vet = line.split("=");
+                    if (vet[1].matches("(-?)[0-9]+([\\.][0-9]+)?")) {
+                        constanteTable.getItems().add(new Constante(vet[0], Float.parseFloat(vet[1])));
+                    }
+                    line = bur.readLine();
+                }
+            }
+            if (line != null && line.equals("<calibration>")) {
+                String[] vet;
+                line = bur.readLine();
+                boolean right = false;
+                while (line != null && (!line.equals("<header>") && !line.equals("<body>"))) {
+                    vet = line.split(";");
+                    right = true;
+                    for (int i = 0; i < vet.length; i++) {
+                        if (!vet[i].matches("(-?)[0-9]+([\\.][0-9]+)?")) {
+                            right = false;
+                            break;
+                        }
+                    }
+                    if (right) {
+                        constanteTable.getItems().add(new Constante("name", Float.parseFloat(vet[0]), Float.parseFloat(vet[1]), Float.parseFloat(vet[2])));
+                    }
+                    line = bur.readLine();
+                }
+            }
+            if (line != null && line.equals("<header>")) {
+                line = bur.readLine();
+                while (line != null && (!line.equals("<body>"))) {
+                    headerTable.getItems().add(new Constante(line, 0.0f));
+                    line = bur.readLine();
+                }
+            }
+            if (line != null && line.equals("<body>")) {
+                line = bur.readLine();
+                while (line != null) {
+                    bodyTable.getItems().add(new Constante(line, 0.0f));
+                    line = bur.readLine();
+                }
+            }
+            bur.close();
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(GenericSEBController.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(GenericSEBController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @Override
-    public void save() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void save(File file) {
+        try {
+            PrintWriter pw = new PrintWriter(file);
+            pw.println("<constant>");
+            for (Constante object : constanteTable.getItems()) {
+                pw.println(object.getNome() + "=" + object.getValor());
+            }
+            pw.println("<calibration>");
+            for (int i = 0; i < calibrationTable.getItems().size(); i++) {
+                Constante constante = calibrationTable.getItems().get(i);
+                pw.println(constante.getValor() + ";" + constante.getValor2() + ";" + constante.getValor3());
+            }
+            pw.println("<header>");
+            for (Constante object : headerTable.getItems()) {
+                pw.println(object.getNome());
+            }
+            pw.println("<body>");
+            for (Constante object : bodyTable.getItems()) {
+                pw.println(object.getNome());
+            }
+            pw.close();
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(GenericSEBController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

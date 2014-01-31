@@ -189,8 +189,30 @@ public abstract class GenericController implements Initializable {
     protected void afterUpload() {
 
     }
-
-    public abstract void open();
     
-    public abstract void save();
+    public void saveNew(){
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(bundle.getString("extension"), "*.prop"));
+        fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+        fileChooser.setTitle(bundle.getString("file.chooser.title"));
+        File newFile = fileChooser.showSaveDialog(Main.screen);
+        if (newFile != null) {
+            save(newFile);
+        }
+    }
+    
+    public void openNew(){
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(bundle.getString("extension"), "*.prop"));
+        fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+        fileChooser.setTitle(bundle.getString("file.chooser.title"));
+        File newFile = fileChooser.showOpenDialog(Main.screen);
+        if (newFile != null) {
+            open(newFile);
+        }
+    }
+
+    protected abstract void open(File file);
+    
+    protected abstract void save(File file);
 }

@@ -14,6 +14,7 @@ import br.ufmt.utils.Constante;
 import br.ufmt.utils.EditingCell;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -162,13 +163,12 @@ public class GenericCSVController extends GenericController {
     @Override
     protected void inicializated() {
         columnsTable.getItems().clear();
-        Callback<TableColumn, TableCell> cellFactoryString
-                = new Callback<TableColumn, TableCell>() {
-                    @Override
-                    public TableCell call(TableColumn p) {
-                        return new EditingCell(bundle);
-                    }
-                };
+        Callback<TableColumn, TableCell> cellFactoryString = new Callback<TableColumn, TableCell>() {
+            @Override
+            public TableCell call(TableColumn p) {
+                return new EditingCell(bundle);
+            }
+        };
         TableColumn tc = (TableColumn) columnsTable.getColumns().get(0);
         tc.setCellValueFactory(new PropertyValueFactory<Constante, String>("nome"));
         tc.setCellFactory(cellFactoryString);
@@ -237,12 +237,62 @@ public class GenericCSVController extends GenericController {
     }
 
     @Override
-    public void open() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void open(File file) {
+        try {
+            BufferedReader bur = new BufferedReader(new FileReader(file));
+            String line = bur.readLine();
+            if (line != null && line.equals("<constant>")) {
+                String[] vet;
+                line = bur.readLine();
+                while (line != null && (!line.equals("<header>") && !line.equals("<body>"))) {
+                    vet = line.split("=");
+                    if (vet[1].matches("(-?)[0-9]+([\\.][0-9]+)?")) {
+                        constanteTable.getItems().add(new Constante(vet[0], Float.parseFloat(vet[1])));
+                    }
+                    line = bur.readLine();
+                }
+            }
+            if (line != null && line.equals("<header>")) {
+                line = bur.readLine();
+                while (line != null && (!line.equals("<body>"))) {
+                    headerTable.getItems().add(new Constante(line, 0.0f));
+                    line = bur.readLine();
+                }
+            }
+            if (line != null && line.equals("<body>")) {
+                line = bur.readLine();
+                while (line != null) {
+                    bodyTable.getItems().add(new Constante(line, 0.0f));
+                    line = bur.readLine();
+                }
+            }
+            bur.close();
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(GenericCSVController.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(GenericCSVController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @Override
-    public void save() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void save(File file) {
+        try {
+            PrintWriter pw = new PrintWriter(file);
+            pw.println("<constant>");
+            for (Constante object : constanteTable.getItems()) {
+                pw.println(object.getNome() + "=" + object.getValor());
+            }
+            pw.println("<header>");
+            for (Constante object : headerTable.getItems()) {
+                pw.println(object.getNome());
+            }
+            pw.println("<body>");
+            for (Constante object : bodyTable.getItems()) {
+                pw.println(object.getNome());
+            }
+            pw.close();
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(GenericCSVController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }
