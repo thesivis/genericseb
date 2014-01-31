@@ -513,18 +513,18 @@ public class GenericSEBController extends GenericController {
             if (line != null && line.equals("<calibration>")) {
                 String[] vet;
                 line = bur.readLine();
-                boolean right = false;
+                boolean right;
                 while (line != null && (!line.equals("<header>") && !line.equals("<body>"))) {
                     vet = line.split(";");
                     right = true;
-                    for (int i = 0; i < vet.length; i++) {
-                        if (!vet[i].matches("(-?)[0-9]+([\\.][0-9]+)?")) {
+                    for (String vet1 : vet) {
+                        if (!vet1.matches("(-?)[0-9]+([\\.][0-9]+)?")) {
                             right = false;
                             break;
                         }
                     }
                     if (right) {
-                        constanteTable.getItems().add(new Constante("name", Float.parseFloat(vet[0]), Float.parseFloat(vet[1]), Float.parseFloat(vet[2])));
+                        calibrationTable.getItems().add(new Constante("name", Float.parseFloat(vet[0]), Float.parseFloat(vet[1]), Float.parseFloat(vet[2])));
                     }
                     line = bur.readLine();
                 }
