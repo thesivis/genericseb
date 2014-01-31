@@ -596,38 +596,5 @@ public class Utilities {
         return variables;
     }
 
-    public static Object compile(String source, String className) {
-        try {
-            PrintWriter fonte = new PrintWriter(className + ".java");
-            fonte.println(source);
-            fonte.close();
-
-            int compilar = com.sun.tools.javac.Main.compile(new String[]{className + ".java"});
-            File arq = new File(className + ".java");
-            arq.delete();
-            if (compilar == 0) {
-                URL url = new URL("file:" + System.getProperty("user.dir") + "/");
-                URLClassLoader ucl = URLClassLoader.newInstance(new URL[]{url});
-                Class classe = ucl.loadClass(className);
-                Object instancia = classe.newInstance();
-                return instancia;
-            }
-
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SecurityException ex) {
-            Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IllegalArgumentException ex) {
-            Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(Utilities.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return null;
-    }
+    
 }
