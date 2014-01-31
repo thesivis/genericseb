@@ -78,12 +78,12 @@ public class GenericGUIController implements Initializable {
     
     @FXML
     private void openAction(ActionEvent event) {
-        genericController.open();
+        genericController.openNew();
     }
     
     @FXML
     private void saveAction(ActionEvent event) {
-        genericController.save();
+        genericController.saveNew();
     }
 
     private void changeContent(String xml) {
