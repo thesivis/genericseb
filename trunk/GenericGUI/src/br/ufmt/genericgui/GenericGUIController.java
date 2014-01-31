@@ -97,7 +97,6 @@ public class GenericGUIController implements Initializable {
                 panel.getChildren().clear();
                 panel.getChildren().add(root);
                 genericController = fxmlLoader.getController();
-                System.out.println("g:"+genericController);
             }
         } catch (IOException ex) {
             Logger.getLogger(GenericGUIController.class.getName()).log(Level.SEVERE, null, ex);

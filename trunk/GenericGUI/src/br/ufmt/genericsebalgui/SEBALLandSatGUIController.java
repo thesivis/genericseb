@@ -42,6 +42,7 @@ public class SEBALLandSatGUIController extends GenericController {
 
     public SEBALLandSatGUIController() {
         extensions = new String[]{"*.tiff", "*.tif"};
+        extensionsConf = new String[]{"*.sebal"};
     }
 
     @Override
@@ -165,44 +166,7 @@ public class SEBALLandSatGUIController extends GenericController {
 
     @Override
     protected void inicializated() {
-        constanteTable.getItems().add(new Constante("julianDay", 248.0f));
-        constanteTable.getItems().add(new Constante("Z", 50.24f));
-        constanteTable.getItems().add(new Constante("latitude", -16.56f));
-        constanteTable.getItems().add(new Constante("Rg_24h", 243.949997f));
-        constanteTable.getItems().add(new Constante("Uref", 0.92071358f));
-        constanteTable.getItems().add(new Constante("P", 299.3f));
-        constanteTable.getItems().add(new Constante("UR", 36.46f));
-        constanteTable.getItems().add(new Constante("Ta", 32.74f));
-        constanteTable.getItems().add(new Constante("reflectanciaAtmosfera", 0.03f));
-        constanteTable.getItems().add(new Constante("Kt", 1.0f));
-        constanteTable.getItems().add(new Constante("L", 0.1f));
-        constanteTable.getItems().add(new Constante("K1", 607.76f));
-        constanteTable.getItems().add(new Constante("K2", 1260.56f));
-        constanteTable.getItems().add(new Constante("S", 1367.0f));
-        constanteTable.getItems().add(new Constante("StefanBoltzman", (float) (5.67 * Math.pow(10, -8))));
-        constanteTable.getItems().add(new Constante("Tao_24h", 0.63f));
-
-
-        try {
-            BufferedReader bur = new BufferedReader(new FileReader(System.getProperty("user.dir") + "/source/landsat.prop"));
-            String linha = bur.readLine();
-
-            if (linha.equals("<header>")) {
-                linha = bur.readLine();
-                while (!linha.equals("<body>")) {
-                    headerTable.getItems().add(new Constante(linha, 0.0f));
-                    linha = bur.readLine();
-                }
-            }
-
-            linha = bur.readLine();
-            while (linha != null) {
-                bodyTable.getItems().add(new Constante(linha, 0.0f));
-                linha = bur.readLine();
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(SEBALLandSatGUIController.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        
     }
 
     @Override

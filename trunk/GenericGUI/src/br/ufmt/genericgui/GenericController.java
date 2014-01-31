@@ -47,6 +47,7 @@ public abstract class GenericController implements Initializable {
     protected TabPane tabPane;
     protected Task task;
     protected String[] extensions;
+    protected String[] extensionsConf;
 
     @FXML
     protected void runButtonAction(ActionEvent event) {
@@ -189,21 +190,35 @@ public abstract class GenericController implements Initializable {
     protected void afterUpload() {
 
     }
-    
-    public void saveNew(){
+
+    public void saveNew() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(bundle.getString("extension"), "*.prop"));
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(bundle.getString("extension"), extensionsConf));
         fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
         fileChooser.setTitle(bundle.getString("file.chooser.title"));
         File newFile = fileChooser.showSaveDialog(Main.screen);
         if (newFile != null) {
+            String[] vet = newFile.getName().split("\\.");
+            String extension = vet[vet.length - 1];
+            String string = null;
+            boolean hasExtension = false;
+            for (int i = 0; i < extensionsConf.length; i++) {
+                string = extensionsConf[i].substring(2);
+                if (extension.equals(string)) {
+                    hasExtension = true;
+                    break;
+                }
+            }
+            if (!hasExtension) {
+                newFile = new File(newFile.getPath() + "." + string);
+            }
             save(newFile);
         }
     }
-    
-    public void openNew(){
+
+    public void openNew() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(bundle.getString("extension"), "*.prop"));
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(bundle.getString("extension"), extensionsConf));
         fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
         fileChooser.setTitle(bundle.getString("file.chooser.title"));
         File newFile = fileChooser.showOpenDialog(Main.screen);
@@ -213,6 +228,6 @@ public abstract class GenericController implements Initializable {
     }
 
     protected abstract void open(File file);
-    
+
     protected abstract void save(File file);
 }

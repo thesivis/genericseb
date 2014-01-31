@@ -71,7 +71,7 @@ import sun.awt.image.SunWritableRaster;
  */
 public class GenericSEBController extends GenericController {
 
-    protected int MAX = 550000000;
+    protected final int MAX = 550000000;
     @FXML
     private TableView<Image> filesTable;
     @FXML
@@ -79,6 +79,7 @@ public class GenericSEBController extends GenericController {
 
     public GenericSEBController() {
         extensions = new String[]{"*.tiff", "*.tif"};
+        extensionsConf = new String[]{"*.seb"};
     }
 
     @FXML
@@ -491,51 +492,6 @@ public class GenericSEBController extends GenericController {
             tc.setCellFactory(cellFactoryDouble);
         }
 
-        constanteTable.getItems().add(new Constante("julianDay", 248.0f));
-        constanteTable.getItems().add(new Constante("Z", 50.24f));
-        constanteTable.getItems().add(new Constante("latitude", -16.56f));
-        constanteTable.getItems().add(new Constante("Rg_24h", 243.949997f));
-        constanteTable.getItems().add(new Constante("Uref", 0.92071358f));
-        constanteTable.getItems().add(new Constante("P", 299.3f));
-        constanteTable.getItems().add(new Constante("UR", 36.46f));
-        constanteTable.getItems().add(new Constante("Ta", 32.74f));
-        constanteTable.getItems().add(new Constante("reflectanciaAtmosfera", 0.03f));
-        constanteTable.getItems().add(new Constante("Kt", 1.0f));
-        constanteTable.getItems().add(new Constante("L", 0.1f));
-        constanteTable.getItems().add(new Constante("K1", 607.76f));
-        constanteTable.getItems().add(new Constante("K2", 1260.56f));
-        constanteTable.getItems().add(new Constante("S", 1367.0f));
-        constanteTable.getItems().add(new Constante("StefanBoltzman", (float) (5.67 * Math.pow(10, -8))));
-        constanteTable.getItems().add(new Constante("Tao_24h", 0.63f));
-
-        calibrationTable.getItems().add(new Constante("nome", -1.52f, 193.0f, 1957.0f));
-        calibrationTable.getItems().add(new Constante("nome", -2.84f, 365.0f, 1826.0f));
-        calibrationTable.getItems().add(new Constante("nome", -1.17f, 264.0f, 1554.0f));
-        calibrationTable.getItems().add(new Constante("nome", -1.51f, 221.0f, 1036.0f));
-        calibrationTable.getItems().add(new Constante("nome", -0.37f, 30.2f, 215.0f));
-        calibrationTable.getItems().add(new Constante("nome", 1.2378f, 15.303f, 1.0f));
-        calibrationTable.getItems().add(new Constante("nome", -0.15f, 16.5f, 80.67f));
-
-        try {
-            BufferedReader bur = new BufferedReader(new FileReader(System.getProperty("user.dir") + "/source/landsat.prop"));
-            String linha = bur.readLine();
-
-            if (linha.equals("<header>")) {
-                linha = bur.readLine();
-                while (!linha.equals("<body>")) {
-                    headerTable.getItems().add(new Constante(linha, 0.0f));
-                    linha = bur.readLine();
-                }
-            }
-
-            linha = bur.readLine();
-            while (linha != null) {
-                bodyTable.getItems().add(new Constante(linha, 0.0f));
-                linha = bur.readLine();
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(GenericSEBController.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
 
     @Override
