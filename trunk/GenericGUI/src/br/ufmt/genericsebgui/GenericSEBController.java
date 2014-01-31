@@ -9,6 +9,7 @@ import br.ufmt.genericgui.Main;
 import br.ufmt.genericlexerseb.LanguageType;
 import br.ufmt.genericseb.GenericSEB;
 import br.ufmt.genericseb.Value;
+import br.ufmt.preprocessing.utils.DataFile;
 import br.ufmt.preprocessing.utils.Utilities;
 import br.ufmt.utils.AlertDialog;
 import br.ufmt.utils.Constante;
@@ -38,9 +39,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.concurrent.Task;
@@ -67,6 +70,7 @@ import sun.awt.image.SunWritableRaster;
  */
 public class GenericSEBController extends GenericController {
 
+    protected int MAX = 550000000;
     @FXML
     private TableView<Image> filesTable;
     @FXML
@@ -258,26 +262,10 @@ public class GenericSEBController extends GenericController {
                         Map<String, float[]> constVetor = new HashMap<>();
                         constVetor.put("parameterAlbedo", parameterAlbedo);
 
-                        GenericSEB g = new GenericSEB(LanguageType.JAVA);
-                        Map<String, float[]> datum = g.execute(header.toString(), body.toString(), parameters, constants, constVetor, constMatrix);
-
-
-                        System.out.println("Executed");
-                        FileOutputStream fos;
-                        WritableRaster rasterResp;
-
-                        BandedSampleModel mppsm;
-                        DataBufferFloat dataBuffer;
-                        TIFFEncodeParam encParam = null;
-                        ImageEncoder enc;
-
                         File tiff = image.getFile();
                         String parent = tiff.getParent() + "/OutputParameters/";
                         File dir = new File(parent);
                         dir.mkdirs();
-                        String pathTiff;
-
-
 
                         //GETTING CONFIGURATION OF TIFF
                         int k = 0;
@@ -291,49 +279,79 @@ public class GenericSEBController extends GenericController {
                         /* Create a Array of TIFFField*/
                         TIFFField[] allTiffFields = ifd.getTIFFFields();
 
+                        int bands = raster.getNumBands();
+                        int width = raster.getWidth();
+                        int height = raster.getHeight();
 
-                        float[] dado;
-                        int x, y;
-                        float[] vet;
-                        for (String string : datum.keySet()) {
-                            vet = datum.get(string);
-                            if (!string.equals("coef")) {
+                        size = width * height;
+                        int totalPixels = size * bands;
+                        int total = totalPixels;
 
-                                pathTiff = parent + string + ".tif";
-                                mppsm = new BandedSampleModel(DataBuffer.TYPE_FLOAT, raster.getWidth(), raster.getHeight(), 1);
-                                dataBuffer = new DataBufferFloat(raster.getWidth() * raster.getHeight());
-                                rasterResp = new SunWritableRaster(mppsm, dataBuffer, new Point(0, 0));
-                                fos = new FileOutputStream(pathTiff);
-
-                                for (int i = 0; i < vet.length; i++) {
-                                    dado = new float[]{(float) vet[i]};
-                                    x = i % raster.getWidth();
-                                    y = i / raster.getWidth();
-                                    try {
-                                        rasterResp.setPixel(x, y, dado);
-                                    } catch (java.lang.ArrayIndexOutOfBoundsException ex) {
-                                        System.out.println("i:" + i + " X:" + x + " Y: " + y);
-                                        System.exit(1);
-                                    }
+                        List<DataFile> ret = new ArrayList<>();
+                        String[] lines = body.toString().split("\n");
+                        Set<String> outputs = new HashSet<>();
+                        StringBuilder without = new StringBuilder();
+                        StringBuilder exec = new StringBuilder();
+                        boolean executed = false;
+                        for (int i = 0; i < lines.length; i++) {
+                            String string = lines[i];
+                            executed = false;
+//                    System.out.println("String:"+string);
+                            if (string.startsWith("O_")) {
+                                without.append(string.substring(2));
+                                String var = string.substring(2);
+                                if (var.contains("_(")) {
+                                    var = var.substring(0, var.indexOf("_("));
+                                } else {
+                                    var = var.substring(0, var.indexOf("="));
                                 }
+                                var = var.replaceAll("[ ]+", "");
+                                if (outputs.add(var)) {
+//                            System.out.println("var:" + var + ":");
+                                    exec.append(string);
+                                    if (total + 2 * size < MAX) {
+                                        total = total + size;
+                                    } else {
+                                        for (int j = i + 1; j < lines.length; j++) {
+                                            String string2 = lines[j];
 
-                                enc = ImageCodec.createImageEncoder("tiff", fos, encParam);
-                                enc.encode(rasterResp, model);
-                                fos.close();
-                                Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterResp);
+                                            var = string2.substring(2);
+                                            if (var.contains("_(")) {
+                                                var = var.substring(0, var.indexOf("_("));
+                                            } else {
+                                                var = var.substring(0, var.indexOf("="));
+                                            }
+                                            var = var.replaceAll("[ ]+", "");
+                                            if (outputs.contains(var)) {
+                                                without.append("\n").append(string2.substring(2));
+                                                exec.append("\n").append(string2);
+                                                i = j;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        total = totalPixels;
+                                        execute(tiff, raster, model, imageReader, allTiffFields, ret, header.toString(), without, exec, parameters, constants, constVetor, constMatrix);
+                                        executed = true;
+                                    }
+                                } else {
+                                    exec.append(string);
+                                }
                             } else {
-                                pathTiff = parent + "A.dat";
-                                PrintWriter pw = new PrintWriter(pathTiff);
-                                pw.print(vet[0]);
-                                pw.close();
-
-                                pathTiff = parent + "B.dat";
-                                pw = new PrintWriter(pathTiff);
-                                pw.print(vet[1]);
-                                pw.close();
+                                if (!string.startsWith("index")) {
+                                    without.append(string);
+                                }
+                                exec.append(string);
                             }
+                            if (!string.startsWith("index")) {
+                                without.append("\n");
+                            }
+                            exec.append("\n");
                         }
 
+                        if (!executed) {
+                            execute(tiff, raster, model, imageReader, allTiffFields, ret, header.toString(), without, exec, parameters, constants, constVetor, constMatrix);
+                        }
 
                     } catch (Exception ex) {
                         ex.printStackTrace();
@@ -347,6 +365,88 @@ public class GenericSEBController extends GenericController {
                 return null;
             }
         };
+    }
+
+    private void execute(File tiff, Raster raster, ColorModel model, ImageReader imageReader, TIFFField[] allTiffFields, List<DataFile> ret, String header, StringBuilder without, StringBuilder exec, List<Value> parameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) {
+        try {
+            System.out.println("Executing:" + exec.toString());
+//            System.out.println("Whito:" + without.toString());
+//            System.out.println();
+
+            GenericSEB g = new GenericSEB(LanguageType.JAVA);
+            Map<String, float[]> datas = g.execute(header, exec.toString(), parameters, constants, constantsVetor, constantsMatrix);
+
+            exec.delete(0, exec.length());
+            exec.append(without.toString());
+
+            System.out.println("Executed");
+            FileOutputStream fos;
+            WritableRaster rasterResp;
+
+            BandedSampleModel mppsm;
+            DataBufferFloat dataBuffer;
+            TIFFEncodeParam encParam = null;
+            ImageEncoder enc;
+
+            String parent = tiff.getParent() + "/OutputParameters/";
+            File dir = new File(parent);
+            dir.mkdirs();
+            String pathTiff;
+
+            float[] dado;
+            int x, y;
+            int width = raster.getWidth();
+            int height = raster.getHeight();
+            System.out.println("Width:" + width);
+            System.out.println("height:" + height);
+            float[] vet;
+
+            for (String resp : datas.keySet()) {
+                vet = datas.get(resp);
+                if (!resp.equals("coef")) {
+
+                    pathTiff = parent + resp + ".tif";
+                    mppsm = new BandedSampleModel(DataBuffer.TYPE_FLOAT, raster.getWidth(), raster.getHeight(), 1);
+                    dataBuffer = new DataBufferFloat(raster.getWidth() * raster.getHeight());
+                    rasterResp = new SunWritableRaster(mppsm, dataBuffer, new Point(0, 0));
+                    fos = new FileOutputStream(pathTiff);
+
+                    for (int j = 0; j < vet.length; j++) {
+                        dado = new float[]{(float) vet[j]};
+                        x = j % width;
+                        y = j / width;
+                        try {
+                            rasterResp.setPixel(x, y, dado);
+                        } catch (java.lang.ArrayIndexOutOfBoundsException ex) {
+                            System.out.println("i:" + j + " X:" + x + " Y: " + y);
+                            System.exit(1);
+                        }
+                    }
+
+                    enc = ImageCodec.createImageEncoder("tiff", fos, encParam);
+                    enc.encode(rasterResp, model);
+                    fos.close();
+                    Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterResp);
+                    ret.add(new DataFile(resp, new File(pathTiff)));
+                } else {
+                    pathTiff = parent + "A.dat";
+                    PrintWriter pw = new PrintWriter(pathTiff);
+                    pw.print(vet[0]);
+                    pw.close();
+                    ret.add(new DataFile("A", new File(pathTiff)));
+                    constants.put("a", vet[0]);
+
+                    pathTiff = parent + "B.dat";
+                    pw = new PrintWriter(pathTiff);
+                    pw.print(vet[1]);
+                    constants.put("b", vet[1]);
+                    pw.close();
+                    ret.add(new DataFile("B", new File(pathTiff)));
+                }
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(GenericSEBController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @Override
