@@ -8,6 +8,7 @@ import br.ufmt.utils.Constante;
 import br.ufmt.utils.EditingCell;
 import java.io.File;
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -99,12 +100,8 @@ public abstract class GenericController implements Initializable {
 
     @FXML
     protected void editTableAction(TableColumn.CellEditEvent<Constante, String> t) {
-        Constante editado = ((Constante) t.getTableView().getItems().get(
-                t.getTablePosition().getRow()));
-        if (t.getNewValue().matches("[aA-zZ_](\\w+)?")) {
-            editado.setNome(t.getNewValue());
-
-        }
+        Constante editado = ((Constante) t.getTableView().getItems().get(t.getTablePosition().getRow()));
+        editado.setNome(t.getNewValue());
     }
 
     @FXML
@@ -128,29 +125,26 @@ public abstract class GenericController implements Initializable {
         bodyTable.getItems().clear();
         bodyTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
-        Callback<TableColumn, TableCell> cellFactory
-                = new Callback<TableColumn, TableCell>() {
-                    @Override
-                    public TableCell call(TableColumn p) {
-                        return new EditingCell(bundle, EditingCell.DOUBLE);
-                    }
-                };
+        Callback<TableColumn, TableCell> cellFactory = new Callback<TableColumn, TableCell>() {
+            @Override
+            public TableCell call(TableColumn p) {
+                return new EditingCell(bundle, EditingCell.DOUBLE);
+            }
+        };
 
-        Callback<TableColumn, TableCell> cellFactoryString
-                = new Callback<TableColumn, TableCell>() {
-                    @Override
-                    public TableCell call(TableColumn p) {
-                        return new EditingCell(bundle);
-                    }
-                };
+        Callback<TableColumn, TableCell> cellFactoryString = new Callback<TableColumn, TableCell>() {
+            @Override
+            public TableCell call(TableColumn p) {
+                return new EditingCell(bundle);
+            }
+        };
 
-        Callback<TableColumn, TableCell> cellFactoryEquation
-                = new Callback<TableColumn, TableCell>() {
-                    @Override
-                    public TableCell call(TableColumn p) {
-                        return new EditingCell(bundle, EditingCell.EQUATION);
-                    }
-                };
+        Callback<TableColumn, TableCell> cellFactoryEquation = new Callback<TableColumn, TableCell>() {
+            @Override
+            public TableCell call(TableColumn p) {
+                return new EditingCell(bundle, EditingCell.EQUATION);
+            }
+        };
 
         TableColumn tc = (TableColumn) constanteTable.getColumns().get(0);
         tc.setCellValueFactory(new PropertyValueFactory<Constante, String>("nome"));
@@ -188,7 +182,6 @@ public abstract class GenericController implements Initializable {
     protected abstract void inicializated();
 
     protected void afterUpload() {
-
     }
 
     public void saveNew() {

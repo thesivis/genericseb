@@ -126,7 +126,7 @@ public class EditingCell extends TableCell<Disposer.Record, Object> {
                             }else{
                                 right = true;
                             }
-                            if (right) {
+                            if (right && vet.length == 2) {
                                 equation = vet[0] + "=" + vet[1];
                                 try {
                                     right = exp.evaluateExpr(equation);
