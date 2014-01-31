@@ -11,6 +11,12 @@
   <children>
     <MenuBar fx:id="menuBar" layoutX="0.0" layoutY="0.0" prefWidth="1024">
       <menus>
+        <Menu mnemonicParsing="false" text="%menu.file">
+          <items>
+            <MenuItem mnemonicParsing="false" onAction="#openAction" text="%menu.open" />
+            <MenuItem mnemonicParsing="false" onAction="#saveAction" text="%menu.save" />
+          </items>
+        </Menu>
         <Menu mnemonicParsing="false" text="%algorithm">
           <items>
             <MenuItem mnemonicParsing="false" onAction="#landSatSebalAction" text="%landsatsebal" />

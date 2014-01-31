@@ -30,6 +30,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.AnchorPane;
 import javafx.util.Callback;
 
 /**
@@ -44,6 +45,8 @@ public class GenericCSVController extends GenericController {
     private BufferedReader bur;
     private String line;
     private String delimiter = ";";
+    @FXML
+    private AnchorPane anchorPane;
 
     public GenericCSVController() {
         extensions = new String[]{"*.csv"};
@@ -84,7 +87,6 @@ public class GenericCSVController extends GenericController {
                     for (Constante object : constanteTable.getItems()) {
                         constants.put(object.getNome(), object.getValor());
                     }
-
 
                     File csv = file;
                     if (csv.exists() && csv.getName().endsWith(".csv")) {
@@ -160,47 +162,50 @@ public class GenericCSVController extends GenericController {
     @Override
     protected void inicializated() {
         columnsTable.getItems().clear();
-        Callback<TableColumn, TableCell> cellFactoryString =
-                new Callback<TableColumn, TableCell>() {
-            @Override
-            public TableCell call(TableColumn p) {
-                return new EditingCell(bundle);
-            }
-        };
+        Callback<TableColumn, TableCell> cellFactoryString
+                = new Callback<TableColumn, TableCell>() {
+                    @Override
+                    public TableCell call(TableColumn p) {
+                        return new EditingCell(bundle);
+                    }
+                };
         TableColumn tc = (TableColumn) columnsTable.getColumns().get(0);
         tc.setCellValueFactory(new PropertyValueFactory<Constante, String>("nome"));
         tc.setCellFactory(cellFactoryString);
 
+        File trab = new File(System.getProperty("user.dir") + "/source/trab.prop");
+        if (trab.exists()) {
 
-        constanteTable.getItems().add(new Constante("albedo", 0.4f));
-        constanteTable.getItems().add(new Constante("razaoInsolacao", 0.05f));
-        constanteTable.getItems().add(new Constante("latitude", -0.05266f));
-        constanteTable.getItems().add(new Constante("a2", 0.5f));
-        constanteTable.getItems().add(new Constante("a3", 0.1f));
-        constanteTable.getItems().add(new Constante("b2", 0.05f));
-        constanteTable.getItems().add(new Constante("b3", 0.8f));
-        constanteTable.getItems().add(new Constante("stefan", 5.6697E-8f));
-        constanteTable.getItems().add(new Constante("pascal", 133.3224f));
+            constanteTable.getItems().add(new Constante("albedo", 0.4f));
+            constanteTable.getItems().add(new Constante("razaoInsolacao", 0.05f));
+            constanteTable.getItems().add(new Constante("latitude", -0.05266f));
+            constanteTable.getItems().add(new Constante("a2", 0.5f));
+            constanteTable.getItems().add(new Constante("a3", 0.1f));
+            constanteTable.getItems().add(new Constante("b2", 0.05f));
+            constanteTable.getItems().add(new Constante("b3", 0.8f));
+            constanteTable.getItems().add(new Constante("stefan", 5.6697E-8f));
+            constanteTable.getItems().add(new Constante("pascal", 133.3224f));
 
-        try {
-            BufferedReader burTrab = new BufferedReader(new FileReader(System.getProperty("user.dir") + "/source/trab.prop"));
-            String linha = burTrab.readLine();
+            try {
+                BufferedReader burTrab = new BufferedReader(new FileReader(trab));
+                String linha = burTrab.readLine();
 
-            if (linha.equals("<header>")) {
+                if (linha.equals("<header>")) {
+                    linha = burTrab.readLine();
+                    while (!linha.equals("<body>")) {
+                        headerTable.getItems().add(new Constante(linha, 0.0f));
+                        linha = burTrab.readLine();
+                    }
+                }
+
                 linha = burTrab.readLine();
-                while (!linha.equals("<body>")) {
-                    headerTable.getItems().add(new Constante(linha, 0.0f));
+                while (linha != null) {
+                    bodyTable.getItems().add(new Constante(linha, 0.0f));
                     linha = burTrab.readLine();
                 }
+            } catch (IOException ex) {
+                Logger.getLogger(GenericCSVController.class.getName()).log(Level.SEVERE, null, ex);
             }
-
-            linha = burTrab.readLine();
-            while (linha != null) {
-                bodyTable.getItems().add(new Constante(linha, 0.0f));
-                linha = burTrab.readLine();
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(GenericCSVController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -229,5 +234,15 @@ public class GenericCSVController extends GenericController {
         } catch (IOException ex) {
             Logger.getLogger(GenericCSVController.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    @Override
+    public void open() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void save() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

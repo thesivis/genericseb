@@ -7,7 +7,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane id="AnchorPane" prefHeight="672.0" prefWidth="1024.0" styleClass="mainFxmlClass" xmlns:fx="http://javafx.com/fxml" fx:controller="br.ufmt.genericcsv.GenericCSVController">
+<AnchorPane fx:id="anchorPane" prefHeight="672.0" prefWidth="1024.0" styleClass="mainFxmlClass" xmlns:fx="http://javafx.com/fxml" fx:controller="br.ufmt.genericcsv.GenericCSVController">
      <children>
     <Button fx:id="runButton" layoutX="910.0" layoutY="630.0" mnemonicParsing="false" onAction="#runButtonAction" prefWidth="100.0" styleClass="btn, executar" text="%execute" />
     <TabPane fx:id="tabPane" layoutX="1.0" layoutY="27.0" prefHeight="600.0" prefWidth="1024.0" tabClosingPolicy="UNAVAILABLE">

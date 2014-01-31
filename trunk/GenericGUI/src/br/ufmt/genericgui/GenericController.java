@@ -127,30 +127,29 @@ public abstract class GenericController implements Initializable {
         bodyTable.getItems().clear();
         bodyTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
-        Callback<TableColumn, TableCell> cellFactory =
-                new Callback<TableColumn, TableCell>() {
-            @Override
-            public TableCell call(TableColumn p) {
-                return new EditingCell(bundle, EditingCell.DOUBLE);
-            }
-        };
+        Callback<TableColumn, TableCell> cellFactory
+                = new Callback<TableColumn, TableCell>() {
+                    @Override
+                    public TableCell call(TableColumn p) {
+                        return new EditingCell(bundle, EditingCell.DOUBLE);
+                    }
+                };
 
-        Callback<TableColumn, TableCell> cellFactoryString =
-                new Callback<TableColumn, TableCell>() {
-            @Override
-            public TableCell call(TableColumn p) {
-                return new EditingCell(bundle);
-            }
-        };
+        Callback<TableColumn, TableCell> cellFactoryString
+                = new Callback<TableColumn, TableCell>() {
+                    @Override
+                    public TableCell call(TableColumn p) {
+                        return new EditingCell(bundle);
+                    }
+                };
 
-        Callback<TableColumn, TableCell> cellFactoryEquation =
-                new Callback<TableColumn, TableCell>() {
-            @Override
-            public TableCell call(TableColumn p) {
-                return new EditingCell(bundle, EditingCell.EQUATION);
-            }
-        };
-
+        Callback<TableColumn, TableCell> cellFactoryEquation
+                = new Callback<TableColumn, TableCell>() {
+                    @Override
+                    public TableCell call(TableColumn p) {
+                        return new EditingCell(bundle, EditingCell.EQUATION);
+                    }
+                };
 
         TableColumn tc = (TableColumn) constanteTable.getColumns().get(0);
         tc.setCellValueFactory(new PropertyValueFactory<Constante, String>("nome"));
@@ -167,9 +166,9 @@ public abstract class GenericController implements Initializable {
         tc = (TableColumn) bodyTable.getColumns().get(0);
         tc.setCellFactory(cellFactoryEquation);
         tc.setCellValueFactory(new PropertyValueFactory<Constante, String>("nome"));
-        
+
         inicializated();
-        
+
         setTask();
     }
 
@@ -183,11 +182,15 @@ public abstract class GenericController implements Initializable {
         table.getSelectionModel().clearSelection();
     }
 
-    protected abstract  void setTask();
-    
+    protected abstract void setTask();
+
     protected abstract void inicializated();
-    
-    protected void afterUpload(){
-        
+
+    protected void afterUpload() {
+
     }
+
+    public abstract void open();
+    
+    public abstract void save();
 }
