@@ -28,6 +28,7 @@ public class GenericGUIController implements Initializable {
     private ResourceBundle bundle;
     @FXML
     private AnchorPane panel;
+    private GenericController genericController;
 
     /**
      * Initializes the controller class.
@@ -74,13 +75,29 @@ public class GenericGUIController implements Initializable {
     private void enAction(ActionEvent event) {
         changeLanguage("en");
     }
+    
+    @FXML
+    private void openAction(ActionEvent event) {
+        genericController.open();
+    }
+    
+    @FXML
+    private void saveAction(ActionEvent event) {
+        genericController.save();
+    }
 
     private void changeContent(String xml) {
         try {
             if (xml != null && !xml.isEmpty()) {
-                Parent root = FXMLLoader.load(Main.class.getResource(xml), bundle);
+                URL url = Main.class.getResource(xml);
+                FXMLLoader fxmlLoader = new FXMLLoader();
+                fxmlLoader.setResources(bundle);
+                fxmlLoader.setLocation(url);
+                Parent root = (Parent) fxmlLoader.load(url.openStream());
                 panel.getChildren().clear();
                 panel.getChildren().add(root);
+                genericController = fxmlLoader.getController();
+                System.out.println("g:"+genericController);
             }
         } catch (IOException ex) {
             Logger.getLogger(GenericGUIController.class.getName()).log(Level.SEVERE, null, ex);

@@ -9,7 +9,6 @@ import br.ufmt.genericgui.Main;
 import br.ufmt.genericlexerseb.LanguageType;
 import br.ufmt.genericseb.GenericSEB;
 import br.ufmt.genericseb.Value;
-import br.ufmt.preprocessing.utils.DataFile;
 import br.ufmt.preprocessing.utils.Utilities;
 import br.ufmt.utils.AlertDialog;
 import br.ufmt.utils.Constante;
@@ -436,5 +435,15 @@ public class GenericSEBController extends GenericController {
         } catch (IOException ex) {
             Logger.getLogger(GenericSEBController.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    @Override
+    public void open() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void save() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
