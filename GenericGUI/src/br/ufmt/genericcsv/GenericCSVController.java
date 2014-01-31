@@ -51,6 +51,7 @@ public class GenericCSVController extends GenericController {
 
     public GenericCSVController() {
         extensions = new String[]{"*.csv"};
+        extensionsConf = new String[]{"*.propcsv"};
     }
 
     @Override
