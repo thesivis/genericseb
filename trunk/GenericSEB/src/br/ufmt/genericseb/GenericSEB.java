@@ -9,12 +9,15 @@ import br.ufmt.genericlexerseb.GenericLexerSEB;
 import br.ufmt.genericlexerseb.LanguageType;
 import br.ufmt.genericlexerseb.Structure;
 import br.ufmt.genericlexerseb.Variable;
+import br.ufmt.genericseb.compilation.CharSequenceJavaFileObject;
+import br.ufmt.genericseb.compilation.ClassFileManager;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -26,6 +29,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
+import javax.tools.ToolProvider;
 
 /**
  *
@@ -314,18 +321,40 @@ public class GenericSEB {
         return ret;
     }
 
-    public static Object compile(String source, String className) {
+    public Object compile(String source, String className) {
         try {
             PrintWriter fonte = new PrintWriter(className + ".java");
             fonte.println(source);
             fonte.close();
+            URLClassLoader ucl;
+            URL url;
+            StringBuilder options = new StringBuilder();
+            try {
+                System.out.println("file:" + System.getProperty("user.dir") + "/lib/");
+                url = new URL("file:" + System.getProperty("user.dir") + "/lib/");
+                File dir = new File(url.toURI());
+                File[] jars = dir.listFiles();
+                
+                for (int i = 0; i < jars.length; i++) {
+                    File file = jars[i];
+                    options.append(file.getPath()).append(":");
+                }
 
-            int compilar = com.sun.tools.javac.Main.compile(new String[]{className + ".java"});
+            } catch (SecurityException ex) {
+                Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (URISyntaxException ex) {
+                Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            options.append(".");
+            
+            System.out.println("javac -cp "+options.toString() + " " + className + ".java");
+
+            int compilar = com.sun.tools.javac.Main.compile(new String[]{"-cp",options.toString(),className + ".java"});
             File arq = new File(className + ".java");
-            arq.delete();
+//            arq.delete();
             if (compilar == 0) {
-                URL url = new URL("file:" + System.getProperty("user.dir") + "/");
-                URLClassLoader ucl = URLClassLoader.newInstance(new URL[]{url});
+                url = new URL("file:" + System.getProperty("user.dir") + "/");
+                ucl = URLClassLoader.newInstance(new URL[]{url});
                 Class classe = ucl.loadClass(className);
                 Object instancia = classe.newInstance();
                 return instancia;
@@ -346,6 +375,52 @@ public class GenericSEB {
         } catch (MalformedURLException ex) {
             Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        
+        
+        
+        
+        
+        
+//        try {
+//
+//            String src = source;
+//            String fullName = className;
+//
+//            PrintWriter fonte = new PrintWriter(className + ".java");
+//            fonte.println(source);
+//            fonte.close();
+//            JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+//            JavaFileManager fileManager = new ClassFileManager(compiler
+//                    .getStandardFileManager(null, null, null));
+//
+//            List<JavaFileObject> jfiles = new ArrayList<JavaFileObject>();
+//            jfiles.add(new CharSequenceJavaFileObject(fullName, src));
+//
+//            compiler.getTask(null, fileManager, null, null,
+//                    null, jfiles).call();
+//
+//            Object instance = fileManager.getClassLoader(null)
+//                    .loadClass(fullName).newInstance();
+//
+//            return instance;
+//
+//        } catch (FileNotFoundException ex) {
+//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (ClassNotFoundException ex) {
+//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (InstantiationException ex) {
+//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (IllegalAccessException ex) {
+//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (SecurityException ex) {
+//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (IllegalArgumentException ex) {
+//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+        
+        
+        
         return null;
     }
 
@@ -356,6 +431,7 @@ public class GenericSEB {
 
         StringBuilder source = new StringBuilder();
         source.append("import static br.ufmt.genericseb.Constants.*;\n");
+        source.append("import br.ufmt.genericseb.Constants;\n");
         source.append("import java.util.HashMap;\n");
         source.append("import java.util.Map;\n");
         source.append("import br.ufmt.jseriesgpu.ParameterGPU;\n");
@@ -861,6 +937,7 @@ public class GenericSEB {
 
         StringBuilder source = new StringBuilder();
         source.append("import static br.ufmt.genericseb.Constants.*;\n");
+        source.append("import br.ufmt.genericseb.Constants;\n");
         source.append("import java.util.HashMap;\n");
         source.append("import java.util.Map;\n");
         source.append("import br.ufmt.jseriesgpu.ParameterGPU;\n");
@@ -1352,6 +1429,7 @@ public class GenericSEB {
 
         StringBuilder source = new StringBuilder();
         source.append("import static br.ufmt.genericseb.Constants.*;\n");
+        source.append("import br.ufmt.genericseb.Constants;\n");
         source.append("import java.util.HashMap;\n");
         source.append("import java.util.Map;\n");
         source.append("import br.ufmt.genericseb.GenericSEB;\n");
