@@ -59,18 +59,18 @@ public class Main extends Application {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-//        try {
-//            String fileLog = System.getProperty("user.dir") + "/log.log";
-//            java.io.PrintStream log = new java.io.PrintStream(new java.io.FileOutputStream(new java.io.File(fileLog), true));
-//            System.setErr(log);
-//            
-//            String fileConsole = System.getProperty("user.dir") + "/console.log";
-//            java.io.PrintStream logConsole = new java.io.PrintStream(new java.io.FileOutputStream(new java.io.File(fileConsole), true));
-//            System.setOut(logConsole);
-//            
-//        } catch (java.io.FileNotFoundException ex) {
-//            java.util.logging.Logger.getLogger(Main.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-//        }
+        try {
+            String fileLog = System.getProperty("user.dir") + "/log.log";
+            java.io.PrintStream log = new java.io.PrintStream(new java.io.FileOutputStream(new java.io.File(fileLog)));
+            System.setErr(log);
+            
+            String fileConsole = System.getProperty("user.dir") + "/console.log";
+            java.io.PrintStream logConsole = new java.io.PrintStream(new java.io.FileOutputStream(new java.io.File(fileConsole)));
+            System.setOut(logConsole);
+            
+        } catch (java.io.FileNotFoundException ex) {
+            java.util.logging.Logger.getLogger(Main.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
         launch(args);
     }
 }
