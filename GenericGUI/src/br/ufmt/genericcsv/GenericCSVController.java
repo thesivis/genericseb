@@ -263,4 +263,12 @@ public class GenericCSVController extends GenericController {
             Logger.getLogger(GenericCSVController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    @Override
+    protected void clear() {
+        columnsTable.getItems().clear();
+        line = null;
+        bur = null;
+        delimiter = ";";
+    }
 }

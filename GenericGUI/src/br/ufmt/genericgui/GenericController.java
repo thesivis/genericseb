@@ -216,11 +216,23 @@ public abstract class GenericController implements Initializable {
         fileChooser.setTitle(bundle.getString("file.chooser.title"));
         File newFile = fileChooser.showOpenDialog(Main.screen);
         if (newFile != null) {
+            clearNew();
             open(newFile);
         }
+    }
+    
+    public void clearNew(){
+        constanteTable.getItems().clear();
+        headerTable.getItems().clear();
+        bodyTable.getItems().clear();
+        file = null;
+        nomeArquivoLabel.setText("");
+        clear();
     }
 
     protected abstract void open(File file);
 
     protected abstract void save(File file);
+    
+    protected abstract void clear();
 }

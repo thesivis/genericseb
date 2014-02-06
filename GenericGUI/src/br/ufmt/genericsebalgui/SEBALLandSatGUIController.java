@@ -228,4 +228,9 @@ public class SEBALLandSatGUIController extends GenericController {
             Logger.getLogger(SEBALLandSatGUIController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    @Override
+    protected void clear() {
+        
+    }
 }

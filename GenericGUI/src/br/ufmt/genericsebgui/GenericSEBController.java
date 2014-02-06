@@ -577,4 +577,10 @@ public class GenericSEBController extends GenericController {
             Logger.getLogger(GenericSEBController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+    @Override
+    protected void clear() {
+        filesTable.getItems().clear();
+        calibrationTable.getItems().clear();
+    }
 }

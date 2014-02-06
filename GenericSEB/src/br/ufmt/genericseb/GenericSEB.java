@@ -333,16 +333,22 @@ public class GenericSEB {
             URL url;
             StringBuilder options = new StringBuilder();
             URL[] urls = new URL[1];
+            url = new URL("file:" + System.getProperty("user.dir") + "/lib/");
+            boolean isLib = false;
             try {
-                System.out.println("file:" + System.getProperty("user.dir") + "/lib/");
-                url = new URL("file:" + System.getProperty("user.dir") + "/lib/");
-                File dir = new File(url.toURI());
-                File[] jars = dir.listFiles();
-                urls = new URL[jars.length + 1];
-                for (int i = 0; i < jars.length; i++) {
-                    File file = jars[i];
-                    options.append(file.getPath()).append(":");
-                    urls[i + 1] = jars[i].toURI().toURL();
+                File lib = new File(url.toURI());
+                isLib = lib.exists();
+                if (isLib) {
+//                System.out.println("file:" + System.getProperty("user.dir") + "/lib/");
+                    url = new URL("file:" + System.getProperty("user.dir") + "/lib/");
+                    File dir = new File(url.toURI());
+                    File[] jars = dir.listFiles();
+                    urls = new URL[jars.length + 1];
+                    for (int i = 0; i < jars.length; i++) {
+                        File file = jars[i];
+                        options.append(file.getPath()).append(":");
+                        urls[i + 1] = jars[i].toURI().toURL();
+                    }
                 }
 
             } catch (SecurityException ex) {
@@ -352,28 +358,27 @@ public class GenericSEB {
             }
             options.append(".");
 
-            System.out.println("javac -cp " + options.toString() + " " + className + ".java");
+//            System.out.println("javac -cp " + options.toString() + " " + className + ".java");
 
-            int compilar = com.sun.tools.javac.Main.compile(new String[]{"-cp", options.toString(), className + ".java"});
+            int compilar;
+            if(isLib){
+                compilar = com.sun.tools.javac.Main.compile(new String[]{"-cp", options.toString(), className + ".java"});
+            }else{
+                compilar = com.sun.tools.javac.Main.compile(new String[]{className + ".java"});
+            }
             File arq = new File(className + ".java");
-//            arq.delete();
+            arq.delete();
             if (compilar == 0) {
                 url = new URL("file:" + System.getProperty("user.dir") + "/");
                 urls[0] = url;
 
                 ucl = URLClassLoader.newInstance(urls);
-                urls = ucl.getURLs();
-                for (int i = 0; i < urls.length; i++) {
-                    URL url1 = urls[i];
-                    System.out.println("URL:" + url1.getPath());
-                }
-                Class c = ucl.loadClass("br.ufmt.genericseb.Constants");
-                System.out.println(c);
-                ucl.loadClass("br.ufmt.genericseb.GenericSEB");
-                ucl.loadClass("br.ufmt.genericlexerseb.Maths");
+//                ucl.loadClass("br.ufmt.genericseb.Constants");
+//                ucl.loadClass("br.ufmt.genericseb.GenericSEB");
+//                ucl.loadClass("br.ufmt.genericlexerseb.Maths");
                 Class classe = ucl.loadClass(className);
                 Object instancia = classe.newInstance();
-                System.out.println("instancia:" + instancia);
+//                System.out.println("instancia:" + instancia);
                 return instancia;
             }
 
@@ -392,102 +397,6 @@ public class GenericSEB {
         } catch (MalformedURLException ex) {
             Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-
-
-//        String src = source;
-//        String fullName = className;
-//
-//
-//        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-//        DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
-//
-//
-//        JavaFileObject file = new CharSequenceJavaFileObject(fullName, src);
-//
-//        Iterable<? extends JavaFileObject> compilationUnits = Arrays.asList(file);
-//        JavaCompiler.CompilationTask task = compiler.getTask(null, null, diagnostics, null, null, compilationUnits);
-//
-//        boolean success = task.call();
-//        for (Diagnostic diagnostic : diagnostics.getDiagnostics()) {
-//            System.out.println(diagnostic.getCode());
-//            System.out.println(diagnostic.getKind());
-//            System.out.println(diagnostic.getPosition());
-//            System.out.println(diagnostic.getStartPosition());
-//            System.out.println(diagnostic.getEndPosition());
-//            System.out.println(diagnostic.getSource());
-//            System.out.println(diagnostic.getMessage(null));
-//
-//        }
-//        System.out.println("Success: " + success);
-//        try {
-//            URL url = new URL("file:" + System.getProperty("user.dir") + "/");
-//            URLClassLoader ucl = URLClassLoader.newInstance(new URL[]{url});
-//            Class classe = ucl.loadClass(fullName);
-//
-//            Object instance = classe.newInstance();
-//            System.out.println("Instance:" + instance);
-//            return instance;
-//        } catch (MalformedURLException ex) {
-//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (ClassNotFoundException ex) {
-//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (InstantiationException ex) {
-//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (IllegalAccessException ex) {
-//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-
-
-
-
-
-
-
-
-
-
-//        try {
-//
-//            String src = source;
-//            String fullName = className;
-//
-//            PrintWriter fonte = new PrintWriter(className + ".java");
-//            fonte.println(source);
-//            fonte.close();
-//            
-//            JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-//            JavaFileManager fileManager = new ClassFileManager(compiler
-//                    .getStandardFileManager(null, null, null));
-//
-//            List<JavaFileObject> jfiles = new ArrayList<JavaFileObject>();
-//            jfiles.add(new CharSequenceJavaFileObject(fullName, src));
-//
-//            compiler.getTask(null, fileManager, null, null,
-//                    null, jfiles).call();
-//
-//            Object instance = fileManager.getClassLoader(null)
-//                    .loadClass(fullName).newInstance();
-//            
-//            System.out.println("instance:"+instance);
-//
-//            return instance;
-//
-//        } catch (FileNotFoundException ex) {
-//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (ClassNotFoundException ex) {
-//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (InstantiationException ex) {
-//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (IllegalAccessException ex) {
-//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (SecurityException ex) {
-//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (IllegalArgumentException ex) {
-//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-
-
 
         return null;
     }
