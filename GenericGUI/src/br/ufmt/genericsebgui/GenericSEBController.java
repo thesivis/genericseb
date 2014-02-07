@@ -504,7 +504,7 @@ public class GenericSEBController extends GenericController {
                 line = bur.readLine();
                 while (line != null && (!line.equals("<calibration>") && !line.equals("<header>") && !line.equals("<body>"))) {
                     vet = line.split("=");
-                    if (vet[1].matches("(-?)[0-9]+([\\.][0-9]+)?")) {
+                    if (vet[1].matches("(-?)[0-9]+([\\.][0-9]+([E](-?)[0-9+])?)?")) {
                         constanteTable.getItems().add(new Constante(vet[0], Float.parseFloat(vet[1])));
                     }
                     line = bur.readLine();
@@ -518,7 +518,7 @@ public class GenericSEBController extends GenericController {
                     vet = line.split(";");
                     right = true;
                     for (String vet1 : vet) {
-                        if (!vet1.matches("(-?)[0-9]+([\\.][0-9]+)?")) {
+                        if (!vet1.matches("(-?)[0-9]+([\\.][0-9]+([E](-?)[0-9+])?)?")) {
                             right = false;
                             break;
                         }
