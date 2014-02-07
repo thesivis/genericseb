@@ -8,9 +8,6 @@ import br.ufmt.genericlexerseb.ExpressionParser;
 import br.ufmt.genericlexerseb.GenericLexerSEB;
 import br.ufmt.genericlexerseb.LanguageType;
 import br.ufmt.genericlexerseb.Structure;
-import br.ufmt.genericlexerseb.Variable;
-import br.ufmt.genericseb.compilation.CharSequenceJavaFileObject;
-import br.ufmt.genericseb.compilation.ClassFileManager;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -21,21 +18,13 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileManager;
-import javax.tools.JavaFileObject;
-import javax.tools.ToolProvider;
 
 /**
  *
