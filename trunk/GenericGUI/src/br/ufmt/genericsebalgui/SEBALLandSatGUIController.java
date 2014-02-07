@@ -179,7 +179,7 @@ public class SEBALLandSatGUIController extends GenericController {
                 line = bur.readLine();
                 while (line != null && (!line.equals("<header>") && !line.equals("<body>"))) {
                     vet = line.split("=");
-                    if (vet[1].matches("(-?)[0-9]+([\\.][0-9]+)?")) {
+                    if (vet[1].matches("(-?)[0-9]+([\\.][0-9]+([E](-?)[0-9+])?)?")) {
                         constanteTable.getItems().add(new Constante(vet[0], Float.parseFloat(vet[1])));
                     }
                     line = bur.readLine();
