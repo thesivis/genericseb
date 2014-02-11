@@ -50,7 +50,7 @@ import sun.awt.image.SunWritableRaster;
  */
 public class ProcessorTiff {
 
-    private int MAX = 600000000;
+    private int MAX = 550000000;
     private LanguageType language = LanguageType.JAVA;
 
     public ProcessorTiff() {
@@ -112,8 +112,10 @@ public class ProcessorTiff {
                     for (int i = 0; i < height; i++) {
                         valor = raster.getPixel(j, i, valor);
                         for (int l = 0; l < valor.length; l++) {
+
                             pixel[l][idx] = valor[l];
                         }
+
                         idx++;
                     }
                 }
@@ -146,7 +148,7 @@ public class ProcessorTiff {
                             } else {
                                 for (int j = i + 1; j < lines.length; j++) {
                                     String string2 = lines[j];
-                                    
+
                                     var = string2.substring(2);
                                     if (var.contains("_(")) {
                                         var = var.substring(0, var.indexOf("_("));
@@ -158,7 +160,7 @@ public class ProcessorTiff {
                                         without.append("\n").append(string2.substring(2));
                                         exec.append("\n").append(string2);
                                         i = j;
-                                    }else{
+                                    } else {
                                         break;
                                     }
                                 }
