@@ -44,16 +44,16 @@ public class Main {
 //        System.exit(1);
 
         LandSat land = new LandSat();
-        String path = "/home/raphael/Google/GenericGUI/tiffgrande.tif";
-        int julianDay = 248;
-        float Z = 50.24f;
+        String path = "/home/raphael/Google/GenericGUI/Teste/landsat_5_tm_20070326_226_072_l2_empilhada_orto.tif";
+        int julianDay = 85;
+        float Z = 53.178f;
+        float P = 99.9f;
+        float UR = 74.01f;
+        float Ta = 31.03f;
         float latitude = -16.56f;
-        float Rg_24h = 243.949997f;
-        float Uref = 0.92071358f;
-        float P = 99.3f;
-        float UR = 36.46f;
-        float Ta = 32.74f;
-        float Tao_24h = 0.63f;
+        float Rg_24h = 243.7708132f;
+        float Uref = 1.63f;
+        float Tao_24h = 0.592380438f;
         StringBuilder equations = new StringBuilder();
 
 

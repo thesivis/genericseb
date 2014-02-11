@@ -772,6 +772,7 @@ public class GenericSEB {
                     break;
                 case "reflectancia":
                 case "O_reflectancia":
+                    gpuCode.append(ident).append("        sumBandas = 0.0f;\n");
                     for (int j = 0; j < numbers.size(); j++) {
 
                         equation = eq.getTerm() + "=" + eq.getForm();
@@ -1273,6 +1274,7 @@ public class GenericSEB {
                     break;
                 case "reflectancia":
                 case "O_reflectancia":
+                    gpuCode.append(ident).append("        sumBandas = 0.0f;\n");
                     for (int j = 0; j < numbers.size(); j++) {
 
                         equation = eq.getTerm() + "=" + eq.getForm();
@@ -1663,6 +1665,7 @@ public class GenericSEB {
                     break;
                 case "reflectancia":
                 case "O_reflectancia":
+                    source.append(ident).append("        sumBandas = 0.0f;\n");
                     for (int j = 0; j < numbers.size(); j++) {
                         equation = eq.getTerm() + "=" + eq.getForm();
                         equation = ident + "            " + lexer.analyse(equation, structure, null, LanguageType.JAVA) + ";\n";
@@ -1782,6 +1785,23 @@ public class GenericSEB {
                     + "                }\n"
                     + "            }\n");
         }
+        
+//        source.append("        System.out.println(\"banda3:\"+banda3);\n");
+//        source.append("        System.out.println(\"banda4:\"+banda4);\n");
+//        source.append("        System.out.println(\"bandaRefletida3:\"+bandaRefletida3);\n");
+//        source.append("        System.out.println(\"bandaRefletida4:\"+bandaRefletida4);\n");
+//        source.append("        System.out.println(\"SAVI:\"+SAVI);\n");
+//        source.append("        System.out.println(\"NDVI:\"+NDVI);\n");
+//        source.append("        System.out.println(\"Ts:\"+Ts);\n");
+//        source.append("        System.out.println(\"IAF:\"+IAF);\n");
+//        source.append("        System.out.println(\"albedo:\"+albedo);\n");
+//        source.append("        System.out.println(\"emissivity:\"+emissivity);\n");
+//        source.append("        System.out.println(\"Rn:\"+Rn);\n");
+//        source.append("        System.out.println(\"emissividadeNB:\"+emissividadeNB);\n");
+//        source.append("        System.out.println(\"mSavi:\"+index);\n");
+//        source.append("        System.out.println(\"G0:\"+Ts);\n");
+//        source.append("        System.out.println(\"LWd:\"+LWd+\"\\n\");\n");
+        
 
 
 
@@ -1790,6 +1810,34 @@ public class GenericSEB {
         if (index != null) {
             source.append("        float[] coef = new float[2];\n"
                     + "        GenericSEB.calculaAB(coef, RnHot, GHot, Uref, SAVI_hot, tMax, tMin);\n");
+//            source.append("        System.out.println(\"pixel1:\"+pixel1[10057582]);\n");
+//            source.append("        System.out.println(\"pixel2:\"+pixel2[10057582]);\n");
+//            source.append("        System.out.println(\"pixel3:\"+pixel3[10057582]);\n");
+//            source.append("        System.out.println(\"pixel4:\"+pixel4[10057582]);\n");
+//            source.append("        System.out.println(\"pixel5:\"+pixel5[10057582]);\n");
+//            source.append("        System.out.println(\"pixel6:\"+pixel6[10057582]);\n");
+//            source.append("        System.out.println(\"pixel7:\"+pixel7[10057582]);\n\n");
+//            
+//            source.append("        System.out.println(\"pixel1:\"+pixel1[45724667]);\n");
+//            source.append("        System.out.println(\"pixel2:\"+pixel2[45724667]);\n");
+//            source.append("        System.out.println(\"pixel3:\"+pixel3[45724667]);\n");
+//            source.append("        System.out.println(\"pixel4:\"+pixel4[45724667]);\n");
+//            source.append("        System.out.println(\"pixel5:\"+pixel5[45724667]);\n");
+//            source.append("        System.out.println(\"pixel6:\"+pixel6[45724667]);\n");
+//            source.append("        System.out.println(\"pixel7:\"+pixel7[45724667]);\n");
+//            source.append("        System.out.println(\"cosZ:\"+cosZ);\n");
+//            source.append("        System.out.println(\"dr:\"+dr);\n");
+//            source.append("        System.out.println(\"RnHot:\"+RnHot);\n");
+//            source.append("        System.out.println(\"GHot:\"+GHot);\n");
+//            source.append("        System.out.println(\"SAVI_hot:\"+SAVI_hot);\n");
+//            source.append("        System.out.println(\"A:\"+coef[0]);\n");
+//            source.append("        System.out.println(\"B:\"+coef[1]);\n");
+//            source.append("        System.out.println(\"index:\"+index);\n");
+//            source.append("        System.out.println(\"indexMax:\"+indexMax);\n");
+//            source.append("        System.out.println(\"indexMin:\"+indexMin);\n");
+//            source.append("        System.out.println(\"tMax:\"+tMax);\n");
+//            source.append("        System.out.println(\"tMin:\"+tMin);\n");
+//            source.append("        System.exit(1);\n");
             source.append("        ret.put(\"coef\",coef);\n\n");
         }
 
@@ -1805,13 +1853,15 @@ public class GenericSEB {
         // TODO code application logic here
 
         List<Value> parameters = new ArrayList<>();
-        parameters.add(new Value("pixel21", new float[]{1.0f, 2.0f}));
-        parameters.add(new Value("pixel3", new float[]{1.0f, 2.0f}));
-        parameters.add(new Value("pixel4", new float[]{1.0f, 2.0f}));
-        parameters.add(new Value("pixel5", new float[]{1.0f, 2.0f}));
-        parameters.add(new Value("pixel6", new float[]{1.0f, 2.0f}));
-        parameters.add(new Value("pixel7", new float[]{1.0f, 2.0f}));
-        parameters.add(new Value("pixel8", new float[]{1.0f, 2.0f}));
+//[64.0, 41.0, 62.0, 34.0, 8.0, 160.0, 3.0]
+//[59.0, 28.0, 20.0, 105.0, 70.0, 0.0, 20.0]
+        parameters.add(new Value("pixel1", new float[]{64.0f ,59.0f}));
+        parameters.add(new Value("pixel2", new float[]{41.0f ,28.0f}));
+        parameters.add(new Value("pixel3", new float[]{62.0f ,20.0f}));
+        parameters.add(new Value("pixel4", new float[]{34.0f ,105.0f}));
+        parameters.add(new Value("pixel5", new float[]{8.0f  ,70.0f}));
+        parameters.add(new Value("pixel6", new float[]{160.0f,0.0f}));
+        parameters.add(new Value("pixel7", new float[]{3.0f  ,20.0f}));
 
 
         Map<String, Float> constants = new HashMap<>();
@@ -1822,15 +1872,15 @@ public class GenericSEB {
         constants.put("K2", 1260.56f);
         constants.put("S", 1367.0f);
         constants.put("StefanBoltzman", (float) (5.67 * Math.pow(10, -8)));
-        constants.put("julianDay", 248.0f);
-        constants.put("Z", 50.24f);
-        constants.put("P", 99.3f);
-        constants.put("UR", 36.46f);
-        constants.put("Ta", 32.74f);
+        constants.put("julianDay", 85.0f);
+        constants.put("Z", 53.178f);
+        constants.put("P", 99.9f);
+        constants.put("UR", 74.01f);
+        constants.put("Ta", 31.03f);
         constants.put("latitude", -16.56f);
-        constants.put("Rg_24h", 243.949997f);
-        constants.put("Uref", 0.92071358f);
-        constants.put("Tao_24h", 0.63f);
+        constants.put("Rg_24h", 243.7708132f);
+        constants.put("Uref", 1.63f);
+        constants.put("Tao_24h", 0.592380438f);
 
         Map<String, float[][]> constMatrix = new HashMap<>();
 
@@ -1862,33 +1912,23 @@ public class GenericSEB {
 
         String body = "rad_espectral = coef_calib_a + ((coef_calib_b - coef_calib_a) / 255.0) * pixel\n"
                 + "reflectancia = (pi * rad_espectral) / (irrad_espectral * cosZ * dr)\n"
-                + "O_albedo = (sumBandas - reflectanciaAtmosfera) / (transmissividade * transmissividade)\n"
-                + "O_NDVI = (bandaRefletida4 - bandaRefletida3) / (bandaRefletida4 + bandaRefletida3)\n"
-                + "O_SAVI = ((1.0 + L) * (bandaRefletida4 - bandaRefletida3)) / (L + bandaRefletida4 + bandaRefletida3)\n"
-                + "O_IAF = (-ln((0.69 - SAVI) / 0.59) / 0.91)\n"
-                + "O_IAF_(SAVI <= 0.1) = 0\n"
-                + "O_IAF_(SAVI >= 0.687) = 6\n"
-                + "O_emissividadeNB = 0.97 + 0.0033 * IAF\n"
-                + "O_emissividadeNB_(IAF >= 3) = 0.98\n"
-                + "O_emissividadeNB_(NDVI <= 0) = 0.99\n"
-                + "O_emissivity = 0.95 + 0.01 * IAF\n"
-                + "O_emissivity_(IAF >= 3) = 0.98\n"
-                + "O_emissivity_(NDVI <= 0) = 0.985\n"
-                + "O_Ts = K2/ln(((emissividadeNB * K1) / banda6) + 1.0)\n"
-                + "O_LWd = emissivity * StefanBoltzman * (pow(Ts, 4))\n"
-                + "O_Rn = ((1.0 - albedo) * SWd) + (emissivity * (LWdAtm) - LWd)\n"
-                + "O_G0 = Rn * (((Ts - T0) / albedo) * (0.0038 * albedo + 0.0074 * albedo * albedo) * (1.0 - 0.98 * pow(NDVI, 4)))\n"
-                + "index = (0.5) * ((2.0 * bandaRefletida4 + 1) - sqrt((pow((2 * bandaRefletida4 + 1), 2) - 8 * (bandaRefletida4 - bandaRefletida3))))\n"
-                + "O_z0m=exp(-5.809+5.62*SAVI)\n"
-                + "O_SWnet=(1.0 - albedo) * SWd\n"
-                + "O_U_star= k * Uref / ln(z200 / z0m)\n"
-                + "O_r_ah=ln(z2 / z1) / (U_star * k)\n"
-                + "O_H = p * cp * (b + a * (Ts - T0)) / r_ah\n"
-                + "O_LE = Rn - H - G0\n"
-                + "O_evap_fr = LE / (Rn - G0)\n"
-                + "O_Rn_24h= Rg_24h * (1.0 - albedo) - 110.0 * Tao_24h\n"
-                + "O_LE_24h= evap_fr * Rn_24h\n"
-                + "O_ET_24h = (evap_fr * Rn_24h * 86.4) / 2450.0";
+                + "albedo = (sumBandas - reflectanciaAtmosfera) / (transmissividade * transmissividade)\n"
+                + "NDVI = (bandaRefletida4 - bandaRefletida3) / (bandaRefletida4 + bandaRefletida3)\n"
+                + "SAVI = ((1.0 + L) * (bandaRefletida4 - bandaRefletida3)) / (L + bandaRefletida4 + bandaRefletida3)\n"
+                + "IAF = (-ln((0.69 - SAVI) / 0.59) / 0.91)\n"
+                + "IAF_(SAVI <= 0.1) = 0\n"
+                + "IAF_(SAVI >= 0.687) = 6\n"
+                + "emissividadeNB = 0.97 + 0.0033 * IAF\n"
+                + "emissividadeNB_(IAF >= 3) = 0.98\n"
+                + "emissividadeNB_(NDVI <= 0) = 0.99\n"
+                + "emissivity = 0.95 + 0.01 * IAF\n"
+                + "emissivity_(IAF >= 3) = 0.98\n"
+                + "emissivity_(NDVI <= 0) = 0.985\n"
+                + "Ts = K2/ln(((emissividadeNB * K1) / banda6) + 1.0)\n"
+                + "LWd = emissivity * StefanBoltzman * (pow(Ts, 4))\n"
+                + "Rn = ((1.0 - albedo) * SWd) + (emissivity * (LWdAtm) - LWd)\n"
+                + "G0 = Rn * (((Ts - T0) / albedo) * (0.0038 * albedo + 0.0074 * albedo * albedo) * (1.0 - 0.98 * pow(NDVI, 4)))\n"
+                + "index = (0.5) * ((2.0 * bandaRefletida4 + 1) - sqrt((pow((2 * bandaRefletida4 + 1), 2) - 8 * (bandaRefletida4 - bandaRefletida3))))";
 
         GenericSEB g = new GenericSEB(LanguageType.JAVA);
         try {
