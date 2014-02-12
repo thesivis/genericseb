@@ -350,9 +350,9 @@ public class GenericSEB {
 //            System.out.println("javac -cp " + options.toString() + " " + className + ".java");
 
             int compilar;
-            if(isLib){
+            if (isLib) {
                 compilar = com.sun.tools.javac.Main.compile(new String[]{"-cp", options.toString(), className + ".java"});
-            }else{
+            } else {
                 compilar = com.sun.tools.javac.Main.compile(new String[]{className + ".java"});
             }
             File arq = new File(className + ".java");
@@ -687,6 +687,18 @@ public class GenericSEB {
 
         gpuCodeBody.append("        int idx = blockIdx.x*blockDim.x + threadIdx.x;\n");
         gpuCodeBody.append("        if(idx < size){\n");
+
+
+        if (numbers.size() > 0) {
+            gpuCodeBody.append("        if(");
+            for (int j = 0; j < numbers.size() - 1; j++) {
+                gpuCodeBody.append("pixel").append(numbers.get(j)).append("[idx] != 0.0f && ");
+            }
+            gpuCodeBody.append("pixel").append(numbers.get(numbers.size() - 1)).append("[idx] != 0.0f){\n");
+        }
+
+
+
         gpuCodeBody.append("            execute_sub(\n");
         for (String string : parameters.keySet()) {
             gpuCodeBody.append("                ").append(string).append("[idx],\n");
@@ -873,6 +885,12 @@ public class GenericSEB {
 
 
         gpuCodeBody.append("            );\n");
+
+        if (numbers.size() > 0) {
+            gpuCodeBody.append("        }\n");
+
+        }
+
         gpuCodeBody.append("        }\n");
         gpuCodeBody.append("    }\n");
 
@@ -1193,6 +1211,17 @@ public class GenericSEB {
 
         gpuCodeBody.append("        int idx = get_global_id(0);\n");
         gpuCodeBody.append("        if(idx < size[0]){\n");
+
+
+        if (numbers.size() > 0) {
+            gpuCodeBody.append("        if(");
+            for (int j = 0; j < numbers.size() - 1; j++) {
+                gpuCodeBody.append("pixel").append(numbers.get(j)).append("[idx] != 0.0f && ");
+            }
+            gpuCodeBody.append("pixel").append(numbers.get(numbers.size() - 1)).append("[idx] != 0.0f){\n");
+        }
+
+
         gpuCodeBody.append("            execute_sub(\n");
         for (String string : parameters.keySet()) {
             gpuCodeBody.append("                ").append(string).append("[idx],\n");
@@ -1369,6 +1398,11 @@ public class GenericSEB {
 
 
         gpuCodeBody.append("            idx);\n");
+
+        if (numbers.size() > 0) {
+            gpuCodeBody.append("        }\n");
+        }
+
         gpuCodeBody.append("        }\n");
         gpuCodeBody.append("    }\n");
 
@@ -1597,6 +1631,15 @@ public class GenericSEB {
 
         source.append("        for(int i = 0;i < ").append(vet1).append(".length;i++){\n");
 
+        if (numbers.size() > 0) {
+            source.append("            if(");
+            for (int j = 0; j < numbers.size() - 1; j++) {
+                source.append("pixel").append(numbers.get(j)).append("[i] != 0.0f && ");
+            }
+            source.append("pixel").append(numbers.get(numbers.size() - 1)).append("[i] != 0.0f){\n");
+        }
+
+
         String equation;
         String[] outEquation;
         String t;
@@ -1611,7 +1654,7 @@ public class GenericSEB {
             structure = new Structure();
             structure.setToken(eq.getTerm());
             equation = eq.getTerm() + "=" + eq.getForm();
-            ident = "";
+            ident = "    ";
             if (eq.getCondition() != null) {
                 source.append("            if(");
                 String[] condition = eq.getCondition();
@@ -1640,7 +1683,7 @@ public class GenericSEB {
                     source.append(" ");
                 }
                 source.append("){\n");
-                ident = "    ";
+                ident = "        ";
             }
             switch (eq.getTerm()) {
                 case "rad_espectral":
@@ -1665,7 +1708,7 @@ public class GenericSEB {
                     break;
                 case "reflectancia":
                 case "O_reflectancia":
-                    source.append(ident).append("        sumBandas = 0.0f;\n");
+                    source.append(ident).append("            sumBandas = 0.0f;\n");
                     for (int j = 0; j < numbers.size(); j++) {
                         equation = eq.getTerm() + "=" + eq.getForm();
                         equation = ident + "            " + lexer.analyse(equation, structure, null, LanguageType.JAVA) + ";\n";
@@ -1785,7 +1828,7 @@ public class GenericSEB {
                     + "                }\n"
                     + "            }\n");
         }
-        
+
 //        source.append("        System.out.println(\"banda3:\"+banda3);\n");
 //        source.append("        System.out.println(\"banda4:\"+banda4);\n");
 //        source.append("        System.out.println(\"bandaRefletida3:\"+bandaRefletida3);\n");
@@ -1801,8 +1844,11 @@ public class GenericSEB {
 //        source.append("        System.out.println(\"mSavi:\"+index);\n");
 //        source.append("        System.out.println(\"G0:\"+Ts);\n");
 //        source.append("        System.out.println(\"LWd:\"+LWd+\"\\n\");\n");
-        
 
+
+        if (numbers.size() > 0) {
+            source.append("            }\n");
+        }
 
 
         source.append("        }\n");
@@ -1855,13 +1901,13 @@ public class GenericSEB {
         List<Value> parameters = new ArrayList<>();
 //[64.0, 41.0, 62.0, 34.0, 8.0, 160.0, 3.0]
 //[59.0, 28.0, 20.0, 105.0, 70.0, 0.0, 20.0]
-        parameters.add(new Value("pixel1", new float[]{64.0f ,59.0f}));
-        parameters.add(new Value("pixel2", new float[]{41.0f ,28.0f}));
-        parameters.add(new Value("pixel3", new float[]{62.0f ,20.0f}));
-        parameters.add(new Value("pixel4", new float[]{34.0f ,105.0f}));
-        parameters.add(new Value("pixel5", new float[]{8.0f  ,70.0f}));
-        parameters.add(new Value("pixel6", new float[]{160.0f,0.0f}));
-        parameters.add(new Value("pixel7", new float[]{3.0f  ,20.0f}));
+        parameters.add(new Value("pixel1", new float[]{64.0f, 59.0f}));
+        parameters.add(new Value("pixel2", new float[]{41.0f, 28.0f}));
+        parameters.add(new Value("pixel3", new float[]{62.0f, 20.0f}));
+        parameters.add(new Value("pixel4", new float[]{34.0f, 105.0f}));
+        parameters.add(new Value("pixel5", new float[]{8.0f, 70.0f}));
+        parameters.add(new Value("pixel6", new float[]{160.0f, 0.0f}));
+        parameters.add(new Value("pixel7", new float[]{3.0f, 20.0f}));
 
 
         Map<String, Float> constants = new HashMap<>();
