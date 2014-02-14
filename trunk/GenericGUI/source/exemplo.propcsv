@@ -1,3 +1,25 @@
 <constant>
+albedo=0.4
+razaoInsolacao=0.05
+latitude=-0.05266
+a2=0.5
+a3=0.1
+b2=0.05
+b3=0.8
+stefan=5.6697E-8
+pascal=133.3224
 <header>
 <body>
+O_nh=floor(hora/100)
+O_nh_(mod(hora,100) == 30)=nh+0.5
+O_constanteSolar = 1369.0*(1+cos((dj+84.0))/360.0)
+O_f = 2*pi*dj/365.2425
+O_h = ((15.0*(nh-12.0))/180.0)*pi
+O_declinacaoSolar=(pi/180.0)*(0.3964 + 3.631*sin(f)-22.97*cos(f) + 0.03838*sin(2*f)-0.3885*cos(2*f)+ 0.07659*sin(3*f)-0.1587*cos(3*f)- 0.01021*cos(4*f))   
+O_cosZ = sin(latitude)*sin(declinacaoSolar)+cos(latitude)*cos(declinacaoSolar)*cos(h)
+O_cosZ_(cosZ <= 0) = 0
+O_declinacaoSolar_(cosZ <= 0) = 0
+O_rn2 = rn
+O_rn2_(cosZ <= 0) = 0
+O_rg=(rn2+stefan*(pow((temp+273.15),4))*(a2+b2*sqrt(ed/pascal))*(a3+b3*razaoInsolacao))/((1.0-albedo))
+O_transmitancia_(rn2 != 0)=pow((rg/(constanteSolar*cosZ)),(cosZ))
