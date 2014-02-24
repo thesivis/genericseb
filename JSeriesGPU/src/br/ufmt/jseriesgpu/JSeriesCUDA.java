@@ -28,6 +28,7 @@ import jcuda.driver.*;
 public class JSeriesCUDA extends GPU {
 
     private int Threads = 20;
+    private int warpSize;
     private int[] threadsPerBlock = new int[]{1, 1, 1};
     private int[] blocksPerGrid = new int[]{1, 1, 1};
     private String compileOptions = " -use_fast_math ";
@@ -126,6 +127,9 @@ public class JSeriesCUDA extends GPU {
             time.setDescription("Tempo de execução das alocações e envios de parâmetros");
             measures.add(time);
             time.setBegin(new Date());
+        }
+        if (print) {
+            System.out.println("MaxThreadsPerBlock: " + maxThreadsPerBlock + " Reg: " + registers + " Shared Memory: " + sharedMemory);
         }
         Pointer aux = null;
         ParameterGPU parametro = null;
@@ -278,29 +282,8 @@ public class JSeriesCUDA extends GPU {
 
                     break;
                 case 2:
-                    a = proporcao[0];
-                    x = (int) Math.sqrt(maxThreadsPerBlock * a) + 1;
-                    y = (int) (x / a);
-                    if (y == 0) {
-                        y = 1;
-                    }
-                    total = x * y;
-
-                    while (x > 1 && total > maxThreadsPerBlock) {
-                        x = x - 1;
-                        y = (int) (x / a);
-                        if (y == 0) {
-                            y = 1;
-                        }
-                        total = x * y;
-                    }
-
-                    while (x > 1 && ((x + 1) * y) <= maxThreadsPerBlock) {
-                        x = x + 1;
-                    }
-
-                    blocks[ordem.get(0)] = x;
-                    blocks[ordem.get(1)] = y;
+                    blocks[ordem.get(0)] = warpSize;
+                    blocks[ordem.get(1)] = maxThreadsPerBlock / warpSize;
                     break;
                 case 1:
                     blocks[0] = maxThreadsPerBlock;
@@ -666,7 +649,7 @@ public class JSeriesCUDA extends GPU {
             int maxThreadsPerBlock = compute.getMaxThreadBlockSize();
             int sharedMemoryPerMultiprocessor = compute.getMaxSharedMemoryMultiprocessorBytes();
             int totalRegistersPerMultiprocessor = compute.getRegisterFileSize();
-            int warpSize = compute.getThreadsWarp();
+            warpSize = compute.getThreadsWarp();
 
             int sharedMemoryAllocationUnitSize = compute.getSharedMemoryAllocationUnitSize();
             int threadBlocksPerMultiprocessor = compute.getThreadBlocksMultiprocessor();
