@@ -14,6 +14,7 @@ import br.ufmt.preprocessing.exceptions.TiffNotFoundException;
 import br.ufmt.preprocessing.utils.DataFile;
 import br.ufmt.utils.AlertDialog;
 import br.ufmt.utils.Constante;
+import br.ufmt.utils.Names;
 import com.sun.media.jai.codec.FileSeekableStream;
 import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageDecoder;
@@ -174,10 +175,10 @@ public class SEBALLandSatGUIController extends GenericController {
         try {
             BufferedReader bur = new BufferedReader(new FileReader(file));
             String line = bur.readLine();
-            if (line != null && line.equals("<constant>")) {
+            if (line != null && line.equals(Names.CONSTANT)) {
                 String[] vet;
                 line = bur.readLine();
-                while (line != null && (!line.equals("<header>") && !line.equals("<body>"))) {
+                while (line != null && (!line.equals(Names.FOR_VARIABLES) && !line.equals(Names.FOR_EACH_VALUE))) {
                     vet = line.split("=");
                     if (vet[1].matches("(-?)[0-9]+([\\.][0-9]+([E](-?)[0-9+])?)?")) {
                         constanteTable.getItems().add(new Constante(vet[0], Float.parseFloat(vet[1])));
@@ -185,14 +186,14 @@ public class SEBALLandSatGUIController extends GenericController {
                     line = bur.readLine();
                 }
             }
-            if (line != null && line.equals("<header>")) {
+            if (line != null && line.equals(Names.FOR_VARIABLES)) {
                 line = bur.readLine();
-                while (line != null && (!line.equals("<body>"))) {
+                while (line != null && (!line.equals(Names.FOR_EACH_VALUE))) {
                     headerTable.getItems().add(new Constante(line, 0.0f));
                     line = bur.readLine();
                 }
             }
-            if (line != null && line.equals("<body>")) {
+            if (line != null && line.equals(Names.FOR_EACH_VALUE)) {
                 line = bur.readLine();
                 while (line != null) {
                     bodyTable.getItems().add(new Constante(line, 0.0f));
@@ -211,15 +212,15 @@ public class SEBALLandSatGUIController extends GenericController {
     public void save(File file) {
         try {
             PrintWriter pw = new PrintWriter(file);
-            pw.println("<constant>");
+            pw.println(Names.CONSTANT);
             for (Constante object : constanteTable.getItems()) {
                 pw.println(object.getNome() + "=" + object.getValor());
             }
-            pw.println("<header>");
+            pw.println(Names.FOR_VARIABLES);
             for (Constante object : headerTable.getItems()) {
                 pw.println(object.getNome());
             }
-            pw.println("<body>");
+            pw.println(Names.FOR_EACH_VALUE);
             for (Constante object : bodyTable.getItems()) {
                 pw.println(object.getNome());
             }

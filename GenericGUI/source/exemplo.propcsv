@@ -8,8 +8,8 @@ b2=0.05
 b3=0.8
 stefan=5.6697E-8
 pascal=133.3224
-<header>
-<body>
+<forVariable>
+<forEachValue>
 O_nh=floor(hora/100)
 O_nh_(mod(hora,100) == 30)=nh+0.5
 O_constanteSolar = 1369.0*(1+cos((dj+84.0))/360.0)

@@ -15,6 +15,7 @@ import br.ufmt.utils.AlertDialog;
 import br.ufmt.utils.Constante;
 import br.ufmt.utils.EditingCell;
 import br.ufmt.utils.Image;
+import br.ufmt.utils.Names;
 import com.sun.media.imageio.plugins.tiff.TIFFDirectory;
 import com.sun.media.imageio.plugins.tiff.TIFFField;
 import com.sun.media.jai.codec.FileSeekableStream;
@@ -499,10 +500,10 @@ public class GenericSEBController extends GenericController {
         try {
             BufferedReader bur = new BufferedReader(new FileReader(file));
             String line = bur.readLine();
-            if (line != null && line.equals("<constant>")) {
+            if (line != null && line.equals(Names.CONSTANT)) {
                 String[] vet;
                 line = bur.readLine();
-                while (line != null && (!line.equals("<calibration>") && !line.equals("<header>") && !line.equals("<body>"))) {
+                while (line != null && (!line.equals("<calibration>") && !line.equals(Names.FOR_VARIABLES) && !line.equals(Names.FOR_EACH_VALUE))) {
                     vet = line.split("=");
                     if (vet[1].matches("(-?)[0-9]+([\\.][0-9]+([E](-?)[0-9+])?)?")) {
                         constanteTable.getItems().add(new Constante(vet[0], Float.parseFloat(vet[1])));
@@ -514,7 +515,7 @@ public class GenericSEBController extends GenericController {
                 String[] vet;
                 line = bur.readLine();
                 boolean right;
-                while (line != null && (!line.equals("<header>") && !line.equals("<body>"))) {
+                while (line != null && (!line.equals(Names.FOR_VARIABLES) && !line.equals(Names.FOR_EACH_VALUE))) {
                     vet = line.split(";");
                     right = true;
                     for (String vet1 : vet) {
@@ -529,14 +530,14 @@ public class GenericSEBController extends GenericController {
                     line = bur.readLine();
                 }
             }
-            if (line != null && line.equals("<header>")) {
+            if (line != null && line.equals(Names.FOR_VARIABLES)) {
                 line = bur.readLine();
-                while (line != null && (!line.equals("<body>"))) {
+                while (line != null && (!line.equals(Names.FOR_EACH_VALUE))) {
                     headerTable.getItems().add(new Constante(line, 0.0f));
                     line = bur.readLine();
                 }
             }
-            if (line != null && line.equals("<body>")) {
+            if (line != null && line.equals(Names.FOR_EACH_VALUE)) {
                 line = bur.readLine();
                 while (line != null) {
                     bodyTable.getItems().add(new Constante(line, 0.0f));
@@ -555,7 +556,7 @@ public class GenericSEBController extends GenericController {
     public void save(File file) {
         try {
             PrintWriter pw = new PrintWriter(file);
-            pw.println("<constant>");
+            pw.println(Names.CONSTANT);
             for (Constante object : constanteTable.getItems()) {
                 pw.println(object.getNome() + "=" + object.getValor());
             }
@@ -564,11 +565,11 @@ public class GenericSEBController extends GenericController {
                 Constante constante = calibrationTable.getItems().get(i);
                 pw.println(constante.getValor() + ";" + constante.getValor2() + ";" + constante.getValor3());
             }
-            pw.println("<header>");
+            pw.println(Names.FOR_VARIABLES);
             for (Constante object : headerTable.getItems()) {
                 pw.println(object.getNome());
             }
-            pw.println("<body>");
+            pw.println(Names.FOR_EACH_VALUE);
             for (Constante object : bodyTable.getItems()) {
                 pw.println(object.getNome());
             }

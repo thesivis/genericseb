@@ -23,7 +23,7 @@ Tao_24h=0.63
 -0.37;30.2;215.0
 1.2378;15.303;1.0
 -0.15;16.5;80.67
-<header>
+<forVariable>
 dr = 1.0 + 0.033 * cos(julianDay * 2 * pi / 365)
 cosZ = cos(((90.0 - Z) * pi) / 180.0)
 declinacaoSolar = radians(23.45 * sin(radians(360.0 * (julianDay - 80) / 365)))
@@ -37,7 +37,7 @@ transmissividade = 0.35 + 0.627 * exp((-0.00146 * P / (Kt * cosZ)) - 0.075 * pow
 emissivityAtm = 0.625 * pow((1000.0 * ea / (Ta + T0)), 0.131)
 SWd = (S * cosZ * cosZ) / (1.085 * cosZ + 10.0 * ea * (2.7 + cosZ) * 0.001 + 0.2)
 LWdAtm = emissivityAtm * StefanBoltzman * (pow(Ta + T0, 4))
-<body>
+<forEachValue>
 rad_espectral = coef_calib_a + ((coef_calib_b - coef_calib_a) / 255.0) * pixel
 reflectancia = (pi * rad_espectral) / (irrad_espectral * cosZ * dr)
 O_albedo = (sumBandas - reflectanciaAtmosfera) / (transmissividade * transmissividade)
