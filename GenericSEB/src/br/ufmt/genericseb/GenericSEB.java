@@ -7,6 +7,7 @@ package br.ufmt.genericseb;
 import br.ufmt.genericlexerseb.ExpressionParser;
 import br.ufmt.genericlexerseb.GenericLexerSEB;
 import br.ufmt.genericlexerseb.LanguageType;
+import br.ufmt.genericlexerseb.Maths;
 import br.ufmt.genericlexerseb.Structure;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -109,7 +110,7 @@ public class GenericSEB {
                         System.exit(1);
                     }
                 } else {
-                    throw new RuntimeException("Header can't not have conditions");
+                    throw new RuntimeException("forVariables can't not have conditions");
                 }
 //                System.exit(1);
             }
@@ -183,11 +184,11 @@ public class GenericSEB {
         return variables;
     }
 
-    public Map<String, float[]> execute(String header, String body, List<Value> parameters, Map<String, Float> constants) throws Exception {
-        return execute(header, body, parameters, constants, null, null);
+    public Map<String, float[]> execute(String forVariables, String forEachValue, List<Value> parameters, Map<String, Float> constants) throws Exception {
+        return execute(forVariables, forEachValue, parameters, constants, null, null);
     }
 
-    public Map<String, float[]> execute(String header, String body, List<Value> parameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
+    public Map<String, float[]> execute(String forVariables, String forEachValue, List<Value> parameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
 
         Map<String, float[]> ret = new HashMap<>();
         Map<String, float[]> firstRet = null;
@@ -198,7 +199,7 @@ public class GenericSEB {
         StringBuilder newBodyWithoutIndex = new StringBuilder();
 
         String vet[];
-        String vets[] = body.split("\n");
+        String vets[] = forEachValue.split("\n");
         boolean hasIndex = false;
 
         String line;
@@ -248,17 +249,17 @@ public class GenericSEB {
             if (hasIndex) {
                 throw new Exception("Index not yet implemented with CUDA");
             }
-            source = generateCUDA(header, body, parameters, constants, constantsVetor, constantsMatrix);
+            source = generateCUDA(forVariables, forEachValue, parameters, constants, constantsVetor, constantsMatrix);
         } else if (language.equals(LanguageType.OPENCL)) {
             if (hasIndex) {
                 throw new Exception("Index not yet implemented with OpenCL");
             }
-            source = generateOpenCL(header, body, parameters, constants, constantsVetor, constantsMatrix);
+            source = generateOpenCL(forVariables, forEachValue, parameters, constants, constantsVetor, constantsMatrix);
         } else {
-            String exec = body;
+            String exec = forEachValue;
             if (hasIndex) {
                 firstRet = new HashMap<>();
-                source = generateJava(header, newBodyWithIndex.toString(), parameters, constants, constantsVetor, constantsMatrix);
+                source = generateJava(forVariables, newBodyWithIndex.toString(), parameters, constants, constantsVetor, constantsMatrix);
                 Object instanced = compile(source, "Equation");
                 try {
                     Method method = instanced.getClass().getDeclaredMethod("execute", classes);
@@ -284,7 +285,7 @@ public class GenericSEB {
             }
 //            System.out.println("Exec:" + exec);
 //            System.exit(1);
-            source = generateJava(header, exec, parameters, constants, constantsVetor, constantsMatrix);
+            source = generateJava(forVariables, exec, parameters, constants, constantsVetor, constantsMatrix);
         }
 
 //        System.out.println(source);
@@ -390,7 +391,7 @@ public class GenericSEB {
         return null;
     }
 
-    private String generateCUDA(String header, String body, List<Value> parametersList, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
+    private String generateCUDA(String forVariables, String forEachValue, List<Value> parametersList, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
 
         List<String> variables = getVariables();
         ExpressionParser ex = new ExpressionParser();
@@ -456,7 +457,7 @@ public class GenericSEB {
         source.append("\n");
 
         //DECLARANDO OS VETORES QUE SERAO RETORNADOS
-        String[] vet = body.split("\n");
+        String[] vet = forEachValue.split("\n");
         String term;
         boolean vector;
         Set<String> variablesDeclared = new HashSet<>();
@@ -506,7 +507,7 @@ public class GenericSEB {
         }
         gpuCode.append("\n");
 
-        vet = header.split("\n");
+        vet = forVariables.split("\n");
         GenericLexerSEB lexer = new GenericLexerSEB();
         Structure structure;
         Map<String, Float> vars = new HashMap<>();
@@ -584,7 +585,7 @@ public class GenericSEB {
         gpuCodeBody.append("\n");
 
 
-        vet = body.split("\n");
+        vet = forEachValue.split("\n");
         for (int i = 0; i < vet.length; i++) {
             if (vet[i].startsWith("rad_espectral") || vet[i].startsWith("O_rad_espectral")) {
                 vector = vet[i].startsWith("O_rad_espectral");
@@ -617,11 +618,11 @@ public class GenericSEB {
                 }
             }
         }
-        if (header != null && !header.isEmpty()) {
-            verifyEquations(header, variables, false);
+        if (forVariables != null && !forVariables.isEmpty()) {
+            verifyEquations(forVariables, variables, false);
         }
-        if (body != null && !body.isEmpty()) {
-            verifyEquations(body, variables, true);
+        if (forEachValue != null && !forEachValue.isEmpty()) {
+            verifyEquations(forEachValue, variables, true);
         }
         Equation eq;
         for (int i = 0; i < equations.size(); i++) {
@@ -916,7 +917,7 @@ public class GenericSEB {
         return source.toString();
     }
 
-    private String generateOpenCL(String header, String body, List<Value> parametersList, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
+    private String generateOpenCL(String forVariables, String forEachValue, List<Value> parametersList, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
         List<String> variables = getVariables();
         ExpressionParser ex = new ExpressionParser();
 
@@ -986,7 +987,7 @@ public class GenericSEB {
         source.append("\n");
 
         //DECLARANDO OS VETORES QUE SERAO RETORNADOS
-        String[] vet = body.split("\n");
+        String[] vet = forEachValue.split("\n");
         String term;
         boolean vector;
         Set<String> variablesDeclared = new HashSet<>();
@@ -1040,7 +1041,7 @@ public class GenericSEB {
         }
         gpuCode.append("\n");
 
-        vet = header.split("\n");
+        vet = forVariables.split("\n");
         GenericLexerSEB lexer = new GenericLexerSEB();
         Structure structure;
         Map<String, Float> vars = new HashMap<>();
@@ -1117,7 +1118,7 @@ public class GenericSEB {
         gpuCode.append("\n");
         gpuCodeBody.append("\n");
 
-        vet = body.split("\n");
+        vet = forEachValue.split("\n");
         for (int i = 0; i < vet.length; i++) {
             if (vet[i].startsWith("rad_espectral") || vet[i].startsWith("O_rad_espectral")) {
                 vector = vet[i].startsWith("O_rad_espectral");
@@ -1143,11 +1144,11 @@ public class GenericSEB {
             }
         }
 
-        if (header != null && !header.isEmpty()) {
-            verifyEquations(header, variables, false);
+        if (forVariables != null && !forVariables.isEmpty()) {
+            verifyEquations(forVariables, variables, false);
         }
-        if (body != null && !body.isEmpty()) {
-            verifyEquations(body, variables, true);
+        if (forEachValue != null && !forEachValue.isEmpty()) {
+            verifyEquations(forEachValue, variables, true);
         }
         Equation eq;
         for (int i = 0; i < equations.size(); i++) {
@@ -1425,7 +1426,7 @@ public class GenericSEB {
         return source.toString();
     }
 
-    private String generateJava(String header, String body, List<Value> parametersList, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
+    private String generateJava(String forVariables, String forEachValue, List<Value> parametersList, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
         List<String> variables = getVariables();
         ExpressionParser ex = new ExpressionParser();
 
@@ -1528,8 +1529,8 @@ public class GenericSEB {
         GenericLexerSEB lexer = new GenericLexerSEB();
         Structure structure;
 
-        if (header != null && !header.isEmpty()) {
-            vet = header.split("\n");
+        if (forVariables != null && !forVariables.isEmpty()) {
+            vet = forVariables.split("\n");
             //COLOCANDO AS FORMULAS DO CABECALHOS
             for (int i = 0; i < vet.length; i++) {
                 structure = new Structure();
@@ -1540,7 +1541,7 @@ public class GenericSEB {
         }
 
         //DECLARANDO OS VETORES QUE SERAO RETORNADOS
-        vet = body.split("\n");
+        vet = forEachValue.split("\n");
         Equation eq;
         boolean vector;
         Set<String> variablesDeclared = new HashSet<>();
@@ -1586,11 +1587,11 @@ public class GenericSEB {
             }
         }
         System.out.println("Verify");
-        if (header != null && !header.isEmpty()) {
-            verifyEquations(header, variables, false);
+        if (forVariables != null && !forVariables.isEmpty()) {
+            verifyEquations(forVariables, variables, false);
         }
-        if (body != null && !body.isEmpty()) {
-            verifyEquations(body, variables, true);
+        if (forEachValue != null && !forEachValue.isEmpty()) {
+            verifyEquations(forEachValue, variables, true);
         }
 
         if (index != null) {
@@ -1899,6 +1900,60 @@ public class GenericSEB {
         // TODO code application logic here
 
         List<Value> parameters = new ArrayList<>();
+        Map<String, Float> constants = new HashMap<>();
+
+        parameters.add(new Value("hora", new float[]{0.0f, 30.0f, 100.0f, 130.0f}));
+        parameters.add(new Value("dj", new float[]{293.0f, 293.0f, 293.0f, 293.0f}));
+        parameters.add(new Value("temp", new float[]{276.58f, 270.25f, 268.09f, 266.08f}));
+        parameters.add(new Value("ed", new float[]{0.0f, -20.455844f, -21.494523f, -21.202263f}));
+        parameters.add(new Value("rn", new float[]{3704.7237151078f, 3570.1247122853f, 3525.1109277698f, 3483.7200791505f}));
+
+        constants.put("albedo", 0.4f);
+        constants.put("razaoInsolacao", 0.05f);
+        constants.put("latitude", -0.05266f);
+        constants.put("a2", 0.5f);
+        constants.put("a3", 0.1f);
+        constants.put("b2", 0.05f);
+        constants.put("b3", 0.8f);
+        constants.put("stefan", 5.6697E-8f);
+        constants.put("pascal", 133.3224f);
+
+
+        GenericSEB g = new GenericSEB(LanguageType.JAVA);
+        String form = "O_dj2=dj\n"
+                + "O_hora2=hora\n"
+                + "O_nh=floor(hora/100)\n"
+                + "O_nh_(mod(hora,100) == 30)=nh+0.5\n"
+                + "O_constanteSolar = 1369.0*(1+cos((dj+84.0))/360.0)\n"
+                + "O_f = 2*pi*dj/365.2425\n"
+                + "O_h = ((15.0*(nh-12.0))/180.0)*pi\n"
+                + "O_declinacaoSolar=(pi/180.0)*(0.3964 + 3.631*sin(f)-22.97*cos(f) + 0.03838*sin(2*f)-0.3885*cos(2*f)+ 0.07659*sin(3*f)-0.1587*cos(3*f)- 0.01021*cos(4*f))   \n"
+                + "O_cosZ = sin(latitude)*sin(declinacaoSolar)+cos(latitude)*cos(declinacaoSolar)*cos(h)\n"
+                + "O_rn2 = rn\n"
+                + "O_rn2_(cosZ < 0) = 0\n"
+                + "O_rg=(rn2+stefan*(pow((temp+273.15),4))*(a2+b2*sqrt(ed/pascal))*(a3+b3*razaoInsolacao))/((1.0-albedo))\n"
+                + "O_transmitancia=pow((rg/(constanteSolar*cosZ)),(cosZ))";
+        try {
+            Map<String, float[]> ret = g.execute("", form, parameters, constants);
+            float[] resp = ret.get("declinacaoSolar");
+            for (int i = 0; i < resp.length; i++) {
+                float f = resp[i];
+                System.out.println(f);
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+
+
+//        float v = (float) Math.floor(30.0);
+//        if (Maths.mod(v, 100.0f) == 30.0f) {
+//            v = (float) (v + 0.5);
+//        }
+//        System.out.println(v);
+        System.exit(1);
+
+
 //[64.0, 41.0, 62.0, 34.0, 8.0, 160.0, 3.0]
 //[59.0, 28.0, 20.0, 105.0, 70.0, 0.0, 20.0]
         parameters.add(new Value("pixel1", new float[]{64.0f, 59.0f}));
@@ -1910,7 +1965,7 @@ public class GenericSEB {
         parameters.add(new Value("pixel7", new float[]{3.0f, 20.0f}));
 
 
-        Map<String, Float> constants = new HashMap<>();
+
         constants.put("reflectanciaAtmosfera", 0.03f);
         constants.put("Kt", 1.0f);
         constants.put("L", 0.1f);
@@ -1942,7 +1997,7 @@ public class GenericSEB {
         Map<String, float[]> constVetor = new HashMap<>();
         constVetor.put("parameterAlbedo", new float[]{0.293f, 0.274f, 0.233f, 0.157f, 0.033f, 0.0f, 0.011f});
 
-        String header = "dr = 1.0 + 0.033 * cos(julianDay * 2 * pi / 365)\n"
+        String forVariables = "dr = 1.0 + 0.033 * cos(julianDay * 2 * pi / 365)\n"
                 + "cosZ = cos(((90.0 - Z) * pi) / 180.0)\n"
                 + "declinacaoSolar = radians(23.45 * sin(radians(360.0 * (julianDay - 80) / 365)))\n"
                 + "anguloHorarioNascerSol = acos(-tan(pi * latitude / 180.0) * tan(declinacaoSolar))\n"
@@ -1956,7 +2011,7 @@ public class GenericSEB {
                 + "SWd = (S * cosZ * cosZ) / (1.085 * cosZ + 10.0 * ea * (2.7 + cosZ) * 0.001 + 0.2)\n"
                 + "LWdAtm = emissivityAtm * StefanBoltzman * (pow(Ta + T0, 4))";
 
-        String body = "rad_espectral = coef_calib_a + ((coef_calib_b - coef_calib_a) / 255.0) * pixel\n"
+        String forEachValue = "rad_espectral = coef_calib_a + ((coef_calib_b - coef_calib_a) / 255.0) * pixel\n"
                 + "reflectancia = (pi * rad_espectral) / (irrad_espectral * cosZ * dr)\n"
                 + "albedo = (sumBandas - reflectanciaAtmosfera) / (transmissividade * transmissividade)\n"
                 + "NDVI = (bandaRefletida4 - bandaRefletida3) / (bandaRefletida4 + bandaRefletida3)\n"
@@ -1976,9 +2031,9 @@ public class GenericSEB {
                 + "G0 = Rn * (((Ts - T0) / albedo) * (0.0038 * albedo + 0.0074 * albedo * albedo) * (1.0 - 0.98 * pow(NDVI, 4)))\n"
                 + "index = (0.5) * ((2.0 * bandaRefletida4 + 1) - sqrt((pow((2 * bandaRefletida4 + 1), 2) - 8 * (bandaRefletida4 - bandaRefletida3))))";
 
-        GenericSEB g = new GenericSEB(LanguageType.JAVA);
+        g = new GenericSEB(LanguageType.JAVA);
         try {
-            g.execute(header, body, parameters, constants, constVetor, constMatrix);
+            g.execute(forVariables, forEachValue, parameters, constants, constVetor, constMatrix);
         } catch (Exception ex) {
             Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
         }
