@@ -6,7 +6,7 @@ package br.ufmt.preprocessing;
 
 import br.ufmt.genericlexerseb.LanguageType;
 import br.ufmt.genericseb.GenericSEB;
-import br.ufmt.genericseb.Value;
+import br.ufmt.genericseb.VariableValue;
 import br.ufmt.preprocessing.utils.DataFile;
 import br.ufmt.preprocessing.utils.Utilities;
 import com.sun.media.imageio.plugins.tiff.TIFFDirectory;
@@ -101,9 +101,9 @@ public class ProcessorTiff {
                 System.out.println(size);
                 float[][] pixel = new float[bands][width * height];
 
-                List<Value> parameters = new ArrayList<>();
+                List<VariableValue> parameters = new ArrayList<>();
                 for (int i = 1; i <= bands; i++) {
-                    parameters.add(new Value(nameParameters[i - 1], pixel[i - 1]));
+                    parameters.add(new VariableValue(nameParameters[i - 1], pixel[i - 1]));
                 }
 
                 System.out.println("Creating datas");
@@ -198,7 +198,7 @@ public class ProcessorTiff {
         return null;
     }
 
-    private void execute(File tiff, Raster raster, ColorModel model, ImageReader imageReader, TIFFField[] allTiffFields, List<DataFile> ret, String header, StringBuilder without, StringBuilder exec, List<Value> parameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) {
+    private void execute(File tiff, Raster raster, ColorModel model, ImageReader imageReader, TIFFField[] allTiffFields, List<DataFile> ret, String header, StringBuilder without, StringBuilder exec, List<VariableValue> parameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) {
         try {
             System.out.println("Executing:" + exec.toString());
 //            System.out.println("Whito:" + without.toString());
