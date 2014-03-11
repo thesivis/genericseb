@@ -71,70 +71,72 @@ public class GenericSEB {
             }
 //            System.out.println("Line:" + line);
             line = line.replaceAll("[ ]+", "");
-            if (line.contains(")=")) {
-                int idx = line.indexOf(")=");
-                while (line.indexOf(")=", idx + 1) != -1) {
-                    idx = line.indexOf(")=", idx + 1);
-                }
-                vet = new String[2];
-                vet[0] = line.substring(0, idx) + ")";
-                vet[1] = line.substring(idx + 2);
+            if (!line.startsWith("//")) {
+                if (line.contains(")=")) {
+                    int idx = line.indexOf(")=");
+                    while (line.indexOf(")=", idx + 1) != -1) {
+                        idx = line.indexOf(")=", idx + 1);
+                    }
+                    vet = new String[2];
+                    vet[0] = line.substring(0, idx) + ")";
+                    vet[1] = line.substring(idx + 2);
 
-            } else {
-                vet = line.split("=");
-            }
-            if (vet[0].startsWith("O_")) {
-                vet[0] = vet[0].substring(2);
-                if (verifyIF) {
-                    equation.setIndex("idx");
+                } else {
+                    vet = line.split("=");
                 }
-            }
-            if (vet[0].contains("_(")) {
-                if (verifyIF) {
-                    String ifTest = vet[0].substring(vet[0].indexOf("_(") + 2, vet[0].length() - 1);
-                    vet[0] = vet[0].substring(0, vet[0].indexOf("_("));
+                if (vet[0].startsWith("O_")) {
+                    vet[0] = vet[0].substring(2);
+                    if (verifyIF) {
+                        equation.setIndex("idx");
+                    }
+                }
+                if (vet[0].contains("_(")) {
+                    if (verifyIF) {
+                        String ifTest = vet[0].substring(vet[0].indexOf("_(") + 2, vet[0].length() - 1);
+                        vet[0] = vet[0].substring(0, vet[0].indexOf("_("));
 //                    System.out.println(ifTest + " " + vet[0]);
 
-                    try {
-                        if (!ex.evaluateExprIf(ifTest, variables)) {
-                            throw new Exception("Equation " + ifTest + " is wrong!");
-                        }
-                        if (verifyIF) {
-                            ifTest = lexer.analyse(ifTest, language);
+                        try {
+                            if (!ex.evaluateExprIf(ifTest, variables)) {
+                                throw new Exception("Equation " + ifTest + " is wrong!");
+                            }
+                            if (verifyIF) {
+                                ifTest = lexer.analyse(ifTest, language);
 
-                            equation.setCondition(ex.tokenizeIf(ifTest));
-                        }
-                    } catch (IllegalArgumentException e) {
+                                equation.setCondition(ex.tokenizeIf(ifTest));
+                            }
+                        } catch (IllegalArgumentException e) {
 //                    System.out.println("Equation is wrong: " + line);
-                        e.printStackTrace();
-                        System.exit(1);
+                            e.printStackTrace();
+                            System.exit(1);
+                        }
+                    } else {
+                        throw new RuntimeException("forVariables can't not have conditions");
                     }
-                } else {
-                    throw new RuntimeException("forVariables can't not have conditions");
-                }
 //                System.exit(1);
-            }
-            line = vet[0] + "=" + vet[1];
-            if (verifyIF) {
-                equation.setTerm(vet[0]);
-                equation.setForm(vet[1]);
-                if (vet[0].equals("index")) {
-                    index = equation;
-                    equation.setIndex(null);
-                } else {
-                    equations.add(equation);
                 }
-            }
-            variables.add(vet[0]);
-            try {
-                if (!ex.evaluateExpr(line, variables)) {
-                    throw new Exception("Equation " + line + " is wrong!");
+                line = vet[0] + "=" + vet[1];
+                if (verifyIF) {
+                    equation.setTerm(vet[0]);
+                    equation.setForm(vet[1]);
+                    if (vet[0].equals("index")) {
+                        index = equation;
+                        equation.setIndex(null);
+                    } else {
+                        equations.add(equation);
+                    }
                 }
+                variables.add(vet[0]);
+                try {
+                    if (!ex.evaluateExpr(line, variables)) {
+                        throw new Exception("Equation " + line + " is wrong!");
+                    }
 
-            } catch (IllegalArgumentException e) {
+                } catch (IllegalArgumentException e) {
 //                    System.out.println("Equation is wrong: " + line);
-                e.printStackTrace();
-                System.exit(1);
+                    e.printStackTrace();
+                    System.exit(1);
+                }
             }
 
         }
@@ -369,6 +371,8 @@ public class GenericSEB {
                 Class classe = ucl.loadClass(className);
                 Object instancia = classe.newInstance();
 //                System.out.println("instancia:" + instancia);
+//                System.out.println("OK");
+//                System.exit(1);
                 return instancia;
             }
 
@@ -1921,8 +1925,9 @@ public class GenericSEB {
 
         GenericSEB g = new GenericSEB(LanguageType.JAVA);
         String form = "O_dj2=dj\n"
-                + "O_hora2=hora\n"
-                + "O_nh=floor(hora/100)\n"
+                + "//TESTANDO COMENTARIO\n"
+                + "O_hora2=hora //TESTANDO COMENTARIO\n"
+                + "O_nh=floor(hora/100) //TESTANDO COMENTARIO\n"
                 + "O_nh_(mod(hora,100) == 30)=nh+0.5\n"
                 + "O_constanteSolar = 1369.0*(1+cos((dj+84.0))/360.0)\n"
                 + "O_f = 2*pi*dj/365.2425\n"
