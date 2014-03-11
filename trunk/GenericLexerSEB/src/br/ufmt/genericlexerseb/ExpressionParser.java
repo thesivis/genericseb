@@ -265,7 +265,8 @@ public class ExpressionParser {
     }
 
     public boolean evaluateExprIf(String expr) {
-        String[] input = tokenizeIf(expr);
+        String str = preprocessExpr(expr);
+        String[] input = tokenizeIf(str);
 
 //        debug = true;
         String[] output2 = infixToRPN(input);
@@ -377,6 +378,10 @@ public class ExpressionParser {
 
     private String preprocessExpr(String input) {
         String str = new String(input);
+        String[] vet = str.split("//", -2);
+        if (vet.length > 1) {
+            str = new String(vet[0]);
+        }
         str = str.replaceAll("\\s", "");
 //        str = str.replaceAll(",", " ");
         if (debug) {
