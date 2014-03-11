@@ -8,7 +8,7 @@ import br.ufmt.genericgui.GenericController;
 import br.ufmt.genericgui.Main;
 import br.ufmt.genericlexerseb.LanguageType;
 import br.ufmt.genericseb.GenericSEB;
-import br.ufmt.genericseb.Value;
+import br.ufmt.genericseb.VariableValue;
 import br.ufmt.preprocessing.utils.DataFile;
 import br.ufmt.preprocessing.utils.Utilities;
 import br.ufmt.utils.AlertDialog;
@@ -204,7 +204,7 @@ public class GenericSEBController extends GenericController {
                         ImageDecoder decoder = null;
                         Raster raster = null;
                         int size = 0;
-                        List<Value> parameters = new ArrayList<>();
+                        List<VariableValue> parameters = new ArrayList<>();
                         Map<String, Integer> files = new HashMap<>();
 
                         float[] data;
@@ -234,7 +234,7 @@ public class GenericSEBController extends GenericController {
                                 }
                             }
                             files.put(image.getFile().getName(), l + 1);
-                            parameters.add(new Value(image.getValor(), data));
+                            parameters.add(new VariableValue(image.getValor(), data));
                         }
 
                         float[][] calibration = new float[calibrationTable.getItems().size()][3];
@@ -370,7 +370,7 @@ public class GenericSEBController extends GenericController {
         };
     }
 
-    private void execute(File tiff, Raster raster, ColorModel model, ImageReader imageReader, TIFFField[] allTiffFields, List<DataFile> ret, String header, StringBuilder without, StringBuilder exec, List<Value> parameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) {
+    private void execute(File tiff, Raster raster, ColorModel model, ImageReader imageReader, TIFFField[] allTiffFields, List<DataFile> ret, String header, StringBuilder without, StringBuilder exec, List<VariableValue> parameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) {
         try {
             System.out.println("Executing:" + exec.toString());
 //            System.out.println("Whito:" + without.toString());

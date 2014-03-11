@@ -186,11 +186,11 @@ public class GenericSEB {
         return variables;
     }
 
-    public Map<String, float[]> execute(String forVariables, String forEachValue, List<Value> parameters, Map<String, Float> constants) throws Exception {
+    public Map<String, float[]> execute(String forVariables, String forEachValue, List<VariableValue> parameters, Map<String, Float> constants) throws Exception {
         return execute(forVariables, forEachValue, parameters, constants, null, null);
     }
 
-    public Map<String, float[]> execute(String forVariables, String forEachValue, List<Value> parameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
+    public Map<String, float[]> execute(String forVariables, String forEachValue, List<VariableValue> parameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
 
         Map<String, float[]> ret = new HashMap<>();
         Map<String, float[]> firstRet = null;
@@ -395,7 +395,7 @@ public class GenericSEB {
         return null;
     }
 
-    private String generateCUDA(String forVariables, String forEachValue, List<Value> parametersList, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
+    private String generateCUDA(String forVariables, String forEachValue, List<VariableValue> parametersList, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
 
         List<String> variables = getVariables();
         ExpressionParser ex = new ExpressionParser();
@@ -424,7 +424,7 @@ public class GenericSEB {
         pars = new Object[parametersList.size()];
         classes = new Class[parametersList.size()];
         List<Integer> numbers = new ArrayList<>();
-        for (Value value : parametersList) {
+        for (VariableValue value : parametersList) {
             String string = value.getName();
             parameters.put(string, string);
             if (string.startsWith("pixel")) {
@@ -921,7 +921,7 @@ public class GenericSEB {
         return source.toString();
     }
 
-    private String generateOpenCL(String forVariables, String forEachValue, List<Value> parametersList, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
+    private String generateOpenCL(String forVariables, String forEachValue, List<VariableValue> parametersList, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
         List<String> variables = getVariables();
         ExpressionParser ex = new ExpressionParser();
 
@@ -953,7 +953,7 @@ public class GenericSEB {
         pars = new Object[parametersList.size()];
         classes = new Class[parametersList.size()];
         List<Integer> numbers = new ArrayList<>();
-        for (Value value : parametersList) {
+        for (VariableValue value : parametersList) {
             String string = value.getName();
             parameters.put(string, string);
             if (string.startsWith("pixel")) {
@@ -1430,7 +1430,7 @@ public class GenericSEB {
         return source.toString();
     }
 
-    private String generateJava(String forVariables, String forEachValue, List<Value> parametersList, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
+    private String generateJava(String forVariables, String forEachValue, List<VariableValue> parametersList, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
         List<String> variables = getVariables();
         ExpressionParser ex = new ExpressionParser();
 
@@ -1453,7 +1453,7 @@ public class GenericSEB {
         pars = new Object[parametersList.size()];
         classes = new Class[parametersList.size()];
         List<Integer> numbers = new ArrayList<>();
-        for (Value value : parametersList) {
+        for (VariableValue value : parametersList) {
             String string = value.getName();
             parameters.put(string, string);
             if (string.startsWith("pixel")) {
@@ -1903,14 +1903,14 @@ public class GenericSEB {
     public static void main(String[] args) {
         // TODO code application logic here
 
-        List<Value> parameters = new ArrayList<>();
+        List<VariableValue> parameters = new ArrayList<>();
         Map<String, Float> constants = new HashMap<>();
 
-        parameters.add(new Value("hora", new float[]{0.0f, 30.0f, 100.0f, 130.0f}));
-        parameters.add(new Value("dj", new float[]{293.0f, 293.0f, 293.0f, 293.0f}));
-        parameters.add(new Value("temp", new float[]{276.58f, 270.25f, 268.09f, 266.08f}));
-        parameters.add(new Value("ed", new float[]{0.0f, -20.455844f, -21.494523f, -21.202263f}));
-        parameters.add(new Value("rn", new float[]{3704.7237151078f, 3570.1247122853f, 3525.1109277698f, 3483.7200791505f}));
+        parameters.add(new VariableValue("hora", new float[]{0.0f, 30.0f, 100.0f, 130.0f}));
+        parameters.add(new VariableValue("dj", new float[]{293.0f, 293.0f, 293.0f, 293.0f}));
+        parameters.add(new VariableValue("temp", new float[]{276.58f, 270.25f, 268.09f, 266.08f}));
+        parameters.add(new VariableValue("ed", new float[]{0.0f, -20.455844f, -21.494523f, -21.202263f}));
+        parameters.add(new VariableValue("rn", new float[]{3704.7237151078f, 3570.1247122853f, 3525.1109277698f, 3483.7200791505f}));
 
         constants.put("albedo", 0.4f);
         constants.put("razaoInsolacao", 0.05f);
@@ -1961,13 +1961,13 @@ public class GenericSEB {
 
 //[64.0, 41.0, 62.0, 34.0, 8.0, 160.0, 3.0]
 //[59.0, 28.0, 20.0, 105.0, 70.0, 0.0, 20.0]
-        parameters.add(new Value("pixel1", new float[]{64.0f, 59.0f}));
-        parameters.add(new Value("pixel2", new float[]{41.0f, 28.0f}));
-        parameters.add(new Value("pixel3", new float[]{62.0f, 20.0f}));
-        parameters.add(new Value("pixel4", new float[]{34.0f, 105.0f}));
-        parameters.add(new Value("pixel5", new float[]{8.0f, 70.0f}));
-        parameters.add(new Value("pixel6", new float[]{160.0f, 0.0f}));
-        parameters.add(new Value("pixel7", new float[]{3.0f, 20.0f}));
+        parameters.add(new VariableValue("pixel1", new float[]{64.0f, 59.0f}));
+        parameters.add(new VariableValue("pixel2", new float[]{41.0f, 28.0f}));
+        parameters.add(new VariableValue("pixel3", new float[]{62.0f, 20.0f}));
+        parameters.add(new VariableValue("pixel4", new float[]{34.0f, 105.0f}));
+        parameters.add(new VariableValue("pixel5", new float[]{8.0f, 70.0f}));
+        parameters.add(new VariableValue("pixel6", new float[]{160.0f, 0.0f}));
+        parameters.add(new VariableValue("pixel7", new float[]{3.0f, 20.0f}));
 
 
 

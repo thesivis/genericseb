@@ -8,7 +8,7 @@ import br.ufmt.genericgui.GenericController;
 import br.ufmt.genericgui.Main;
 import br.ufmt.genericlexerseb.LanguageType;
 import br.ufmt.genericseb.GenericSEB;
-import br.ufmt.genericseb.Value;
+import br.ufmt.genericseb.VariableValue;
 import br.ufmt.utils.AlertDialog;
 import br.ufmt.utils.Constante;
 import br.ufmt.utils.EditingCell;
@@ -112,7 +112,7 @@ public class GenericCSVController extends GenericController {
                             }
                             bur.close();
 
-                            List<Value> parameters = new ArrayList<>();
+                            List<VariableValue> parameters = new ArrayList<>();
 
                             float[] d;
                             for (int i = 0; i < tam; i++) {
@@ -121,7 +121,7 @@ public class GenericCSVController extends GenericController {
                                 for (int j = 0; j < d.length; j++) {
                                     d[j] = datas.get(i).get(j);
                                 }
-                                parameters.add(new Value(columnsTable.getItems().get(i).getNome(), d));
+                                parameters.add(new VariableValue(columnsTable.getItems().get(i).getNome(), d));
                             }
 
                             GenericSEB g = new GenericSEB(LanguageType.JAVA);
