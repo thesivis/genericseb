@@ -18,7 +18,7 @@
               <children>
                 <TableView fx:id="filesTable" disable="false" editable="true" layoutX="13.0" layoutY="76.0" prefHeight="450.0" prefWidth="500.0" tableMenuButtonVisible="false">
                   <columns>
-                    <TableColumn editable="true" maxWidth="5000.0" minWidth="10.0" prefWidth="300.0" text="%variable" />
+                    <TableColumn editable="true" maxWidth="5000.0" minWidth="10.0" prefWidth="300.0" onEditCommit="#editTableFileAction" text="%variable" />
                     <TableColumn editable="false" maxWidth="5000.0" minWidth="10.0" prefWidth="200.0" text="%file" />
                   </columns>
                 </TableView>
