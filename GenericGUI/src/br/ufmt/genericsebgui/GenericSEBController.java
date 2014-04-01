@@ -102,6 +102,7 @@ public class GenericSEBController extends GenericController {
                 Raster raster = dec.decodeAsRaster(0);
                 bands = raster.getNumBands();
                 tam = raster.getWidth() * raster.getHeight();
+                System.out.println("Add W:" + raster.getWidth() + " H:" + raster.getHeight());
                 if (filesTable.getItems().size() > 0) {
                     Image image;
                     SeekableStream compare = null;
@@ -114,6 +115,7 @@ public class GenericSEBController extends GenericController {
                         decCompare = ImageCodec.createImageDecoder("tiff", compare, param);
                         rasterCompare = decCompare.decodeAsRaster(0);
                         tamCompare = rasterCompare.getWidth() * rasterCompare.getHeight();
+                        System.out.println("I:" + (i + 1) + " W:" + rasterCompare.getWidth() + " H:" + rasterCompare.getHeight());
                         if (tamCompare != tam) {
                             add = false;
                             break;
@@ -130,7 +132,6 @@ public class GenericSEBController extends GenericController {
                         String vet[] = file.getName().split("\\.");
                         StringBuilder name = new StringBuilder(vet[0]);
                         for (int i = 1; i < vet.length - 1; i++) {
-                            String string = vet[i];
                             name.append(vet[i]);
                         }
                         filesTable.getItems().add(new Image(file.getName(), name.toString(), file));
