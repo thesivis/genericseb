@@ -153,6 +153,12 @@ public class GenericSEBController extends GenericController {
     }
 
     @FXML
+    protected void editTableFileAction(TableColumn.CellEditEvent<Image, String> t) {
+        Image editado = ((Image) t.getTableView().getItems().get(t.getTablePosition().getRow()));
+        editado.setValor(t.getNewValue());
+    }
+    
+    @FXML
     protected void addCalibrationAction(ActionEvent event) {
         calibrationTable.getItems().add(new Constante("nome", 0.0f, 0.0f, 0.0f));
     }
@@ -190,6 +196,7 @@ public class GenericSEBController extends GenericController {
                         header.append(object.getNome()).append("\n");
                     }
                     for (Constante object : bodyTable.getItems()) {
+                        System.out.println(object.getNome());
                         body.append(object.getNome()).append("\n");
                     }
                     Map<String, Float> constants = new HashMap<>();
@@ -235,9 +242,11 @@ public class GenericSEBController extends GenericController {
                                 }
                             }
                             files.put(image.getFile().getName(), l + 1);
+                            System.out.println("Add:"+image.getValor());
                             parameters.add(new VariableValue(image.getValor(), data));
                         }
 
+                        System.exit(1);
                         float[][] calibration = new float[calibrationTable.getItems().size()][3];
                         Constante constante;
                         float sum = 0;
@@ -490,7 +499,7 @@ public class GenericSEBController extends GenericController {
 
         for (int i = 1; i < calibrationTable.getColumns().size(); i++) {
             tc = (TableColumn) calibrationTable.getColumns().get(i);
-            tc.setCellValueFactory(new PropertyValueFactory<Image, String>("valor" + (i + 1)));
+            tc.setCellValueFactory(new PropertyValueFactory<Constante, String>("valor" + (i + 1)));
             tc.setCellFactory(cellFactoryDouble);
         }
 
