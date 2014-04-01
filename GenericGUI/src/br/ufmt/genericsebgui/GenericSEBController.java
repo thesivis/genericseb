@@ -196,7 +196,6 @@ public class GenericSEBController extends GenericController {
                         header.append(object.getNome()).append("\n");
                     }
                     for (Constante object : bodyTable.getItems()) {
-                        System.out.println(object.getNome());
                         body.append(object.getNome()).append("\n");
                     }
                     Map<String, Float> constants = new HashMap<>();
@@ -242,11 +241,9 @@ public class GenericSEBController extends GenericController {
                                 }
                             }
                             files.put(image.getFile().getName(), l + 1);
-                            System.out.println("Add:"+image.getValor());
                             parameters.add(new VariableValue(image.getValor(), data));
                         }
 
-                        System.exit(1);
                         float[][] calibration = new float[calibrationTable.getItems().size()][3];
                         Constante constante;
                         float sum = 0;
