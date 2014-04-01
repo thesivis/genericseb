@@ -34,12 +34,17 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.concurrent.Task;
+import javafx.fxml.FXML;
+import javafx.scene.control.Label;
 
 /**
  *
  * @author raphael
  */
 public class SEBALLandSatGUIController extends GenericController {
+    
+    @FXML
+    protected Label nomeArquivoLabel;
 
     public SEBALLandSatGUIController() {
         extensions = new String[]{"*.tiff", "*.tif"};
@@ -166,6 +171,12 @@ public class SEBALLandSatGUIController extends GenericController {
     }
 
     @Override
+    protected void afterUpload() {
+        super.afterUpload(); //To change body of generated methods, choose Tools | Templates.
+        nomeArquivoLabel.setText(file.getPath());
+    }
+
+    @Override
     protected void inicializated() {
         
     }
@@ -232,6 +243,6 @@ public class SEBALLandSatGUIController extends GenericController {
     
     @Override
     protected void clear() {
-        
+        nomeArquivoLabel.setText("");
     }
 }
