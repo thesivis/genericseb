@@ -28,6 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -42,6 +43,8 @@ import javafx.util.Callback;
  */
 public class GenericCSVController extends GenericController {
 
+    @FXML
+    protected Label nomeArquivoLabel;
     @FXML
     protected TableView<Constante> columnsTable;
     private BufferedReader bur;
@@ -179,6 +182,7 @@ public class GenericCSVController extends GenericController {
     @Override
     protected void afterUpload() {
         try {
+            nomeArquivoLabel.setText(file.getPath());
             bur = new BufferedReader(new FileReader(file));
             line = bur.readLine();
             line = line.replaceAll("[ ]+", "");
@@ -271,5 +275,6 @@ public class GenericCSVController extends GenericController {
         line = null;
         bur = null;
         delimiter = ";";
+        nomeArquivoLabel.setText("");
     }
 }

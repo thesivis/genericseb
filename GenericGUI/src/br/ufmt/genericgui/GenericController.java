@@ -34,8 +34,6 @@ public abstract class GenericController implements Initializable {
 
     protected ResourceBundle bundle;
     @FXML
-    protected Label nomeArquivoLabel;
-    @FXML
     protected TableView<Constante> constanteTable;
     @FXML
     protected TableView<Constante> headerTable;
@@ -63,7 +61,6 @@ public abstract class GenericController implements Initializable {
         fileChooser.setTitle(bundle.getString("file.chooser.title"));
         file = fileChooser.showOpenDialog(Main.screen);
         if (file != null) {
-            nomeArquivoLabel.setText(file.getPath());
             afterUpload();
         }
     }
@@ -226,7 +223,6 @@ public abstract class GenericController implements Initializable {
         headerTable.getItems().clear();
         bodyTable.getItems().clear();
         file = null;
-        nomeArquivoLabel.setText("");
         clear();
     }
 
