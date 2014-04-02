@@ -244,8 +244,8 @@ public class ProcessorTiff {
 
                     for (int j = 0; j < vet.length; j++) {
                         dado = new float[]{(float) vet[j]};
-                        x = j % width;
-                        y = j / width;
+                        x = j % height;
+                        y = j - x * height;
                         try {
                             rasterResp.setPixel(x, y, dado);
                         } catch (java.lang.ArrayIndexOutOfBoundsException ex) {

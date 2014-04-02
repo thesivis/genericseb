@@ -157,25 +157,25 @@ public class GenericSEBController extends GenericController {
         Image editado = ((Image) t.getTableView().getItems().get(t.getTablePosition().getRow()));
         editado.setValor(t.getNewValue());
     }
-    
+
     @FXML
     protected void editCalibrationValue1Action(TableColumn.CellEditEvent<Constante, String> t) {
         Constante editado = ((Constante) t.getTableView().getItems().get(t.getTablePosition().getRow()));
         editado.setValor(Float.parseFloat(t.getNewValue()));
     }
-    
+
     @FXML
     protected void editCalibrationValue2Action(TableColumn.CellEditEvent<Constante, String> t) {
         Constante editado = ((Constante) t.getTableView().getItems().get(t.getTablePosition().getRow()));
         editado.setValor2(Float.parseFloat(t.getNewValue()));
     }
-    
+
     @FXML
     protected void editCalibrationValue3Action(TableColumn.CellEditEvent<Constante, String> t) {
         Constante editado = ((Constante) t.getTableView().getItems().get(t.getTablePosition().getRow()));
         editado.setValor3(Float.parseFloat(t.getNewValue()));
     }
-    
+
     @FXML
     protected void addCalibrationAction(ActionEvent event) {
         calibrationTable.getItems().add(new Constante("nome", 0.0f, 0.0f, 0.0f));
@@ -441,8 +441,8 @@ public class GenericSEBController extends GenericController {
 
                     for (int j = 0; j < vet.length; j++) {
                         dado = new float[]{(float) vet[j]};
-                        x = j % width;
-                        y = j / width;
+                        x = j % height;
+                        y = j - x * height;
                         try {
                             rasterResp.setPixel(x, y, dado);
                         } catch (java.lang.ArrayIndexOutOfBoundsException ex) {
