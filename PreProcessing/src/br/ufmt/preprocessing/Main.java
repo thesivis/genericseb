@@ -45,6 +45,7 @@ public class Main {
 
         LandSat land = new LandSat();
         String path = "/home/raphael/Google/GenericGUI/Teste/landsat_5_tm_20070326_226_072_l2_empilhada_orto.tif";
+        path = "/home/raphael/Google/GenericGUI/rppn.tif";
         int julianDay = 85;
         float Z = 53.178f;
         float P = 99.9f;
