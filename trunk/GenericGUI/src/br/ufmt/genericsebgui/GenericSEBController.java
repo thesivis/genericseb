@@ -159,6 +159,24 @@ public class GenericSEBController extends GenericController {
     }
     
     @FXML
+    protected void editCalibrationValue1Action(TableColumn.CellEditEvent<Constante, String> t) {
+        Constante editado = ((Constante) t.getTableView().getItems().get(t.getTablePosition().getRow()));
+        editado.setValor(Float.parseFloat(t.getNewValue()));
+    }
+    
+    @FXML
+    protected void editCalibrationValue2Action(TableColumn.CellEditEvent<Constante, String> t) {
+        Constante editado = ((Constante) t.getTableView().getItems().get(t.getTablePosition().getRow()));
+        editado.setValor2(Float.parseFloat(t.getNewValue()));
+    }
+    
+    @FXML
+    protected void editCalibrationValue3Action(TableColumn.CellEditEvent<Constante, String> t) {
+        Constante editado = ((Constante) t.getTableView().getItems().get(t.getTablePosition().getRow()));
+        editado.setValor3(Float.parseFloat(t.getNewValue()));
+    }
+    
+    @FXML
     protected void addCalibrationAction(ActionEvent event) {
         calibrationTable.getItems().add(new Constante("nome", 0.0f, 0.0f, 0.0f));
     }
