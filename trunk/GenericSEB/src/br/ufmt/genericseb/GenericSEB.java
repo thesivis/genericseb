@@ -695,11 +695,11 @@ public class GenericSEB {
 
 
         if (numbers.size() > 0) {
-            gpuCodeBody.append("        if(");
-            for (int j = 0; j < numbers.size() - 1; j++) {
-                gpuCodeBody.append("pixel").append(numbers.get(j)).append("[idx] != 0.0f && ");
+            gpuCodeBody.append("        if(!(");
+            for (int j = 1; j < numbers.size() - 1; j++) {
+                gpuCodeBody.append("pixel").append(numbers.get(0)).append("[idx] == ").append("pixel").append(numbers.get(j)).append("[idx]").append(" && ");
             }
-            gpuCodeBody.append("pixel").append(numbers.get(numbers.size() - 1)).append("[idx] != 0.0f){\n");
+            gpuCodeBody.append("pixel").append(numbers.get(0)).append("[idx] == ").append("pixel").append(numbers.get(numbers.size() - 1)).append("[idx])){\n");
         }
 
 
@@ -1219,11 +1219,11 @@ public class GenericSEB {
 
 
         if (numbers.size() > 0) {
-            gpuCodeBody.append("        if(");
-            for (int j = 0; j < numbers.size() - 1; j++) {
-                gpuCodeBody.append("pixel").append(numbers.get(j)).append("[idx] != 0.0f && ");
+            gpuCodeBody.append("        if(!(");
+            for (int j = 1; j < numbers.size() - 1; j++) {
+                gpuCodeBody.append("pixel").append(numbers.get(0)).append("[idx] == ").append("pixel").append(numbers.get(j)).append("[idx]").append(" && ");
             }
-            gpuCodeBody.append("pixel").append(numbers.get(numbers.size() - 1)).append("[idx] != 0.0f){\n");
+            gpuCodeBody.append("pixel").append(numbers.get(0)).append("[idx] == ").append("pixel").append(numbers.get(numbers.size() - 1)).append("[idx])){\n");
         }
 
 
@@ -1637,11 +1637,11 @@ public class GenericSEB {
         source.append("        for(int i = 0;i < ").append(vet1).append(".length;i++){\n");
 
         if (numbers.size() > 0) {
-            source.append("            if(");
-            for (int j = 0; j < numbers.size() - 1; j++) {
-                source.append("pixel").append(numbers.get(j)).append("[i] != 0.0f && ");
+            source.append("            if(!(");
+            for (int j = 1; j < numbers.size() - 1; j++) {
+                source.append("pixel").append(numbers.get(0)).append("[i] == ").append("pixel").append(numbers.get(j)).append("[i]").append(" && ");
             }
-            source.append("pixel").append(numbers.get(numbers.size() - 1)).append("[i] != 0.0f){\n");
+            source.append("pixel").append(numbers.get(0)).append("[i] == ").append("pixel").append(numbers.get(numbers.size() - 1)).append("[i])){\n");
         }
 
 
@@ -1819,12 +1819,12 @@ public class GenericSEB {
 
             source.append(
                     "            if (index > indexMax) {\n"
-                    + "                if (" + ts + " < tMin) {\n"
+                    + "                if (" + ts + " < tMin && " + ts + " > -300) {\n"
                     + "                    tMin = " + ts + ";\n"
                     + "                    indexMax = index;\n"
                     + "                }\n"
                     + "            } else if (index < indexMin) {\n"
-                    + "                if (" + ts + " > tMax) {\n"
+                    + "                if (" + ts + " > tMax && " + ts + " < 10000) {\n"
                     + "                    tMax = " + ts + ";\n"
                     + "                    indexMin = index;\n"
                     + "                    RnHot = " + rn + ";\n"
