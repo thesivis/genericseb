@@ -32,6 +32,7 @@ import javafx.util.Callback;
  */
 public abstract class GenericController implements Initializable {
 
+    protected final int MAX = 420000000;
     protected ResourceBundle bundle;
     @FXML
     protected TableView<Constante> constanteTable;

@@ -72,7 +72,7 @@ import sun.awt.image.SunWritableRaster;
  */
 public class GenericSEBController extends GenericController {
 
-    protected final int MAX = 550000000;
+    
     @FXML
     private TableView<Image> filesTable;
     @FXML

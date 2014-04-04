@@ -280,10 +280,6 @@ public class GenericSEB {
                     Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
                 }
                 exec = newBodyWithoutIndex.toString();
-                pars = null;
-                classes = null;
-                equations.clear();
-                index = null;
             }
 //            System.out.println("Exec:" + exec);
 //            System.exit(1);
@@ -300,6 +296,10 @@ public class GenericSEB {
             if (hasIndex) {
                 ret.putAll(firstRet);
             }
+            pars = null;
+            classes = null;
+            equations.clear();
+            index = null;
         } catch (NoSuchMethodException ex1) {
             Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
         } catch (SecurityException ex1) {
