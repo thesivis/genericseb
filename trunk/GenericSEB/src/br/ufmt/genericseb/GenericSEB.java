@@ -906,7 +906,7 @@ public class GenericSEB {
 
         gpuCode.append("}\n");
 
-        System.out.println(source.toString());
+//        System.out.println(source.toString());
 //        System.exit(1);
         try {
             File dir = new File(System.getProperty("user.dir") + "/source");
@@ -1590,7 +1590,7 @@ public class GenericSEB {
                 }
             }
         }
-        System.out.println("Verify");
+//        System.out.println("Verify");
         if (forVariables != null && !forVariables.isEmpty()) {
             verifyEquations(forVariables, variables, false);
         }
@@ -1876,20 +1876,20 @@ public class GenericSEB {
 //            source.append("        System.out.println(\"pixel5:\"+pixel5[45724667]);\n");
 //            source.append("        System.out.println(\"pixel6:\"+pixel6[45724667]);\n");
 //            source.append("        System.out.println(\"pixel7:\"+pixel7[45724667]);\n");
-            if (index != null) {
-                source.append("        System.out.println(\"cosZ:\"+cosZ);\n");
-                source.append("        System.out.println(\"dr:\"+dr);\n");
-                source.append("        System.out.println(\"RnHot:\"+RnHot);\n");
-                source.append("        System.out.println(\"GHot:\"+GHot);\n");
-                source.append("        System.out.println(\"SAVI_hot:\"+SAVI_hot);\n");
-                source.append("        System.out.println(\"A:\"+coef[0]);\n");
-                source.append("        System.out.println(\"B:\"+coef[1]);\n");
-                source.append("        System.out.println(\"index:\"+index);\n");
-                source.append("        System.out.println(\"indexMax:\"+indexMax);\n");
-                source.append("        System.out.println(\"indexMin:\"+indexMin);\n");
-                source.append("        System.out.println(\"tMax:\"+tMax);\n");
-                source.append("        System.out.println(\"tMin:\"+tMin);\n");
-            }
+//            if (index != null) {
+//                source.append("        System.out.println(\"cosZ:\"+cosZ);\n");
+//                source.append("        System.out.println(\"dr:\"+dr);\n");
+//                source.append("        System.out.println(\"RnHot:\"+RnHot);\n");
+//                source.append("        System.out.println(\"GHot:\"+GHot);\n");
+//                source.append("        System.out.println(\"SAVI_hot:\"+SAVI_hot);\n");
+//                source.append("        System.out.println(\"A:\"+coef[0]);\n");
+//                source.append("        System.out.println(\"B:\"+coef[1]);\n");
+//                source.append("        System.out.println(\"index:\"+index);\n");
+//                source.append("        System.out.println(\"indexMax:\"+indexMax);\n");
+//                source.append("        System.out.println(\"indexMin:\"+indexMin);\n");
+//                source.append("        System.out.println(\"tMax:\"+tMax);\n");
+//                source.append("        System.out.println(\"tMin:\"+tMin);\n");
+//            }
 //            source.append("        System.exit(1);\n");
             source.append("        ret.put(\"coef\",coef);\n\n");
         }
@@ -1897,7 +1897,7 @@ public class GenericSEB {
         source.append("        return ret;\n");
         source.append("    }\n");
         source.append("}\n");
-        System.out.println(source.toString());
+//        System.out.println(source.toString());
 //        System.exit(1);
         return source.toString();
     }
