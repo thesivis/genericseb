@@ -8,15 +8,15 @@ package br.ufmt.genericseb;
  *
  * @author raphael
  */
-public class VariableValue {
+public class VariableValue<T> {
     
     private String name;
-    private float[] data;
-
+    private T data;
+    
     public VariableValue() {
     }
 
-    public VariableValue(String name, float[] data) {
+    public VariableValue(String name, T data) {
         this.name = name;
         this.data = data;
     }
@@ -29,11 +29,11 @@ public class VariableValue {
         this.name = name;
     }
 
-    public float[] getData() {
+    public T getData() {
         return data;
     }
 
-    public void setData(float[] data) {
+    public void setData(T data) {
         this.data = data;
     }
     
