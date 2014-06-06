@@ -1183,6 +1183,7 @@ public class GenericSEB {
         source.append("            BufferedReader bur = new BufferedReader(new FileReader(System.getProperty(\"user.dir\") + \"/source/\" + source));\n");
         source.append("            JSeriesCL opencl = new JSeriesCL();\n");
         source.append("            opencl.setMeasure(true);\n");
+//        source.append("            opencl.setPrint(true);\n");
         source.append("            String linha = bur.readLine();\n");
         source.append("            StringBuilder codigo = new StringBuilder(linha + \"\\n\");\n");
         source.append("            while (linha != null) {\n");
