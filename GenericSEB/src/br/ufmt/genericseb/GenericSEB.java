@@ -430,6 +430,9 @@ public class GenericSEB {
                     throw new Exception("Miss number pixel name");
                 }
             }
+            if(vet1 == null){
+                vet1 = string ;
+            }
             pars[size] = value.getData();
             classes[size] = value.getData().getClass();
             source.append("float[] ").append(string);
