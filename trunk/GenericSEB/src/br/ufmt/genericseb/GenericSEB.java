@@ -196,7 +196,6 @@ public class GenericSEB {
         Map<String, float[]> firstRet = null;
         String source = null;
 
-
         StringBuilder newBodyWithIndex = new StringBuilder();
         StringBuilder newBodyWithoutIndex = new StringBuilder();
 
@@ -288,7 +287,6 @@ public class GenericSEB {
 
 //        System.out.println(source);
 //        System.exit(1);
-
         Object instanced = compile(source, "Equation");
         try {
             Method method = instanced.getClass().getDeclaredMethod("execute", classes);
@@ -311,7 +309,6 @@ public class GenericSEB {
         } catch (InvocationTargetException ex1) {
             Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
         }
-
 
         return ret;
     }
@@ -351,7 +348,6 @@ public class GenericSEB {
             options.append(".");
 
 //            System.out.println("javac -cp " + options.toString() + " " + className + ".java");
-
             int compilar;
             if (isLib) {
                 compilar = com.sun.tools.javac.Main.compile(new String[]{"-cp", options.toString(), className + ".java"});
@@ -497,7 +493,6 @@ public class GenericSEB {
         }
 
         //gpu part
-
         StringBuilder gpuCode = new StringBuilder("#include \"Constants.h\"\n\n");
         gpuCode.append("extern \"C\"{\n\n");
 
@@ -530,7 +525,6 @@ public class GenericSEB {
             variables.add(structure.getToken());
         }
         gpuCode.append("\n");
-
 
         StringBuilder vf;
         boolean albedo = false;
@@ -578,7 +572,6 @@ public class GenericSEB {
         }
         gpuCode.append("\n");
 
-
         gpuCode.append("    __device__ void execute_sub(\n");
         for (String string : parameters.keySet()) {
             gpuCode.append("        float ").append(string).append(",\n");
@@ -587,7 +580,6 @@ public class GenericSEB {
         }
         gpuCode.append("\n");
         gpuCodeBody.append("\n");
-
 
         vet = forEachValue.split("\n");
         for (int i = 0; i < vet.length; i++) {
@@ -629,6 +621,7 @@ public class GenericSEB {
             verifyEquations(forEachValue, variables, true);
         }
         Equation eq;
+        StringBuilder cudaVariables = new StringBuilder();
         for (int i = 0; i < equations.size(); i++) {
             eq = equations.get(i);
             switch (eq.getTerm()) {
@@ -648,19 +641,18 @@ public class GenericSEB {
                             }
                             gpuCode.append("\n");
 
-
                             source.append("        float[] ").append(term).append(" = new float[").append(vet1).append(".length];\n");
                             source.append("        par.add(new ParameterGPU(").append(term).append(",true,true));\n");
                             source.append("        ret.put(\"").append(term).append("\",").append(term).append(");\n\n");
 
-
                             variables.add(term);
+                        } else {
+                            cudaVariables.append("        float ").append(eq.getTerm()).append(" = 0.0f;\n");
                         }
                     }
                     break;
             }
         }
-
 
         source.append("        par.add(new ParameterGPU(N,true));\n\n");
 
@@ -678,21 +670,20 @@ public class GenericSEB {
         source.append("            Logger.getLogger(Equation.class.getName()).log(Level.SEVERE, null, ex);\n");
         source.append("        }\n");
 
-
         source.append("        return ret;\n");
         source.append("    }\n");
         source.append("}\n");
 
-
         gpuCodeBody.append("        int size");
 
-        gpuCode.append("    ){\n");
-        gpuCodeBody.append("){\n");
+        gpuCode.append("    ){\n\n");
 
+        gpuCode.append(cudaVariables.toString());
+
+        gpuCodeBody.append("){\n");
 
         gpuCodeBody.append("        int idx = blockIdx.x*blockDim.x + threadIdx.x;\n");
         gpuCodeBody.append("        if(idx < size){\n");
-
 
         if (numbers.size() > 0) {
             gpuCodeBody.append("        if(!(");
@@ -701,8 +692,6 @@ public class GenericSEB {
             }
             gpuCodeBody.append("pixel").append(numbers.get(0)).append("[idx] == ").append("pixel").append(numbers.get(numbers.size() - 1)).append("[idx])){\n");
         }
-
-
 
         gpuCodeBody.append("            execute_sub(\n");
         for (String string : parameters.keySet()) {
@@ -784,7 +773,6 @@ public class GenericSEB {
                         }
                         gpuCode.append(equation).append("\n");
                     }
-
 
                     break;
                 case "reflectancia":
@@ -888,7 +876,6 @@ public class GenericSEB {
             }
         }
 
-
         gpuCodeBody.append("            );\n");
 
         if (numbers.size() > 0) {
@@ -899,7 +886,6 @@ public class GenericSEB {
         gpuCodeBody.append("        }\n");
         gpuCodeBody.append("    }\n");
 
-
         gpuCode.append("    }\n\n");
 
         gpuCode.append(gpuCodeBody.toString());
@@ -907,7 +893,6 @@ public class GenericSEB {
         gpuCode.append("}\n");
 
 //        System.out.println(source.toString());
-//        System.exit(1);
         try {
             File dir = new File(System.getProperty("user.dir") + "/source");
             dir.mkdirs();
@@ -917,7 +902,7 @@ public class GenericSEB {
         } catch (FileNotFoundException ex1) {
             Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
         }
-
+//        System.exit(1);
         return source.toString();
     }
 
@@ -941,8 +926,6 @@ public class GenericSEB {
         source.append("import java.io.FileReader;\n");
         source.append("import br.ufmt.genericlexerseb.Maths;\n");
         source.append("import java.util.List;\n\n");
-
-
 
         source.append("public class Equation{\n");
 
@@ -1026,7 +1009,6 @@ public class GenericSEB {
         }
 
         //gpu part
-
         StringBuilder gpuCode = new StringBuilder("\n");
         gpuCode.append("#ifdef cl_khr_fp64\n");
         gpuCode.append("	#pragma OPENCL EXTENSION cl_khr_fp64: enable\n");
@@ -1064,7 +1046,6 @@ public class GenericSEB {
             variables.add(structure.getToken());
         }
         gpuCode.append("\n");
-
 
         StringBuilder vf;
         boolean albedo = false;
@@ -1112,7 +1093,6 @@ public class GenericSEB {
         }
         gpuCode.append("\n");
 
-
         gpuCode.append("    void execute_sub(\n");
         for (String string : parameters.keySet()) {
             gpuCode.append("        float ").append(string).append(",\n");
@@ -1155,6 +1135,7 @@ public class GenericSEB {
             verifyEquations(forEachValue, variables, true);
         }
         Equation eq;
+        StringBuilder openclVariables = new StringBuilder();
         for (int i = 0; i < equations.size(); i++) {
             eq = equations.get(i);
             switch (eq.getTerm()) {
@@ -1174,8 +1155,8 @@ public class GenericSEB {
                             source.append("        float[] ").append(term).append(" = new float[").append(vet1).append(".length];\n");
                             source.append("        par.add(new ParameterGPU(").append(term).append(",true,true));\n");
                             source.append("        ret.put(\"").append(term).append("\",").append(term).append(");\n\n");
-
-                            variables.add(term);
+                        } else {
+                            openclVariables.append("        float ").append(eq.getTerm()).append(" = 0.0f;\n");
                         }
                     }
                     break;
@@ -1203,7 +1184,6 @@ public class GenericSEB {
         source.append("            Logger.getLogger(Equation.class.getName()).log(Level.SEVERE, null, ex);\n");
         source.append("        }\n");
 
-
         source.append("        return ret;\n");
         source.append("    }\n");
         source.append("}\n");
@@ -1211,12 +1191,13 @@ public class GenericSEB {
         gpuCode.append("        int idx");
         gpuCodeBody.append("        __global int * size");
 
-        gpuCode.append("){\n");
+        gpuCode.append("){\n\n");
         gpuCodeBody.append("){\n");
+
+        gpuCode.append(openclVariables.toString());
 
         gpuCodeBody.append("        int idx = get_global_id(0);\n");
         gpuCodeBody.append("        if(idx < size[0]){\n");
-
 
         if (numbers.size() > 0) {
             gpuCodeBody.append("        if(!(");
@@ -1225,7 +1206,6 @@ public class GenericSEB {
             }
             gpuCodeBody.append("pixel").append(numbers.get(0)).append("[idx] == ").append("pixel").append(numbers.get(numbers.size() - 1)).append("[idx])){\n");
         }
-
 
         gpuCodeBody.append("            execute_sub(\n");
         for (String string : parameters.keySet()) {
@@ -1263,13 +1243,13 @@ public class GenericSEB {
                         }
                     }
                     if (!find) {
-                        gpuCode.append(condition[j]);
+                        gpuCode.append(condition[j].trim());
                         if (parameters.get(condition[j]) != null) {
                             gpuCode.append("[idx]");
                         }
-                        if (condition[j].matches("(-?)[0-9]+[\\.][0-9]+")) {
-                            gpuCode.append("f");
-                        }
+//                        if (condition[j].matches("(-?)[0-9]+[\\.][0-9]+")) {
+//                            gpuCode.append("f");
+//                        }
                     }
                     gpuCode.append(" ");
                 }
@@ -1303,7 +1283,6 @@ public class GenericSEB {
                         }
                         gpuCode.append(equation).append("\n");
                     }
-
 
                     break;
                 case "reflectancia":
@@ -1344,7 +1323,6 @@ public class GenericSEB {
                     }
                     break;
                 default:
-
 
                     equation = ident + "        " + lexer.analyse(equation, structure, null, language) + ";\n";
                     ex.evaluateExpr(equation);
@@ -1401,7 +1379,6 @@ public class GenericSEB {
             }
         }
 
-
         gpuCodeBody.append("            idx);\n");
 
         if (numbers.size() > 0) {
@@ -1411,11 +1388,9 @@ public class GenericSEB {
         gpuCodeBody.append("        }\n");
         gpuCodeBody.append("    }\n");
 
-
         gpuCode.append("    }\n\n");
 
         gpuCode.append(gpuCodeBody.toString());
-
 
 //        System.out.println(source.toString());
         try {
@@ -1633,7 +1608,6 @@ public class GenericSEB {
             }
         }
 
-
         source.append("        for(int i = 0;i < ").append(vet1).append(".length;i++){\n");
 
         if (numbers.size() > 0) {
@@ -1644,14 +1618,12 @@ public class GenericSEB {
             source.append("pixel").append(numbers.get(0)).append("[i] == ").append("pixel").append(numbers.get(numbers.size() - 1)).append("[i])){\n");
         }
 
-
         String equation;
         String[] outEquation;
         String t;
         Equation eq2;
         boolean rad_espectral = false;
         String ident;
-
 
         for (int i = 0; i < equations.size(); i++) {
 //            terms = vet[i].split("=");
@@ -1792,7 +1764,6 @@ public class GenericSEB {
             }
         }
 
-
         if (index != null) {
             String ts = "Ts";
             String rn = "Rn", g = "G0", savi = "SAVI";
@@ -1849,12 +1820,9 @@ public class GenericSEB {
 //        source.append("        System.out.println(\"mSavi:\"+index);\n");
 //        source.append("        System.out.println(\"G0:\"+Ts);\n");
 //        source.append("        System.out.println(\"LWd:\"+LWd+\"\\n\");\n");
-
-
         if (numbers.size() > 0) {
             source.append("            }\n");
         }
-
 
         source.append("        }\n");
 
@@ -1924,7 +1892,6 @@ public class GenericSEB {
         constants.put("stefan", 5.6697E-8f);
         constants.put("pascal", 133.3224f);
 
-
         GenericSEB g = new GenericSEB(LanguageType.JAVA);
         String form = "O_dj2=dj\n"
                 + "//TESTANDO COMENTARIO\n"
@@ -1951,15 +1918,12 @@ public class GenericSEB {
             Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-
-
 //        float v = (float) Math.floor(30.0);
 //        if (Maths.mod(v, 100.0f) == 30.0f) {
 //            v = (float) (v + 0.5);
 //        }
 //        System.out.println(v);
         System.exit(1);
-
 
 //[64.0, 41.0, 62.0, 34.0, 8.0, 160.0, 3.0]
 //[59.0, 28.0, 20.0, 105.0, 70.0, 0.0, 20.0]
@@ -1970,8 +1934,6 @@ public class GenericSEB {
         parameters.add(new VariableValue("pixel5", new float[]{8.0f, 70.0f}));
         parameters.add(new VariableValue("pixel6", new float[]{160.0f, 0.0f}));
         parameters.add(new VariableValue("pixel7", new float[]{3.0f, 20.0f}));
-
-
 
         constants.put("reflectanciaAtmosfera", 0.03f);
         constants.put("Kt", 1.0f);
@@ -2074,7 +2036,6 @@ public class GenericSEB {
 
             a = ((H) * r_ah) / (Constants.p * Constants.cp * (Ts_hot - Ts_cold));
             b = -a * (Ts_cold - Constants.T0);
-
 
             H = Constants.p * Constants.cp * (b + a * (Ts_hot - Constants.T0)) / r_ah;
 

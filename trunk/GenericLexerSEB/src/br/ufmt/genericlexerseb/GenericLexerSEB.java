@@ -65,7 +65,6 @@ public class GenericLexerSEB {
                 }
                 funcs.put(vet[0], vet[5]);
 
-
                 line = bur.readLine();
             }
         } catch (Exception ex) {
@@ -85,7 +84,6 @@ public class GenericLexerSEB {
 
     public String analyse(String equation, Structure dependent, Map<String, Structure> variables, LanguageType language) {
         ExpressionParser expressionParser = new ExpressionParser();
-
 
         if (dependent != null) {
             expressionParser.evaluateExpr(equation);
@@ -120,6 +118,9 @@ public class GenericLexerSEB {
                 terms[i] = "-";
             } else if (terms[i].matches("(-?)[0-9]+[\\.][0-9]+")) {
                 terms[i] = terms[i] + "";
+                if (language.equals(LanguageType.OPENCL)) {
+                    terms[i] = terms[i].trim() + "f";
+                }
             } else if (terms[i].equals("pi") && language.equals(LanguageType.JAVA)) {
                 terms[i] = "Math.PI";
             } else if (terms[i].equals("pi") && language.equals(LanguageType.PYTHON)) {
@@ -142,7 +143,6 @@ public class GenericLexerSEB {
             equation += ")";
         }
 
-
 //        System.out.println(equation);
         return equation;
     }
@@ -150,7 +150,6 @@ public class GenericLexerSEB {
     public double getResult(String equation, Map<String, Variable> variables) {
         PythonInterpreter in = new PythonInterpreter();
         String[] vet = equation.split("=");
-
 
         for (Variable variable : variables.values()) {
             in.set(variable.getName(), variable.getValue());
