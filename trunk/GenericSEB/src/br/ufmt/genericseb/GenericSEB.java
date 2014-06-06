@@ -416,13 +416,13 @@ public class GenericSEB {
         source.append("    public Map<String, float[]> execute(");
         int size = 0;
         String vet1 = null;
-        Map<String, String> parameters = new HashMap<>();
+        Map<String, VariableValue> parameters = new HashMap<>();
         pars = new Object[parametersList.size()];
         classes = new Class[parametersList.size()];
         List<Integer> numbers = new ArrayList<>();
         for (VariableValue value : parametersList) {
             String string = value.getName();
-            parameters.put(string, string);
+            parameters.put(string, value);
             if (string.startsWith("pixel")) {
                 if (string.replace("pixel", "").matches("[0-9]+")) {
                     numbers.add(Integer.parseInt(string.replace("pixel", "")));
@@ -430,12 +430,12 @@ public class GenericSEB {
                     throw new Exception("Miss number pixel name");
                 }
             }
-            if(vet1 == null){
-                vet1 = string ;
+            if (vet1 == null) {
+                vet1 = string;
             }
             pars[size] = value.getData();
             classes[size] = value.getData().getClass();
-            source.append("float[] ").append(string);
+            source.append(classes[size].getCanonicalName()).append(string);
             size++;
             if (size < parametersList.size()) {
                 source.append(",");
@@ -574,11 +574,15 @@ public class GenericSEB {
             }
         }
         gpuCode.append("\n");
-
+        VariableValue value;
+        String type;
         gpuCode.append("    __device__ void execute_sub(\n");
         for (String string : parameters.keySet()) {
-            gpuCode.append("        float ").append(string).append(",\n");
-            gpuCodeBody.append("        float * ").append(string).append(",\n");
+            value = parameters.get(string);
+            type = value.getData().getClass().getCanonicalName().substring(0, value.getData().getClass().getCanonicalName().length() - 2);
+            
+            gpuCode.append("        ").append(type).append(" ").append(string).append(",\n");
+            gpuCodeBody.append("        ").append(type).append(" * ").append(string).append(",\n");
             variables.add(string);
         }
         gpuCode.append("\n");
@@ -935,13 +939,13 @@ public class GenericSEB {
         source.append("    public Map<String, float[]> execute(");
         int size = 0;
         String vet1 = null;
-        Map<String, String> parameters = new HashMap<>();
+        Map<String, VariableValue> parameters = new HashMap<>();
         pars = new Object[parametersList.size()];
         classes = new Class[parametersList.size()];
         List<Integer> numbers = new ArrayList<>();
         for (VariableValue value : parametersList) {
             String string = value.getName();
-            parameters.put(string, string);
+            parameters.put(string, value);
             if (string.startsWith("pixel")) {
                 if (string.replace("pixel", "").matches("[0-9]+")) {
                     numbers.add(Integer.parseInt(string.replace("pixel", "")));
@@ -952,7 +956,7 @@ public class GenericSEB {
             vet1 = string;
             pars[size] = value.getData();
             classes[size] = value.getData().getClass();
-            source.append("float[] ").append(string);
+            source.append(classes[size].getCanonicalName()).append(string);
             size++;
             if (size < parametersList.size()) {
                 source.append(",");
@@ -1096,10 +1100,16 @@ public class GenericSEB {
         }
         gpuCode.append("\n");
 
+        String type;
         gpuCode.append("    void execute_sub(\n");
+
+        VariableValue value;
         for (String string : parameters.keySet()) {
-            gpuCode.append("        float ").append(string).append(",\n");
-            gpuCodeBody.append("        __global float * ").append(string).append(",\n");
+            value = parameters.get(string);
+            type = value.getData().getClass().getCanonicalName().substring(0, value.getData().getClass().getCanonicalName().length() - 2);
+
+            gpuCode.append("        ").append(type).append(" ").append(string).append(",\n");
+            gpuCodeBody.append("        __global ").append(type).append(" * ").append(string).append(",\n");
             variables.add(string);
         }
         gpuCode.append("\n");
@@ -1445,7 +1455,7 @@ public class GenericSEB {
             pars[size] = value.getData();
             classes[size] = value.getData().getClass();
             variables.add(string);
-            source.append("float[] ").append(string);
+            source.append(classes[size].getCanonicalName()).append(string);
             size++;
             if (size < parametersList.size()) {
                 source.append(",");
