@@ -118,7 +118,7 @@ public class GenericLexerSEB {
                 terms[i] = "-";
             } else if (terms[i].matches("(-?)[0-9]+[\\.][0-9]+")) {
                 terms[i] = terms[i] + "";
-                if (language.equals(LanguageType.OPENCL)) {
+                if (language.equals(LanguageType.OPENCL) || language.equals(LanguageType.CUDA)) {
                     terms[i] = terms[i].trim() + "f";
                 }
             } else if (terms[i].equals("pi") && language.equals(LanguageType.JAVA)) {
