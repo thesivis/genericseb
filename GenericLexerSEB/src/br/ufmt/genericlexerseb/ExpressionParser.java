@@ -84,7 +84,6 @@ public class ExpressionParser {
             }
         }
 
-
 //        OPERATORS.put("sqrt", new int[]{15, LEFT_ASSOC, 1});
 //        OPERATORS.put("ln", new int[]{15, LEFT_ASSOC, 1});
 //        OPERATORS.put("log", new int[]{15, LEFT_ASSOC, 1});
@@ -300,7 +299,6 @@ public class ExpressionParser {
         String[] input = tokenize(str);
 
 //        System.out.println("asdf:"+Arrays.toString(input));
-
         OPERATORS.put("<", new int[]{0, LEFT_ASSOC, 2});
         OPERATORS.put("<=", new int[]{0, LEFT_ASSOC, 2});
         OPERATORS.put(">", new int[]{0, LEFT_ASSOC, 2});
@@ -334,7 +332,10 @@ public class ExpressionParser {
                     }
                     break;
                 default:
-                    together.append(" ");
+                    if (!(input[i].matches("(-?)[0-9]+[\\.][0-9]+") && input[i + 1].equals("f"))) {
+                        together.append(" ");
+                    }
+
             }
         }
         together.append(input[input.length - 1]);
@@ -343,7 +344,7 @@ public class ExpressionParser {
         while (strTokenizer.hasMoreTokens()) {
             String tok = strTokenizer.nextToken();
 //            System.out.println(tok);
-            list.add(tok);
+            list.add(tok.trim());
         }
         input = new String[list.size()];
         input = (String[]) list.toArray(input);
