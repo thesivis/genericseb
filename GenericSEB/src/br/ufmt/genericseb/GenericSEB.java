@@ -668,7 +668,7 @@ public class GenericSEB {
         source.append("        try {\n");
         source.append("            JSeriesCUDA cuda = new JSeriesCUDA();\n");
         source.append("            cuda.setPathNvcc(pathNvcc);\n");
-        source.append("            cuda.setPrint(true);\n");
+//        source.append("            cuda.setPrint(true);\n");
         source.append("            cuda.setMeasure(true);\n");
         source.append("            cuda.execute(par, System.getProperty(\"user.dir\") + \"/source/\" + source, \"execute\");\n");
         source.append("            File newFile = new File(System.getProperty(\"user.dir\") + \"/source/\" + source);\n");

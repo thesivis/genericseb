@@ -17,7 +17,6 @@ import java.util.List;
 import static jcuda.driver.JCudaDriver.*;
 import static jcuda.driver.CUdevice_attribute.*;
 
-
 import jcuda.*;
 import jcuda.driver.*;
 
@@ -83,10 +82,7 @@ public class JSeriesCUDA extends GPU {
         JCudaDriver.setExceptionsEnabled(ExceptionsEnabled);
 
 //        teste(ptxFileName);
-
 //        // Initialize the driver and create a context for the first device.
-
-
         cuInit(0);
         CUdevice device = new CUdevice();
         cuDeviceGet(device, 0);
@@ -96,14 +92,12 @@ public class JSeriesCUDA extends GPU {
 
 //        registers = 24;
 //        sharedMemory = 200;
-
         // Create the PTX file by calling the NVCC
         String ptxFileName = preparePtxFile(arquivo);
 
         int maxThreadsPerBlock = getMaxThreadsPerBlock(device, registers, sharedMemory);
 
 //        System.exit(1);
-
         // Load the ptx file.
         CUmodule module = new CUmodule();
         cuModuleLoad(module, ptxFileName);
@@ -133,7 +127,7 @@ public class JSeriesCUDA extends GPU {
         }
         Pointer aux = null;
         ParameterGPU parametro = null;
-        List<Integer> tam = new ArrayList<Integer>();
+        List<Long> tam = new ArrayList<Long>();
         int dim = 0;
         for (int i = 0; i < parametros.size(); i++) {
             parametro = parametros.get(i);
@@ -161,7 +155,7 @@ public class JSeriesCUDA extends GPU {
             }
 
             if (parametro.isDefineThreads()) {
-                tam.add((int) parametro.getSize());
+                tam.add(parametro.getSize());
                 dim++;
             }
 
@@ -304,11 +298,14 @@ public class JSeriesCUDA extends GPU {
                         grids[2] = array[0];
                     }
                     if (blocks[i] < tam.get(i)) {
-                        if (blocks[i] * grids[i] > tam.get(i)) {
-                            grids[i] = (tam.get(i).intValue() / blocks[i]) + 1;
+                        long total = (long) blocks[i] * (long) grids[i];
+//                        System.out.println("blocks:" + blocks[i] + " " + tam.get(i) + " " + grids[i] + " " + total + " = " + (total > tam.get(i)));
+                        if (total > tam.get(i)) {
+                            grids[i] = (int) (tam.get(i) / blocks[i]) + 1;
+//                            System.out.println("Dentro:" + grids[i]);
                         }
                     } else {
-                        blocks[i] = tam.get(i);
+                        blocks[i] = tam.get(i).intValue();
                         grids[i] = 1;
                     }
                 }
@@ -353,7 +350,7 @@ public class JSeriesCUDA extends GPU {
                 blocks[0], blocks[1], blocks[2], // Block dimension
                 0, null, // Shared memory size and stream
                 kernelParameters, null // Kernel- and extra parameters
-                );
+        );
 
         cuCtxSynchronize();
 
@@ -367,7 +364,6 @@ public class JSeriesCUDA extends GPU {
             measures.add(time);
             time.setBegin(new Date());
         }
-
 
         // Allocate host output memory and copy the device output
         // to the host.
@@ -441,10 +437,12 @@ public class JSeriesCUDA extends GPU {
         String modelString = "-m" + System.getProperty("sun.arch.data.model");
         String command = pathNvcc + "nvcc " + modelString + compileOptions + " -ptx " + cuFile.getPath() + " -o " + ptxFileName;
 
+        if (print) {
+            System.out.println("Command:" + command);
+        }
+
 //        System.out.println(command);
-
 //        ptxas -v
-
 //        System.out.println(command);
         Process process = Runtime.getRuntime().exec(command);
 
@@ -633,7 +631,6 @@ public class JSeriesCUDA extends GPU {
             compute = gpuData.get(major + "." + minor);
         }
 
-
         if (compute != null) {
 
             String topList = "21,22,29,30,37,38,45,46,";
@@ -670,7 +667,6 @@ public class JSeriesCUDA extends GPU {
             warpsPerMultiprocessor = compute.getThreadsMultiprocessor() / warpSize;
 
 //            System.out.println("warpsPerMultiprocessor:" + warpsPerMultiprocessor);
-
             maxThreadsPerBlock = compute.getMaxThreadBlockSize();
 
             for (int i = warpSize; i <= maxThreadsPerBlock; i = i + warpSize) {
