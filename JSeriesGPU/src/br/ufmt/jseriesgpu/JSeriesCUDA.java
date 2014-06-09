@@ -400,7 +400,7 @@ public class JSeriesCUDA extends GPU {
         for (int i = 0; i < parametros.size(); i++) {
             cuMemFree(ptrs.get(i));
             jcuda.runtime.JCuda.cudaFree(ptrs.get(i));
-//            cuMemFreeHost(pointers.get(i));
+//            cuMemFreeHost(ptrs.get(i));
         }
         cuModuleUnload(module);
 
