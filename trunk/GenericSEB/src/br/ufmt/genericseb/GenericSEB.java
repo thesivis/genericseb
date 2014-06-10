@@ -21,6 +21,7 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -416,7 +417,7 @@ public class GenericSEB {
         source.append("    public Map<String, float[]> execute(");
         int size = 0;
         String vet1 = null;
-        Map<String, VariableValue> parameters = new HashMap<>();
+        Map<String, VariableValue> parameters = new LinkedHashMap<>();
         pars = new Object[parametersList.size()];
         classes = new Class[parametersList.size()];
         List<Integer> numbers = new ArrayList<>();
@@ -939,7 +940,7 @@ public class GenericSEB {
         source.append("    public Map<String, float[]> execute(");
         int size = 0;
         String vet1 = null;
-        Map<String, VariableValue> parameters = new HashMap<>();
+        Map<String, VariableValue> parameters = new LinkedHashMap<>();
         pars = new Object[parametersList.size()];
         classes = new Class[parametersList.size()];
         List<Integer> numbers = new ArrayList<>();
@@ -1438,7 +1439,7 @@ public class GenericSEB {
         source.append("    public Map<String, float[]> execute(");
         int size = 0;
         String vet1 = null;
-        Map<String, String> parameters = new HashMap<>();
+        Map<String, String> parameters = new LinkedHashMap<>();
         pars = new Object[parametersList.size()];
         classes = new Class[parametersList.size()];
         List<Integer> numbers = new ArrayList<>();
