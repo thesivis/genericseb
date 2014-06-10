@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -95,7 +96,8 @@ public class JSeriesCUDA extends GPU {
         // Create the PTX file by calling the NVCC
         String ptxFileName = preparePtxFile(arquivo);
 
-        int maxThreadsPerBlock = getMaxThreadsPerBlock(device, registers, sharedMemory);
+
+
 
 //        System.exit(1);
         // Load the ptx file.
@@ -121,10 +123,9 @@ public class JSeriesCUDA extends GPU {
             time.setDescription("Tempo de execução das alocações e envios de parâmetros");
             measures.add(time);
             time.setBegin(new Date());
+
         }
-        if (print) {
-            System.out.println("MaxThreadsPerBlock: " + maxThreadsPerBlock + " Reg: " + registers + " Shared Memory: " + sharedMemory);
-        }
+
         Pointer aux = null;
         ParameterGPU parametro = null;
         List<Long> tam = new ArrayList<Long>();
@@ -203,6 +204,7 @@ public class JSeriesCUDA extends GPU {
         int[] blocks = new int[]{1, 1, 1};
 
         int[] grids = new int[]{1, 1, 1};
+        int maxThreadsPerBlock = 192;
 
         if (!isManual()) {
             cuDeviceGetAttribute(array, CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X, device);
@@ -234,84 +236,104 @@ public class JSeriesCUDA extends GPU {
                 }
             }
 
-            switch (dim) {
-                case 3:
-                    double a = proporcao[0];
-                    double b = proporcao[1];
+            List<Occupancy> occupancies = getMaxThreadsPerBlock(device, registers, sharedMemory);
+            if (occupancies != null) {
+                boolean right = false;
+                while (!right) {
+                    if (occupancies.size() > 0) {
+                        Occupancy occ = occupancies.remove(0);
+                        maxThreadsPerBlock = occ.getThreadsPerBlock();
 
-                    int x = (int) Math.cbrt(maxThreadsPerBlock * a * b) + 1;
-                    int y = (int) (x / a);
-                    int z = (int) (x / b);
-
-                    if (y == 0) {
-                        y = 1;
-                    }
-                    if (z == 0) {
-                        z = 1;
-                    }
-
-                    int total = x * y * z;
-                    while (x > 1 && total > maxThreadsPerBlock) {
-                        x = x - 1;
-                        y = (int) (x / a);
-                        z = (int) (x / b);
-
-                        if (y == 0) {
-                            y = 1;
-                        }
-                        if (z == 0) {
-                            z = 1;
+                        if (print) {
+                            System.out.println("Occupancy:" + occ.getRatioOccupancy() + "MaxThreadsPerBlock: " + maxThreadsPerBlock + " Reg: " + registers + " Shared Memory: " + sharedMemory);
                         }
 
-                        total = x * y * z;
-                    }
+                        switch (dim) {
+                            case 3:
+                                double a = proporcao[0];
+                                double b = proporcao[1];
 
-                    while (x > 1 && ((x + 1) * y * z) <= maxThreadsPerBlock) {
-                        x = x + 1;
-                    }
+                                int x = (int) Math.cbrt(maxThreadsPerBlock * a * b) + 1;
+                                int y = (int) (x / a);
+                                int z = (int) (x / b);
 
-                    blocks[ordem.get(0)] = x;
-                    blocks[ordem.get(1)] = y;
-                    blocks[ordem.get(2)] = z;
+                                if (y == 0) {
+                                    y = 1;
+                                }
+                                if (z == 0) {
+                                    z = 1;
+                                }
 
-                    break;
-                case 2:
-                    blocks[ordem.get(0)] = warpSize;
-                    blocks[ordem.get(1)] = maxThreadsPerBlock / warpSize;
-                    break;
-                case 1:
-                    blocks[0] = maxThreadsPerBlock;
-                    break;
-            }
+                                int total = x * y * z;
+                                while (x > 1 && total > maxThreadsPerBlock) {
+                                    x = x - 1;
+                                    y = (int) (x / a);
+                                    z = (int) (x / b);
+
+                                    if (y == 0) {
+                                        y = 1;
+                                    }
+                                    if (z == 0) {
+                                        z = 1;
+                                    }
+
+                                    total = x * y * z;
+                                }
+
+                                while (x > 1 && ((x + 1) * y * z) <= maxThreadsPerBlock) {
+                                    x = x + 1;
+                                }
+
+                                blocks[ordem.get(0)] = x;
+                                blocks[ordem.get(1)] = y;
+                                blocks[ordem.get(2)] = z;
+
+                                break;
+                            case 2:
+                                blocks[ordem.get(0)] = warpSize;
+                                blocks[ordem.get(1)] = maxThreadsPerBlock / warpSize;
+                                break;
+                            case 1:
+                                blocks[0] = maxThreadsPerBlock;
+                                break;
+                        }
 
 //            blocks[0] = 769;
 //            blocks[1] = 1;
 //            blocks[2] = 1;
 //            System.out.println("BlockX: " + blocks[0] + " BlockY: " + blocks[1] + " BlockZ: " + blocks[2]);
-            if (dim >= 1) {
-                for (int i = 0; i < dim; i++) {
-                    if (i == 1) {
-                        cuDeviceGetAttribute(array, CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Y, device);
-                        grids[1] = array[0];
-                    } else if (i == 2) {
-                        cuDeviceGetAttribute(array, CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Z, device);
-                        grids[2] = array[0];
-                    }
-                    if (blocks[i] < tam.get(i)) {
-                        long total = (long) blocks[i] * (long) grids[i];
+                        if (dim >= 1) {
+                            for (int i = 0; i < dim; i++) {
+                                if (i == 1) {
+                                    cuDeviceGetAttribute(array, CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Y, device);
+                                    grids[1] = array[0];
+                                } else if (i == 2) {
+                                    cuDeviceGetAttribute(array, CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Z, device);
+                                    grids[2] = array[0];
+                                }
+                                if (blocks[i] < tam.get(i)) {
+                                    long total = (long) blocks[i] * (long) grids[i];
 //                        System.out.println("blocks:" + blocks[i] + " " + tam.get(i) + " " + grids[i] + " " + total + " = " + (total > tam.get(i)));
-                        if (total > tam.get(i)) {
-                            grids[i] = (int) (tam.get(i) / blocks[i]) + 1;
+                                    if (total > tam.get(i)) {
+                                        grids[i] = (int) (tam.get(i) / blocks[i]) + 1;
 //                            System.out.println("Dentro:" + grids[i]);
+                                    } else {
+                                        right = true;
+                                    }
+                                } else {
+                                    blocks[i] = tam.get(i).intValue();
+                                    grids[i] = 1;
+                                }
+                            }
+                            right = !right;
+                        } else {
+                            grids[0] = 1;
+                            blocks[0] = 1;
                         }
                     } else {
-                        blocks[i] = tam.get(i).intValue();
-                        grids[i] = 1;
+                        throw new DataSizeException();
                     }
                 }
-            } else {
-                grids[0] = 1;
-                blocks[0] = 1;
             }
         } else {
             blocks = threadsPerBlock;
@@ -609,9 +631,10 @@ public class JSeriesCUDA extends GPU {
         this.pathNvcc = pathNvcc;
     }
 
-    public int getMaxThreadsPerBlock(CUdevice device, int registerPerThread, int sharedMemoryPerBlock) {
+    public List<Occupancy> getMaxThreadsPerBlock(CUdevice device, int registerPerThread, int sharedMemoryPerBlock) {
 
         int threadPerBlock;
+        List<Occupancy> occupancies = new ArrayList<>();
 
         ComputeCapability compute;
 
@@ -727,6 +750,12 @@ public class JSeriesCUDA extends GPU {
                     choosenThread = threadPerBlock;
                 }
 
+//                System.out.println(indexOccupancy + " " + threadPerBlock);
+                if (indexOccupancy > 0) {
+//                    System.out.println("Add:");
+                    occupancies.add(new Occupancy(indexOccupancy, threadPerBlock));
+                }
+
 //                if (threadPerBlock == 704) {
 //                    System.out.println("warpsBlocksPerSM:" + warpsBlocksPerSM);
 //                    System.out.println("registerBlocksPerSM:" + registerBlocksPerSM);
@@ -740,10 +769,11 @@ public class JSeriesCUDA extends GPU {
             }
 //            System.out.println("Ocupado:" + bigIndexOccupancy);
 
-            return choosenThread;
-        } else {
-            return 192;
+            Collections.sort(occupancies);
+            Collections.reverse(occupancies);
+            return occupancies;
         }
+        return null;
     }
 
     private static int ceiling(int valor, int teto) {
