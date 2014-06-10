@@ -207,8 +207,6 @@ public class JSeriesCUDA extends GPU {
         int maxThreadsPerBlock = 192;
 
         if (!isManual()) {
-            cuDeviceGetAttribute(array, CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X, device);
-            grids[0] = array[0];
 
             double[] proporcao = new double[dim - 1];
             List<Integer> ordem = new ArrayList<Integer>();
@@ -304,7 +302,10 @@ public class JSeriesCUDA extends GPU {
 //            System.out.println("BlockX: " + blocks[0] + " BlockY: " + blocks[1] + " BlockZ: " + blocks[2]);
                         if (dim >= 1) {
                             for (int i = 0; i < dim; i++) {
-                                if (i == 1) {
+                                if (i == 0) {
+                                    cuDeviceGetAttribute(array, CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X, device);
+                                    grids[0] = array[0];
+                                } else if (i == 1) {
                                     cuDeviceGetAttribute(array, CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Y, device);
                                     grids[1] = array[0];
                                 } else if (i == 2) {
