@@ -329,7 +329,7 @@ public class JSeriesCUDA extends GPU {
         if (print) {
             System.out.println("Dim:" + dim);
             System.out.println("GridX: " + grids[0] + " GridY: " + grids[1] + " GridZ: " + grids[2]);
-            System.out.println("Tam: " + tam);
+            System.out.println("Tam: " + tam + " Threads:" + (grids[0] * blocks[0]));
             System.out.println("BlockX: " + blocks[0] + " BlockY: " + blocks[1] + " BlockZ: " + blocks[2]);
             System.out.println("ThreadsPerBlock: " + maxThreadsPerBlock);
         }
@@ -350,7 +350,7 @@ public class JSeriesCUDA extends GPU {
                 blocks[0], blocks[1], blocks[2], // Block dimension
                 0, null, // Shared memory size and stream
                 kernelParameters, null // Kernel- and extra parameters
-        );
+                );
 
         cuCtxSynchronize();
 
