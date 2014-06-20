@@ -240,7 +240,7 @@ public class JSeriesCUDA extends GPU {
                         maxThreadsPerBlock = occ.getThreadsPerBlock();
 
                         if (print) {
-                            System.out.println("Occupancy:" + occ.getRatioOccupancy() + "MaxThreadsPerBlock: " + maxThreadsPerBlock + " Reg: " + registers + " Shared Memory: " + sharedMemory);
+                            System.out.println("Occupancy:" + occ.getRatioOccupancy() + " MaxThreadsPerBlock: " + maxThreadsPerBlock + " Reg: " + registers + " Shared Memory: " + sharedMemory);
                         }
 
                         switch (dim) {
@@ -652,7 +652,9 @@ public class JSeriesCUDA extends GPU {
             String[] vet = compileOptions.split("-arch=sm_", -2);
             String comp = vet[1].replaceAll("[ ]+", "");
             vet = comp.split("|");
-            compute = gpuData.get(vet[1] + "." + vet[2]);
+//            System.out.println(comp);
+//            System.out.println(vet);
+            compute = gpuData.get(vet[0] + "." + vet[1]);
         } else {
             // Obtain the compute capability
             int majorArray[] = {0};
