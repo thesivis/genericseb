@@ -94,10 +94,7 @@ public class JSeriesCUDA extends GPU {
 //        registers = 24;
 //        sharedMemory = 200;
         // Create the PTX file by calling the NVCC
-        String ptxFileName = preparePtxFile(arquivo);
-
-
-
+        String ptxFileName = preparePtxFile(arquivo, device);
 
 //        System.exit(1);
         // Load the ptx file.
@@ -373,7 +370,7 @@ public class JSeriesCUDA extends GPU {
                 blocks[0], blocks[1], blocks[2], // Block dimension
                 0, null, // Shared memory size and stream
                 kernelParameters, null // Kernel- and extra parameters
-                );
+        );
 
         cuCtxSynchronize();
 
@@ -446,7 +443,7 @@ public class JSeriesCUDA extends GPU {
         cuda.execute(parametros, arquivo, metodo);
     }
 
-    private String preparePtxFile(String cuFileName) throws IOException {
+    private String preparePtxFile(String cuFileName, CUdevice device) throws IOException {
         int endIndex = cuFileName.lastIndexOf('.');
         if (endIndex == -1) {
             endIndex = cuFileName.length() - 1;
@@ -457,6 +454,18 @@ public class JSeriesCUDA extends GPU {
         if (!cuFile.exists()) {
             throw new IOException("Input file not found: " + cuFileName);
         }
+
+        if (!(compileOptions != null && compileOptions.contains("-arch=sm_"))) {
+            // Obtain the compute capability
+            int majorArray[] = {0};
+            int minorArray[] = {0};
+            cuDeviceComputeCapability(majorArray, minorArray, device);
+            int major = majorArray[0];
+            int minor = minorArray[0];
+
+            compileOptions = compileOptions + " -arch=sm_" + major + minor;
+        }
+
         String modelString = "-m" + System.getProperty("sun.arch.data.model");
         String command = pathNvcc + "nvcc " + modelString + compileOptions + " -ptx " + cuFile.getPath() + " -o " + ptxFileName;
 
