@@ -402,9 +402,9 @@ public class GenericSEB {
         source.append("import br.ufmt.genericseb.Constants;\n");
         source.append("import java.util.HashMap;\n");
         source.append("import java.util.Map;\n");
-        source.append("import br.ufmt.jseriesgpu.ParameterGPU;\n");
+        source.append("import br.ufmt.jedigpu.ParameterGPU;\n");
         source.append("import java.util.ArrayList;\n");
-        source.append("import br.ufmt.jseriesgpu.JSeriesCUDA;\n");
+        source.append("import br.ufmt.jedigpu.JSeriesCUDA;\n");
         source.append("import java.io.File;\n");
         source.append("import java.io.IOException;\n");
         source.append("import java.util.logging.Level;\n");
@@ -923,9 +923,9 @@ public class GenericSEB {
         source.append("import br.ufmt.genericseb.Constants;\n");
         source.append("import java.util.HashMap;\n");
         source.append("import java.util.Map;\n");
-        source.append("import br.ufmt.jseriesgpu.ParameterGPU;\n");
+        source.append("import br.ufmt.jedigpu.ParameterGPU;\n");
         source.append("import java.util.ArrayList;\n");
-        source.append("import br.ufmt.jseriesgpu.JSeriesCL;\n");
+        source.append("import br.ufmt.jedigpu.JSeriesCL;\n");
         source.append("import java.io.File;\n");
         source.append("import java.io.IOException;\n");
         source.append("import java.util.logging.Level;\n");
