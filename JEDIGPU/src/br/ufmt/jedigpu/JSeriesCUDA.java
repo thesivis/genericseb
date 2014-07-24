@@ -245,41 +245,44 @@ public class JSeriesCUDA extends GPU {
 
                         switch (dim) {
                             case 3:
-                                double a = proporcao[0];
-                                double b = proporcao[1];
+                                int x = warpSize;
+                                int y = 1;
+                                int z = 1;
 
-                                int x = (int) Math.cbrt(maxThreadsPerBlock * a * b) + 1;
-                                int y = (int) (x / a);
-                                int z = (int) (x / b);
+                                int factoration = maxThreadsPerBlock / warpSize;
 
-                                if (y == 0) {
-                                    y = 1;
-                                }
-                                if (z == 0) {
-                                    z = 1;
-                                }
-
-                                int total = x * y * z;
-                                while (x > 1 && total > maxThreadsPerBlock) {
-                                    x = x - 1;
-                                    y = (int) (x / a);
-                                    z = (int) (x / b);
-
-                                    if (y == 0) {
-                                        y = 1;
+                                int middle;
+                                int div;
+                                List<Integer> numbers = new ArrayList<>();
+                                while (factoration > 1) {
+                                    middle = factoration / 2;
+                                    div = 2;
+                                    while (factoration % div != 0 && div < middle) {
+                                        div++;
                                     }
-                                    if (z == 0) {
-                                        z = 1;
+                                    if (factoration % div == 0) {
+                                        numbers.add(div);
+                                        factoration = factoration / div;
+                                    } else {
+                                        numbers.add(factoration);
+                                        factoration = factoration / factoration;
                                     }
-
-                                    total = x * y * z;
+                                }
+                                numbers.add(1);
+                                middle = numbers.size() / 2;
+                                for (int i = 0; i < middle; i++) {
+                                    y = y * numbers.get(i);
+                                }
+                                for (int i = middle; i < numbers.size(); i++) {
+                                    z = z * numbers.get(i);
+                                }
+                                if (z > y) {
+                                    int a = z;
+                                    z = y;
+                                    y = a;
                                 }
 
-                                while (x > 1 && ((x + 1) * y * z) <= maxThreadsPerBlock) {
-                                    x = x + 1;
-                                }
-
-                                blocks[ordem.get(0)] = x;
+                                blocks[ordem.get(0)] = warpSize;
                                 blocks[ordem.get(1)] = y;
                                 blocks[ordem.get(2)] = z;
 
