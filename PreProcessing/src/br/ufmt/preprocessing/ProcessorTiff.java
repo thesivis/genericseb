@@ -63,7 +63,7 @@ public class ProcessorTiff {
 
             System.out.println("Total:" + totalPixels);
             System.out.println("Size:" + size);
-            float[][] pixel = new float[bands][height * width];
+            short[][] pixel = new short[bands][height * width];
             System.out.println("Alocado");
 
             List<VariableValue> parameters = new ArrayList<>();
@@ -184,14 +184,14 @@ public class ProcessorTiff {
 //                System.out.println("Resp:"+resp);
                 vet = datas.get(resp);
                 if (!resp.equals("coef")) {
-
                     pathTiff = parent + resp + ".tif";
-
                     novo = driver.Create(pathTiff, width, height, 1, gdalconstConstants.GDT_Float32);
                     novo.SetProjection(projecao);
                     bandaNovo = novo.GetRasterBand(1);
                     bandaNovo.WriteRaster(0, 0, width, height, vet);
                     bandaNovo.SetNoDataValue(0);
+                    bandaNovo = null;
+                    novo = null;
 
                     ret.add(new DataFile(resp, new File(pathTiff)));
 //                    System.out.println("salvo");
