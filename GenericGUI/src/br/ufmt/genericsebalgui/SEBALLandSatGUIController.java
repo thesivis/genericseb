@@ -42,7 +42,7 @@ import javafx.scene.control.Label;
  * @author raphael
  */
 public class SEBALLandSatGUIController extends GenericController {
-    
+
     @FXML
     protected Label nomeArquivoLabel;
 
@@ -53,6 +53,7 @@ public class SEBALLandSatGUIController extends GenericController {
 
     @Override
     protected void setTask() {
+//        progressBar.setVisible(false);
         task = new Task() {
             @Override
             protected Object call() throws Exception {
@@ -87,9 +88,9 @@ public class SEBALLandSatGUIController extends GenericController {
                         variables.put(object.getNome(), object.getValor());
                     }
 
-
                     File tiff = file;
                     if (tiff.exists() && tiff.getName().endsWith(".tif")) {
+                        long time = System.currentTimeMillis();
 
 //                SeekableStream s = null;
                         try {
@@ -158,6 +159,8 @@ public class SEBALLandSatGUIController extends GenericController {
                             Logger.getLogger(LandSat.class.getName()).log(Level.SEVERE, null, ex);
                         }
 
+                        time = System.currentTimeMillis() - time;
+                        System.out.println("Tempo:" + time);
                     } else {
                         throw new TiffNotFoundException();
                     }
@@ -178,7 +181,7 @@ public class SEBALLandSatGUIController extends GenericController {
 
     @Override
     protected void inicializated() {
-        
+
     }
 
     @Override
@@ -240,7 +243,7 @@ public class SEBALLandSatGUIController extends GenericController {
             Logger.getLogger(SEBALLandSatGUIController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     @Override
     protected void clear() {
         nomeArquivoLabel.setText("");

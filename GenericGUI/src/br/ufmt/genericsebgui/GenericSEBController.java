@@ -10,39 +10,20 @@ import br.ufmt.genericlexerseb.LanguageType;
 import br.ufmt.genericseb.GenericSEB;
 import br.ufmt.genericseb.VariableValue;
 import br.ufmt.preprocessing.utils.DataFile;
-import br.ufmt.preprocessing.utils.Utilities;
 import br.ufmt.utils.AlertDialog;
 import br.ufmt.utils.Constante;
 import br.ufmt.utils.EditingCell;
 import br.ufmt.utils.Image;
 import br.ufmt.utils.Names;
-import com.sun.media.imageio.plugins.tiff.TIFFDirectory;
-import com.sun.media.imageio.plugins.tiff.TIFFField;
-import com.sun.media.jai.codec.FileSeekableStream;
-import com.sun.media.jai.codec.ImageCodec;
-import com.sun.media.jai.codec.ImageDecoder;
-import com.sun.media.jai.codec.ImageEncoder;
-import com.sun.media.jai.codec.SeekableStream;
-import com.sun.media.jai.codec.TIFFDecodeParam;
-import com.sun.media.jai.codec.TIFFEncodeParam;
-import java.awt.Point;
-import java.awt.image.BandedSampleModel;
-import java.awt.image.ColorModel;
-import java.awt.image.DataBuffer;
-import java.awt.image.DataBufferFloat;
-import java.awt.image.Raster;
-import java.awt.image.WritableRaster;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,12 +39,11 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.FileChooser;
 import javafx.util.Callback;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.metadata.IIOMetadata;
-import javax.imageio.stream.FileImageInputStream;
-import javax.imageio.stream.ImageInputStream;
-import sun.awt.image.SunWritableRaster;
+import org.gdal.gdal.Band;
+import org.gdal.gdal.Dataset;
+import org.gdal.gdal.Driver;
+import org.gdal.gdal.gdal;
+import org.gdal.gdalconst.gdalconstConstants;
 
 /**
  * FXML Controller class
@@ -72,15 +52,19 @@ import sun.awt.image.SunWritableRaster;
  */
 public class GenericSEBController extends GenericController {
 
-    
     @FXML
     private TableView<Image> filesTable;
     @FXML
     private TableView<Constante> calibrationTable;
+    private Driver driver;
 
     public GenericSEBController() {
         extensions = new String[]{"*.tiff", "*.tif"};
         extensionsConf = new String[]{"*.seb"};
+        gdal.AllRegister();
+
+        driver = gdal.GetDriverByName("GTiff");
+        driver.Register();
     }
 
     @FXML
@@ -91,58 +75,51 @@ public class GenericSEBController extends GenericController {
         fileChooser.setTitle(bundle.getString("file.chooser.title"));
         file = fileChooser.showOpenDialog(Main.screen);
         if (file != null) {
-            SeekableStream s = null;
             int tam;
-            try {
-                boolean add = true;
-                s = new FileSeekableStream(file);
-                TIFFDecodeParam param = null;
-                ImageDecoder dec = ImageCodec.createImageDecoder("tiff", s, param);
-                int bands;
-                Raster raster = dec.decodeAsRaster(0);
-                bands = raster.getNumBands();
-                tam = raster.getWidth() * raster.getHeight();
-                System.out.println("Add W:" + raster.getWidth() + " H:" + raster.getHeight());
-                if (filesTable.getItems().size() > 0) {
-                    Image image;
-                    SeekableStream compare = null;
-                    ImageDecoder decCompare;
-                    Raster rasterCompare;
-                    int tamCompare;
-                    for (int i = 0; i < filesTable.getItems().size(); i++) {
-                        image = filesTable.getItems().get(i);
-                        compare = new FileSeekableStream(image.getFile());
-                        decCompare = ImageCodec.createImageDecoder("tiff", compare, param);
-                        rasterCompare = decCompare.decodeAsRaster(0);
-                        tamCompare = rasterCompare.getWidth() * rasterCompare.getHeight();
-                        System.out.println("I:" + (i + 1) + " W:" + rasterCompare.getWidth() + " H:" + rasterCompare.getHeight());
-                        if (tamCompare != tam) {
-                            add = false;
-                            break;
-                        }
+
+            boolean add = true;
+
+            Dataset entrada = gdal.Open(file.getPath(), gdalconstConstants.GA_ReadOnly);
+
+            int bands = entrada.GetRasterCount();
+            int height = entrada.GetRasterYSize();
+            int width = entrada.GetRasterXSize();
+
+            tam = height * width;
+            System.out.println("Add W:" + width + " H:" + height);
+            if (filesTable.getItems().size() > 0) {
+                Image image;
+                int tamCompare;
+                Dataset rasterCompare;
+                for (int i = 0; i < filesTable.getItems().size(); i++) {
+                    image = filesTable.getItems().get(i);
+                    rasterCompare = gdal.Open(image.getFile().getPath(), gdalconstConstants.GA_ReadOnly);
+                    tamCompare = rasterCompare.GetRasterYSize() * rasterCompare.GetRasterXSize();
+                    System.out.println("I:" + (i + 1) + " W:" + rasterCompare.GetRasterXSize() + " H:" + rasterCompare.GetRasterYSize());
+                    if (tamCompare != tam) {
+                        add = false;
+                        break;
                     }
                 }
+            }
 
-                if (add) {
-                    if (bands > 1) {
-                        for (int i = 0; i < bands; i++) {
-                            filesTable.getItems().add(new Image(file.getName(), "pixel" + (i + 1), file));
-                        }
-                    } else {
-                        String vet[] = file.getName().split("\\.");
-                        StringBuilder name = new StringBuilder(vet[0]);
-                        for (int i = 1; i < vet.length - 1; i++) {
-                            name.append(vet[i]);
-                        }
-                        filesTable.getItems().add(new Image(file.getName(), name.toString(), file));
+            if (add) {
+                if (bands > 1) {
+                    for (int i = 0; i < bands; i++) {
+                        filesTable.getItems().add(new Image(file.getName(), "pixel" + (i + 1), file));
                     }
                 } else {
-                    new AlertDialog(Main.screen, bundle.getString("error.size") + " X:" + raster.getWidth() + " Y:" + raster.getHeight()).showAndWait();
+                    String vet[] = file.getName().split("\\.");
+                    StringBuilder name = new StringBuilder(vet[0]);
+                    for (int i = 1; i < vet.length - 1; i++) {
+                        name.append(vet[i]);
+                    }
+                    filesTable.getItems().add(new Image(file.getName(), name.toString(), file));
                 }
-
-            } catch (IOException ex) {
-                Logger.getLogger(GenericSEBController.class.getName()).log(Level.SEVERE, null, ex);
+            } else {
+                new AlertDialog(Main.screen, bundle.getString("error.size") + " X:" + width + " Y:" + height).showAndWait();
             }
+
         }
 
     }
@@ -224,10 +201,6 @@ public class GenericSEBController extends GenericController {
                     try {
 
                         Image image = null;
-                        TIFFDecodeParam param = null;
-                        SeekableStream stream = null;
-                        ImageDecoder decoder = null;
-                        Raster raster = null;
                         int size = 0;
                         List<VariableValue> parameters = new ArrayList<>();
                         Map<String, Integer> files = new HashMap<>();
@@ -237,27 +210,24 @@ public class GenericSEBController extends GenericController {
                         int idx;
                         int l;
 
+                        Dataset raster = null;
+
                         for (int i = 0; i < filesTable.getItems().size(); i++) {
                             image = filesTable.getItems().get(i);
                             if (!files.containsKey(image.getFile().getName())) {
                                 files.put(image.getFile().getName(), 0);
                             }
-                            stream = new FileSeekableStream(image.getFile());
-                            decoder = ImageCodec.createImageDecoder("tiff", stream, param);
-                            raster = decoder.decodeAsRaster(0);
+
+                            raster = gdal.Open(image.getFile().getPath(), gdalconstConstants.GA_ReadOnly);
                             if (size == 0) {
-                                size = raster.getWidth() * raster.getHeight();
+                                size = raster.GetRasterYSize() * raster.GetRasterXSize();
                             }
                             data = new float[size];
+
                             idx = 0;
                             l = files.get(image.getFile().getName());
-                            for (int j = 0; j < raster.getWidth(); j++) {
-                                for (int k = 0; k < raster.getHeight(); k++) {
-                                    value = raster.getPixel(j, k, value);
-                                    data[idx] = value[l];
-                                    idx++;
-                                }
-                            }
+                            Band banda = raster.GetRasterBand((l + 1));
+                            banda.ReadRaster(0, 0, raster.GetRasterXSize(), raster.GetRasterYSize(), data);
                             files.put(image.getFile().getName(), l + 1);
                             parameters.add(new VariableValue(image.getValor(), data));
                         }
@@ -295,23 +265,7 @@ public class GenericSEBController extends GenericController {
                         File dir = new File(parent);
                         dir.mkdirs();
 
-                        //GETTING CONFIGURATION OF TIFF
-                        int k = 0;
-                        ColorModel model = decoder.decodeAsRenderedImage().getColorModel();
-                        Iterator readersIterator = ImageIO.getImageReadersByFormatName("tif");
-                        ImageReader imageReader = (ImageReader) readersIterator.next();
-                        ImageInputStream imageInputStream = new FileImageInputStream(tiff);
-                        imageReader.setInput(imageInputStream, false, true);
-                        IIOMetadata imageMetaData = imageReader.getImageMetadata(k);
-                        TIFFDirectory ifd = TIFFDirectory.createFromMetadata(imageMetaData);
-                        /* Create a Array of TIFFField*/
-                        TIFFField[] allTiffFields = ifd.getTIFFFields();
-
-                        int bands = raster.getNumBands();
-                        int width = raster.getWidth();
-                        int height = raster.getHeight();
-
-                        size = width * height;
+                        int bands = filesTable.getItems().size();
                         int totalPixels = size * bands;
                         int total = totalPixels;
 
@@ -359,7 +313,7 @@ public class GenericSEBController extends GenericController {
                                             }
                                         }
                                         total = totalPixels;
-                                        execute(tiff, raster, model, imageReader, allTiffFields, ret, header.toString(), without, exec, parameters, constants, constVetor, constMatrix);
+                                        execute(tiff, raster, ret, header.toString(), without, exec, parameters, constants, constVetor, constMatrix);
                                         executed = true;
                                     }
                                 } else {
@@ -378,7 +332,7 @@ public class GenericSEBController extends GenericController {
                         }
 
                         if (!executed) {
-                            execute(tiff, raster, model, imageReader, allTiffFields, ret, header.toString(), without, exec, parameters, constants, constVetor, constMatrix);
+                            execute(tiff, raster, ret, header.toString(), without, exec, parameters, constants, constVetor, constMatrix);
                         }
 
                     } catch (Exception ex) {
@@ -395,7 +349,7 @@ public class GenericSEBController extends GenericController {
         };
     }
 
-    private void execute(File tiff, Raster raster, ColorModel model, ImageReader imageReader, TIFFField[] allTiffFields, List<DataFile> ret, String header, StringBuilder without, StringBuilder exec, List<VariableValue> parameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) {
+    private void execute(File tiff, Dataset raster, List<DataFile> ret, String header, StringBuilder without, StringBuilder exec, List<VariableValue> parameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) {
         try {
             System.out.println("Executing:" + exec.toString());
 //            System.out.println("Whito:" + without.toString());
@@ -408,13 +362,6 @@ public class GenericSEBController extends GenericController {
             exec.append(without.toString());
 
             System.out.println("Executed");
-            FileOutputStream fos;
-            WritableRaster rasterResp;
-
-            BandedSampleModel mppsm;
-            DataBufferFloat dataBuffer;
-            TIFFEncodeParam encParam = null;
-            ImageEncoder enc;
 
             String parent = tiff.getParent() + "/OutputParameters/";
             File dir = new File(parent);
@@ -423,38 +370,25 @@ public class GenericSEBController extends GenericController {
 
             float[] dado;
             int x, y;
-            int width = raster.getWidth();
-            int height = raster.getHeight();
+            int width = raster.GetRasterXSize();
+            int height = raster.GetRasterYSize();
+            String projecao = raster.GetProjection();
             System.out.println("Width:" + width);
             System.out.println("height:" + height);
             float[] vet;
+            Dataset novo;
+            Band bandaNovo;
 
             for (String resp : datas.keySet()) {
                 vet = datas.get(resp);
                 if (!resp.equals("coef")) {
-
                     pathTiff = parent + resp + ".tif";
-                    mppsm = new BandedSampleModel(DataBuffer.TYPE_FLOAT, raster.getWidth(), raster.getHeight(), 1);
-                    dataBuffer = new DataBufferFloat(raster.getWidth() * raster.getHeight());
-                    rasterResp = new SunWritableRaster(mppsm, dataBuffer, new Point(0, 0));
-                    fos = new FileOutputStream(pathTiff);
-
-                    for (int j = 0; j < vet.length; j++) {
-                        dado = new float[]{(float) vet[j]};
-                        x = j / height;
-                        y = j - x * height;
-                        try {
-                            rasterResp.setPixel(x, y, dado);
-                        } catch (java.lang.ArrayIndexOutOfBoundsException ex) {
-                            System.out.println("i:" + j + " X:" + x + " Y: " + y);
-                            System.exit(1);
-                        }
-                    }
-
-                    enc = ImageCodec.createImageEncoder("tiff", fos, encParam);
-                    enc.encode(rasterResp, model);
-                    fos.close();
-                    Utilities.saveTiff(pathTiff, imageReader, allTiffFields, rasterResp);
+                    novo = driver.Create(pathTiff, width, height, 1, gdalconstConstants.GDT_Float32);
+                    novo.SetProjection(projecao);
+                    bandaNovo = novo.GetRasterBand(1);
+                    bandaNovo.WriteRaster(0, 0, width, height, vet);
+                    bandaNovo.SetNoDataValue(0);
+                    
                     ret.add(new DataFile(resp, new File(pathTiff)));
                 } else {
                     pathTiff = parent + "A.dat";
@@ -485,21 +419,21 @@ public class GenericSEBController extends GenericController {
         calibrationTable.getItems().clear();
         calibrationTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
-        Callback<TableColumn, TableCell> cellFactoryString =
-                new Callback<TableColumn, TableCell>() {
-            @Override
-            public TableCell call(TableColumn p) {
-                return new EditingCell(bundle);
-            }
-        };
+        Callback<TableColumn, TableCell> cellFactoryString
+                = new Callback<TableColumn, TableCell>() {
+                    @Override
+                    public TableCell call(TableColumn p) {
+                        return new EditingCell(bundle);
+                    }
+                };
 
-        Callback<TableColumn, TableCell> cellFactoryDouble =
-                new Callback<TableColumn, TableCell>() {
-            @Override
-            public TableCell call(TableColumn p) {
-                return new EditingCell(bundle, EditingCell.DOUBLE);
-            }
-        };
+        Callback<TableColumn, TableCell> cellFactoryDouble
+                = new Callback<TableColumn, TableCell>() {
+                    @Override
+                    public TableCell call(TableColumn p) {
+                        return new EditingCell(bundle, EditingCell.DOUBLE);
+                    }
+                };
 
         TableColumn tc = (TableColumn) filesTable.getColumns().get(0);
         tc.setCellValueFactory(new PropertyValueFactory<Image, String>("valor"));

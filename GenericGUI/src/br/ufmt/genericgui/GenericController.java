@@ -4,6 +4,7 @@
  */
 package br.ufmt.genericgui;
 
+import br.ufmt.preprocessing.ProcessorTiff;
 import br.ufmt.utils.Constante;
 import br.ufmt.utils.EditingCell;
 import java.io.File;
@@ -32,7 +33,7 @@ import javafx.util.Callback;
  */
 public abstract class GenericController implements Initializable {
 
-    protected final int MAX = 420000000;
+    protected final int MAX = ProcessorTiff.MAX;
     protected ResourceBundle bundle;
     @FXML
     protected TableView<Constante> constanteTable;

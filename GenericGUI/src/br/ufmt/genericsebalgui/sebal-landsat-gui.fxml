@@ -63,7 +63,7 @@
         </Tab>
       </tabs>
     </TabPane>
-    <ProgressBar fx:id="progressBar" disable="false" layoutX="292.0" layoutY="10.0" prefWidth="200.0" progress="-1.0" visible="false" />
+    <ProgressBar fx:id="progressBar" disable="false" layoutX="292.0" layoutY="10.0" prefWidth="200.0" progress="-1.0" visible="true" />
     <Label layoutX="14.0" layoutY="6.0" prefWidth="237.0" text="%title.landsat5.sebal" />
   </children>
   <stylesheets>

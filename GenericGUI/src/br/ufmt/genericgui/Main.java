@@ -17,7 +17,9 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 /**
- *
+ * JAVA 7 java -XX:MaxPermSize=3072m  -Xms512m  -Xmx3072m -jar GenericGUI.jar 
+ * JAVA 8 java -XX:MaxMetaspaceSize=3072m  -Xms512m  -Xmx3072m -jar GenericGUI.jar 
+ * 
  * @author raphael
  */
 public class Main extends Application {
