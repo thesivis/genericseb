@@ -251,10 +251,15 @@ public class JSeriesCUDA extends GPU {
                         }
 
                         int[] b = calculateThreadsPerBlock(maxThreadsPerBlock, dim);
+//                        System.out.println(Arrays.toString(b));
 
-                        blocks[ordem.get(0)] = b[0];
-                        blocks[ordem.get(1)] = b[1];
-                        blocks[ordem.get(2)] = b[2];
+                        if (ordem.isEmpty() || ordem.size() == 2) {
+                            blocks = b;
+                        } else {
+                            blocks[ordem.get(0)] = b[0];
+                            blocks[ordem.get(1)] = b[1];
+                            blocks[ordem.get(2)] = b[2];
+                        }
 
 //            blocks[0] = 769;
 //            blocks[1] = 1;
@@ -264,7 +269,7 @@ public class JSeriesCUDA extends GPU {
                         for (int i = 0; i < tam.size(); i++) {
                             sizes[i] = tam.get(i);
                         }
-                        grids = calculateBlocksPerGrid(threadsPerBlock, sizes, dim);
+                        grids = calculateBlocksPerGrid(blocks, sizes, dim);
                         for (int i = 0; i < grids.length; i++) {
                             if (grids[i] == -1) {
                                 right = true;
@@ -747,7 +752,7 @@ public class JSeriesCUDA extends GPU {
                 }
                 if (threadsPerBlock[i] < sizes[i]) {
                     long total = (long) threadsPerBlock[i] * (long) grids[i];
-//                        System.out.println("blocks:" + blocks[i] + " " + tam.get(i) + " " + grids[i] + " " + total + " = " + (total > tam.get(i)));
+//                        System.out.println("blocks:" + threadsPerBlock[i] + " " + sizes[i] + " " + grids[i] + " " + total + " = " + (total > sizes[i]));
                     if (total > sizes[i]) {
                         int mod = ((int) (sizes[i] % (threadsPerBlock[i])));
                         grids[i] = (int) (sizes[i] / threadsPerBlock[i]) + (mod == 0 ? 0 : 1);
@@ -769,8 +774,8 @@ public class JSeriesCUDA extends GPU {
 
     public void setManual(String code, Long[] sizes) throws IOException {
         int max = getMaxThreadPerBlock(code);
-        int[] threadsPerBlock = calculateThreadsPerBlock(max, 2);
-        int[] blocksPerGrid = calculateBlocksPerGrid(threadsPerBlock, sizes, max);
+        int[] threadsPerBlock = calculateThreadsPerBlock(max, sizes.length);
+        int[] blocksPerGrid = calculateBlocksPerGrid(threadsPerBlock, sizes, sizes.length);
         setManual(true);
         setThreadsPerBlock(threadsPerBlock);
         setBlocksPerGrid(blocksPerGrid);
