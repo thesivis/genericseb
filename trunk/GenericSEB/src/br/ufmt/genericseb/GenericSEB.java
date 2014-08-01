@@ -7,7 +7,6 @@ package br.ufmt.genericseb;
 import br.ufmt.genericlexerseb.ExpressionParser;
 import br.ufmt.genericlexerseb.GenericLexerSEB;
 import br.ufmt.genericlexerseb.LanguageType;
-import br.ufmt.genericlexerseb.Maths;
 import br.ufmt.genericlexerseb.Structure;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -1804,12 +1803,12 @@ public class GenericSEB {
             }
 
             source.append(
-                    "            if (index > indexMax) {\n"
+                    "            if (index >= indexMax) {\n"
                     + "                if (" + ts + " < tMin && " + ts + " > -300) {\n"
                     + "                    tMin = " + ts + ";\n"
                     + "                    indexMax = index;\n"
                     + "                }\n"
-                    + "            } else if (index < indexMin) {\n"
+                    + "            } else if (index <= indexMin) {\n"
                     + "                if (" + ts + " > tMax && " + ts + " < 10000) {\n"
                     + "                    tMax = " + ts + ";\n"
                     + "                    indexMin = index;\n"
