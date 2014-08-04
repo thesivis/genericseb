@@ -1804,12 +1804,12 @@ public class GenericSEB {
 
             source.append(
                     "            if (index >= indexMax) {\n"
-                    + "                if (" + ts + " < tMin && " + ts + " > -300) {\n"
+                    + "                if (" + ts + " <= tMin && " + ts + " > -300) {\n"
                     + "                    tMin = " + ts + ";\n"
                     + "                    indexMax = index;\n"
                     + "                }\n"
                     + "            } else if (index <= indexMin) {\n"
-                    + "                if (" + ts + " > tMax && " + ts + " < 10000) {\n"
+                    + "                if (" + ts + " >= tMax && " + ts + " < 10000) {\n"
                     + "                    tMax = " + ts + ";\n"
                     + "                    indexMin = index;\n"
                     + "                    RnHot = " + rn + ";\n"
