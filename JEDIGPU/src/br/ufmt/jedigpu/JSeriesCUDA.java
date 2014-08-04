@@ -305,6 +305,7 @@ public class JSeriesCUDA extends GPU {
             System.out.println("Tam: " + tam + " Threads:" + (grids[0] * blocks[0]));
             System.out.println("BlockX: " + blocks[0] + " BlockY: " + blocks[1] + " BlockZ: " + blocks[2]);
             System.out.println("ThreadsPerBlock: " + maxThreadsPerBlock);
+            System.out.println("Used Shared Memory:"+usedSharedMemory);
         }
 
         if (measure) {
