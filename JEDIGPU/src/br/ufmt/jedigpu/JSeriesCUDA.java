@@ -35,6 +35,7 @@ public class JSeriesCUDA extends GPU {
     private String pathNvcc = "/usr/local/cuda/bin/";
     private int registers;
     private int sharedMemory;
+    private int usedSharedMemory = 0;
     private CUdevice device;
     private static HashMap<String, ComputeCapability> gpuData = new HashMap<String, ComputeCapability>();
 
@@ -320,7 +321,7 @@ public class JSeriesCUDA extends GPU {
         cuLaunchKernel(function,
                 grids[0], grids[1], grids[2], // Grid dimension
                 blocks[0], blocks[1], blocks[2], // Block dimension
-                0, null, // Shared memory size and stream
+                usedSharedMemory, null, // Shared memory size and stream
                 kernelParameters, null // Kernel- and extra parameters
         );
 
@@ -986,6 +987,14 @@ public class JSeriesCUDA extends GPU {
             return occupancies;
         }
         return null;
+    }
+
+    public int getUsedSharedMemory() {
+        return usedSharedMemory;
+    }
+
+    public void setUsedSharedMemory(int usedSharedMemory) {
+        this.usedSharedMemory = usedSharedMemory;
     }
 
     private static int ceiling(int valor, int teto) {
