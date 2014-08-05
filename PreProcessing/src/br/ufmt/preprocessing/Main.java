@@ -55,7 +55,7 @@ public class Main {
         StringBuilder equations = new StringBuilder();
 
         try {
-            BufferedReader bur = new BufferedReader(new FileReader("/home/raphael/Google/GenericGUI/Teste/landsat.prop"));
+            BufferedReader bur = new BufferedReader(new FileReader("/home/raphael/Google/GenericGUI/Teste/index.prop"));
             String linha = bur.readLine();
             while (linha != null) {
                 equations.append(linha).append("\n");
