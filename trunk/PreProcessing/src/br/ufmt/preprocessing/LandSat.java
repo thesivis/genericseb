@@ -63,6 +63,8 @@ public class LandSat {
                     if (bands == 7) {
 
                         Map<String, Float> variables = new HashMap<>();
+                        variables.put("width", (float) width);
+                        variables.put("height", (float) height);
                         variables.put("julianDay", (float) julianDay);
                         variables.put("Z", (float) Z);
                         variables.put("reflectanciaAtmosfera", (float) reflectanciaAtmosfera);
@@ -79,7 +81,6 @@ public class LandSat {
                         variables.put("Rg_24h", (float) Rg_24h);
                         variables.put("Uref", (float) Uref);
                         variables.put("Tao_24h", (float) Tao_24h);
-
 
                         String[] nameParameters = new String[]{"pixel1", "pixel2", "pixel3", "pixel4", "pixel5", "pixel6", "pixel7"};
 
@@ -109,7 +110,7 @@ public class LandSat {
                             linha = bur.readLine();
                         }
 
-                        ProcessorTiff processorTiff = new ProcessorTiff(LanguageType.JAVA);
+                        ProcessorTiff processorTiff = new ProcessorTiff(LanguageType.CUDA);
                         try {
                             ret = processorTiff.execute(header.toString(), body.toString(), pathToOriginalTiff, nameParameters, variables, constVetor, constMatrix);
                         } catch (Exception ex) {
@@ -143,12 +144,12 @@ public class LandSat {
 
     public List<DataFile> lookPixelHotColdLandSat5(String pathToOriginalTiff, int julianDay, float Z, float P, float UR, float Ta, float Uref) {
         float[][] calibration = new float[][]{{-1.52f, 193.0f, 1957.0f},
-            {-2.84f, 365.0f, 1826.0f},
-            {-1.17f, 264.0f, 1554.0f},
-            {-1.51f, 221.0f, 1036.0f},
-            {-0.37f, 30.2f, 215.0f},
-            {1.2378f, 15.303f, 1.0f},
-            {-0.15f, 16.5f, 80.67f}};
+        {-2.84f, 365.0f, 1826.0f},
+        {-1.17f, 264.0f, 1554.0f},
+        {-1.51f, 221.0f, 1036.0f},
+        {-0.37f, 30.2f, 215.0f},
+        {1.2378f, 15.303f, 1.0f},
+        {-0.15f, 16.5f, 80.67f}};
 
         float[] parameterAlbedo = new float[]{0.293f, 0.274f, 0.233f, 0.157f, 0.033f, 0.0f, 0.011f};
         float reflectancaAtmosfera = 0.03f;
@@ -347,7 +348,6 @@ public class LandSat {
 //                                            System.out.println("mSAVI2:" + mSAVI);
 //                                        }
 //                                    }
-
                                     if (tmax < TsVet) {
                                         tmax = TsVet;
                                     }
@@ -400,7 +400,6 @@ public class LandSat {
 //                        System.out.println("THot:" + tMax);
 //                        System.out.println("TCold:" + tMin);
 ////                        System.out.println("mSaviMin:" + mSaviMin);
-
                         float[] coef = new float[2];
 
                         Utilities.calculaAB(coef, RnHot, GHot, Uref, SAVI_hot, tMax, tMin);
