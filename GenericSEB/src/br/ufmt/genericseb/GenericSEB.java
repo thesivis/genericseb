@@ -267,7 +267,32 @@ public class GenericSEB {
 //            if (hasIndex) {
 //                throw new Exception("Index not yet implemented with CUDA");
 //            }
-            source = generateCUDA(forVariables, forEachValue, parameters, constants, constantsVetor, constantsMatrix);
+            String exec = forEachValue;
+            if (hasIndex) {
+                firstRet = new HashMap<>();
+                source = generateCUDA(forVariables, newBodyWithIndex.toString(), parameters, constants, constantsVetor, constantsMatrix);
+                Object instanced = compile(source, "Equation");
+                try {
+                    Method method = instanced.getClass().getDeclaredMethod("execute", classes);
+                    firstRet = (Map<String, float[]>) method.invoke(instanced, pars);
+                    if (indexEnum.equals(IndexEnum.SEBTA)) {
+                        constants.put("a", firstRet.get("coef")[0]);
+                        constants.put("b", firstRet.get("coef")[1]);
+                    }
+                } catch (NoSuchMethodException ex1) {
+                    Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+                } catch (SecurityException ex1) {
+                    Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+                } catch (IllegalAccessException ex1) {
+                    Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+                } catch (IllegalArgumentException ex1) {
+                    Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+                } catch (InvocationTargetException ex1) {
+                    Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+                exec = newBodyWithoutIndex.toString();
+            }
+            source = generateCUDA(forVariables, exec, parameters, constants, constantsVetor, constantsMatrix);
         } else if (language.equals(LanguageType.OPENCL)) {
             if (hasIndex) {
                 throw new Exception("Index not yet implemented with OpenCL");
@@ -467,8 +492,8 @@ public class GenericSEB {
         if (indexEnum != null) {
             if (indexEnum.equals(IndexEnum.SEBTA)) {
                 source.append("        float Uref = ").append(constants.get("Uref")).append("f;\n");
-                source.append("        int width = (int)").append(constants.remove("width")).append("f;\n");
-                source.append("        int height = (int)").append(constants.remove("height")).append("f;\n");
+                source.append("        int width = (int)").append(constants.get("width")).append("f;\n");
+                source.append("        int height = (int)").append(constants.get("height")).append("f;\n");
             }
         }
 
