@@ -39,6 +39,7 @@ public class GenericSEB {
     private List<Equation> equations;
     private Equation index;
     private IndexEnum indexEnum;
+    private static final String[] varsIndexSEBTA = new String[]{"maxTsVet", "minIndexVet", "minTsVet", "maxIndexVet", "rnHotVet", "gHotVet", "saviHotVet"};
 
     public GenericSEB(LanguageType language) {
         this.language = language;
@@ -427,6 +428,7 @@ public class GenericSEB {
         source.append("import java.io.IOException;\n");
         source.append("import java.util.logging.Level;\n");
         source.append("import java.util.logging.Logger;\n");
+        source.append("import br.ufmt.genericseb.GenericSEB;\n");
         source.append("import br.ufmt.genericlexerseb.Maths;\n");
         source.append("import java.util.List;\n\n");
 
@@ -454,7 +456,7 @@ public class GenericSEB {
             }
             pars[size] = value.getData();
             classes[size] = value.getData().getClass();
-            source.append(classes[size].getCanonicalName()).append(string);
+            source.append(classes[size].getCanonicalName()).append(" ").append(string);
             size++;
             if (size < parametersList.size()) {
                 source.append(",");
@@ -464,6 +466,7 @@ public class GenericSEB {
 
         if (indexEnum != null) {
             if (indexEnum.equals(IndexEnum.SEBTA)) {
+                source.append("        float Uref = ").append(constants.get("Uref")).append("f;\n");
                 source.append("        int width = (int)").append(constants.remove("width")).append("f;\n");
                 source.append("        int height = (int)").append(constants.remove("height")).append("f;\n");
             }
@@ -482,7 +485,7 @@ public class GenericSEB {
                 } else {
                     source.append("        int[] N = new int[]{").append(string).append(".length};\n\n");
                 }
-                if (index == null) {
+                if (indexEnum == null) {
                     source.append("        par.add(new ParameterGPU(").append(string).append(",true,false,true));\n");
                 } else {
                     source.append("        par.add(new ParameterGPU(").append(string).append(",true));\n");
@@ -716,10 +719,8 @@ public class GenericSEB {
         }
         if (indexEnum != null) {
             if (indexEnum.equals(IndexEnum.SEBTA)) {
-                String[] varsIndex = new String[]{"maxTsVet", "minIndexVet", "minTsVet", "maxIndexVet", "rnHotVet", "gHotVet", "saviHotVet"};
-
-                for (int i = 0; i < varsIndex.length; i++) {
-                    String string = varsIndex[i];
+                for (int i = 0; i < varsIndexSEBTA.length; i++) {
+                    String string = varsIndexSEBTA[i];
                     source.append("        float[] ").append(string).append(" = new float[width];\n");
                     if (i == 0) {
                         gpuCode.append("\n");
@@ -731,7 +732,7 @@ public class GenericSEB {
 
                     gpuCode.append("        float * ").append(string);
                     gpuCodeBody.append("        float * ").append(string).append(",\n");
-                    if (i + 1 < vet.length) {
+                    if (i + 1 < varsIndexSEBTA.length) {
                         gpuCode.append(",");
                     }
                     gpuCode.append("\n");
@@ -754,6 +755,44 @@ public class GenericSEB {
         source.append("            Logger.getLogger(Equation.class.getName()).log(Level.SEVERE, null, ex);\n");
         source.append("        }\n");
 
+        if (index != null) {
+            if (indexEnum.equals(IndexEnum.SEBTA)) {
+
+                source.append(
+                        "        float maxTs = maxTsVet[0];\n"
+                        + "        float minTs = minTsVet[0];\n"
+                        + "        float maxIndex = maxIndexVet[0];\n"
+                        + "        float minIndex = minIndexVet[0];\n"
+                        + "        float rnHot = rnHotVet[0];\n"
+                        + "        float gHot = gHotVet[0];\n"
+                        + "        float saviHot = saviHotVet[0];\n");
+
+                source.append(
+                        "        for (int i = 1; i < maxTsVet.length; i++) {\n"
+                        + "            if (minIndexVet[i] <= minIndex) {\n"
+                        + "                if (maxTsVet[i] >= maxTs) {\n"
+                        + "                    maxTs = maxTsVet[i];\n"
+                        + "                    minIndex = minIndexVet[i];\n"
+                        + "                    rnHot = rnHotVet[i];\n"
+                        + "                    gHot = gHotVet[i];\n"
+                        + "                    saviHot = saviHotVet[i];\n"
+                        + "                }\n"
+                        + "            }\n"
+                        + "\n"
+                        + "            if (maxIndexVet[i] >= maxIndex) {\n"
+                        + "                if (minTsVet[i] <= minTs) {\n"
+                        + "                    minTs = minTsVet[i];\n"
+                        + "                    maxIndex = maxIndexVet[i];\n"
+                        + "                }\n"
+                        + "            }\n"
+                        + "        }\n");
+
+                source.append("        float[] coef = new float[2];\n"
+                        + "        GenericSEB.calculaAB(coef, rnHot, gHot, Uref, saviHot, maxTs, minTs);\n");
+                source.append("        ret.put(\"coef\",coef);\n\n");
+            }
+        }
+
         source.append("        return ret;\n");
         source.append("    }\n");
         source.append("}\n");
@@ -765,21 +804,45 @@ public class GenericSEB {
         gpuCode.append(cudaVariables.toString());
 
         gpuCodeBody.append("){\n");
-        gpuCodeBody.append("        int size = parameters[0];\n");
+        if (indexEnum != null) {
+            if (indexEnum.equals(IndexEnum.SEBTA)) {
+                gpuCodeBody.append("        int size = parameters[1];\n");
+            }
+        }else{
+            gpuCodeBody.append("        int size = parameters[0];\n");
+        }
         gpuCodeBody.append("        int idx = blockIdx.x*blockDim.x + threadIdx.x;\n");
+        gpuCodeBody.append("        int ind = idx;\n");
         gpuCodeBody.append("        if(idx < size){\n");
 
+        if (indexEnum != null) {
+            if (indexEnum.equals(IndexEnum.SEBTA)) {
+                for (int i = 0; i < varsIndexSEBTA.length; i++) {
+                    String string = varsIndexSEBTA[i];
+                    gpuCodeBody.append("            ").append(string).append("[ind]");
+                    if (string.startsWith("min")) {
+                        gpuCodeBody.append("=99999.0f;\n");
+                    } else {
+                        gpuCodeBody.append("=-99999.0f;\n");
+                    }
+                }
+
+                gpuCodeBody.append("            for(int i=0;i<parameters[2];i++){\n");
+                gpuCodeBody.append("                idx = ind*parameters[2]+i;\n");
+            }
+        }
+
         if (numbers.size() > 0) {
-            gpuCodeBody.append("        if(!(");
+            gpuCodeBody.append("            if(idx < parameters[0] && !(");
             for (int j = 1; j < numbers.size() - 1; j++) {
                 gpuCodeBody.append("pixel").append(numbers.get(0)).append("[idx] == ").append("pixel").append(numbers.get(j)).append("[idx]").append(" && ");
             }
             gpuCodeBody.append("pixel").append(numbers.get(0)).append("[idx] == ").append("pixel").append(numbers.get(numbers.size() - 1)).append("[idx])){\n");
         }
 
-        gpuCodeBody.append("            execute_sub(\n");
+        gpuCodeBody.append("                execute_sub(\n");
         for (String string : parameters.keySet()) {
-            gpuCodeBody.append("                ").append(string).append("[idx],\n");
+            gpuCodeBody.append("                    ").append(string).append("[idx],\n");
         }
 
         String equation;
@@ -798,7 +861,7 @@ public class GenericSEB {
             equation = eq.getTerm() + "=" + eq.getForm();
             ident = "";
             if (eq.getCondition() != null) {
-                gpuCode.append("        if(");
+                gpuCode.append("            if(");
                 String[] condition = eq.getCondition();
                 boolean find;
                 for (int j = 0; j < condition.length; j++) {
@@ -844,7 +907,7 @@ public class GenericSEB {
                         if (eq.getIndex() != null) {
                             equation = equation.replace("rad_espectral", " *banda" + numbers.get(j));
                             if (variablesDeclared.add("banda")) {
-                                gpuCodeBody.append("                (banda").append(numbers.get(j)).append("+idx)");
+                                gpuCodeBody.append("                    (banda").append(numbers.get(j)).append("+idx)");
                                 if (i + 1 < vet.length && j + 1 < numbers.size()) {
                                     gpuCodeBody.append(",");
                                 }
@@ -887,7 +950,7 @@ public class GenericSEB {
                                 gpuCode.append(ident).append("        sumBandas += parameterAlbedo[").append(j).append("]* *bandaRefletida").append(numbers.get(j)).append(";\n");
 
                                 if (variablesDeclared.add("bandaRefletida")) {
-                                    gpuCodeBody.append("                (bandaRefletida").append(numbers.get(j)).append("+idx)");
+                                    gpuCodeBody.append("                    (bandaRefletida").append(numbers.get(j)).append("+idx)");
                                     if (i + 1 < vet.length && j + 1 < numbers.size()) {
                                         gpuCodeBody.append(",");
                                     }
@@ -907,10 +970,10 @@ public class GenericSEB {
                     outEquation = ex.getOutput();
                     if (eq.getIndex() != null) {
                         term = eq.getTerm();
-                        equation = ident + "        *" + term + " = ";
+                        equation = ident + "            *" + term + " = ";
 
                         if (variablesDeclared.add(term)) {
-                            gpuCodeBody.append("                (").append(term).append("+idx)");
+                            gpuCodeBody.append("                    (").append(term).append("+idx)");
                             if (i + 1 < vet.length) {
                                 gpuCodeBody.append(",");
                             }
@@ -918,7 +981,7 @@ public class GenericSEB {
                         }
 
                     } else {
-                        equation = ident + "        " + eq.getTerm() + " = ";
+                        equation = ident + "            " + eq.getTerm() + " = ";
                     }
 
                     for (int j = 0; j < outEquation.length; j++) {
@@ -956,15 +1019,53 @@ public class GenericSEB {
                     break;
             }
             if (eq.getCondition() != null) {
-                gpuCode.append("        }\n\n");
+                gpuCode.append("            }\n\n");
             }
         }
 
-        gpuCodeBody.append("            );\n");
+        if (indexEnum != null) {
+            if (indexEnum.equals(IndexEnum.SEBTA)) {
+                for (int i = 0; i < varsIndexSEBTA.length; i++) {
+                    String string = varsIndexSEBTA[i];
+//                    if (i == 0) {
+//                        gpuCodeBody.append(",");
+//                    }
+                    gpuCodeBody.append("                    (").append(string).append("+ind)");
+                    if (i + 1 < varsIndexSEBTA.length) {
+                        gpuCodeBody.append(",");
+                    }
+                    gpuCodeBody.append("\n");
+                }
+
+                gpuCode.append(
+                        "            if(sebta <= *minIndexVet){\n"
+                        + "                if(Ts >= *maxTsVet){\n"
+                        + "                    *maxTsVet=Ts;\n"
+                        + "                    *minIndexVet=sebta;\n"
+                        + "                    *rnHotVet=Rn;\n"
+                        + "                    *gHotVet=G0;\n"
+                        + "                    *saviHotVet=SAVI;\n"
+                        + "                }\n"
+                        + "            }\n"
+                        + "            if(sebta >= *maxIndexVet){\n"
+                        + "                if(Ts <= *minTsVet){\n"
+                        + "                    *minTsVet=Ts;\n"
+                        + "                    *maxIndexVet=sebta;\n"
+                        + "                }\n"
+                        + "            }\n\n");
+
+            }
+        }
+
+        gpuCodeBody.append("                );\n");
 
         if (numbers.size() > 0) {
-            gpuCodeBody.append("        }\n");
-
+            gpuCodeBody.append("            }\n");
+        }
+        if (indexEnum != null) {
+            if (indexEnum.equals(IndexEnum.SEBTA)) {
+                gpuCodeBody.append("            }\n");
+            }
         }
 
         gpuCodeBody.append("        }\n");
@@ -975,10 +1076,10 @@ public class GenericSEB {
         gpuCode.append(gpuCodeBody.toString());
 
         gpuCode.append("}\n");
-        
 
         System.out.println(gpuCode.toString());
-//        System.out.println(source.toString());
+        System.out.println("------------------------------------------------------------------------------------------------");
+        System.out.println(source.toString());
         try {
             File dir = new File(System.getProperty("user.dir") + "/source");
             dir.mkdirs();
@@ -988,7 +1089,7 @@ public class GenericSEB {
         } catch (FileNotFoundException ex1) {
             Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
         }
-        System.exit(1);
+//        System.exit(1);
         return source.toString();
     }
 
@@ -1885,15 +1986,15 @@ public class GenericSEB {
                 }
 
                 source.append(
-                        "            if (index >= indexMax) {\n"
+                        "            if (sebta >= indexMax) {\n"
                         + "                if (" + ts + " <= tMin && " + ts + " > -300) {\n"
                         + "                    tMin = " + ts + ";\n"
-                        + "                    indexMax = index;\n"
+                        + "                    indexMax = sebta;\n"
                         + "                }\n"
-                        + "            } else if (index <= indexMin) {\n"
+                        + "            } else if (sebta <= indexMin) {\n"
                         + "                if (" + ts + " >= tMax && " + ts + " < 10000) {\n"
                         + "                    tMax = " + ts + ";\n"
-                        + "                    indexMin = index;\n"
+                        + "                    indexMin = sebta;\n"
                         + "                    RnHot = " + rn + ";\n"
                         + "                    SAVI_hot = " + savi + ";\n"
                         + "                    GHot = " + g + ";\n"
