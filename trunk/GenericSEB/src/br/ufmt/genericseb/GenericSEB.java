@@ -38,6 +38,7 @@ public class GenericSEB {
     private Class[] classes;
     private List<Equation> equations;
     private Equation index;
+    private IndexEnum indexEnum;
 
     public GenericSEB(LanguageType language) {
         this.language = language;
@@ -119,7 +120,7 @@ public class GenericSEB {
                 if (verifyIF) {
                     equation.setTerm(vet[0]);
                     equation.setForm(vet[1]);
-                    if (vet[0].equals("index")) {
+                    if (isIndex(vet[0])) {
                         index = equation;
                         equation.setIndex(null);
                     } else {
@@ -142,6 +143,21 @@ public class GenericSEB {
         }
 
         return false;
+    }
+
+    private boolean isIndex(String index) {
+        boolean ret = false;
+        if (index.equals("sebta")) {
+            indexEnum = IndexEnum.SEBTA;
+            ret = true;
+        } else if (index.equals("sebi")) {
+            indexEnum = IndexEnum.SEBI;
+            ret = true;
+        } else if (index.equals("sseb")) {
+            indexEnum = IndexEnum.SSEB;
+            ret = true;
+        }
+        return ret;
     }
 
     public static List<String> getVariables() {
@@ -230,14 +246,14 @@ public class GenericSEB {
                 newBodyWithIndex.append(vets[i]).append("\n");
                 if (vets[i].startsWith("O_")) {
                     newBodyWithoutIndex.append(vets[i].substring(2)).append("\n");
-                } else if (!vet[0].equals("index")) {
+                } else if (!isIndex(vet[0])) {
                     newBodyWithoutIndex.append(vets[i]).append("\n");
                 }
             } else {
                 newBodyWithoutIndex.append(vets[i]).append("\n");
             }
 
-            if (vet[0].equals("index")) {
+            if (isIndex(vet[0])) {
                 hasIndex = true;
             }
         }
@@ -247,9 +263,9 @@ public class GenericSEB {
 //        System.exit(1);
 
         if (language.equals(LanguageType.CUDA)) {
-            if (hasIndex) {
-                throw new Exception("Index not yet implemented with CUDA");
-            }
+//            if (hasIndex) {
+//                throw new Exception("Index not yet implemented with CUDA");
+//            }
             source = generateCUDA(forVariables, forEachValue, parameters, constants, constantsVetor, constantsMatrix);
         } else if (language.equals(LanguageType.OPENCL)) {
             if (hasIndex) {
@@ -265,8 +281,10 @@ public class GenericSEB {
                 try {
                     Method method = instanced.getClass().getDeclaredMethod("execute", classes);
                     firstRet = (Map<String, float[]>) method.invoke(instanced, pars);
-                    constants.put("a", firstRet.get("coef")[0]);
-                    constants.put("b", firstRet.get("coef")[1]);
+                    if (indexEnum.equals(IndexEnum.SEBTA)) {
+                        constants.put("a", firstRet.get("coef")[0]);
+                        constants.put("b", firstRet.get("coef")[1]);
+                    }
                 } catch (NoSuchMethodException ex1) {
                     Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
                 } catch (SecurityException ex1) {
@@ -298,6 +316,7 @@ public class GenericSEB {
             classes = null;
             equations.clear();
             index = null;
+            indexEnum = null;
         } catch (NoSuchMethodException ex1) {
             Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
         } catch (SecurityException ex1) {
@@ -443,14 +462,31 @@ public class GenericSEB {
         }
         source.append("){\n\n");
 
+        if (indexEnum != null) {
+            if (indexEnum.equals(IndexEnum.SEBTA)) {
+                source.append("        int width = (int)").append(constants.remove("width")).append("f;\n");
+                source.append("        int height = (int)").append(constants.remove("height")).append("f;\n");
+            }
+        }
+
         source.append("        Map<String, float[]> ret = new HashMap<>();\n\n");
         source.append("        List<ParameterGPU> par = new ArrayList<ParameterGPU>();\n\n");
 
         boolean first = true;
         for (String string : parameters.keySet()) {
             if (first) {
-                source.append("        int[] N = new int[]{").append(string).append(".length};\n\n");
-                source.append("        par.add(new ParameterGPU(").append(string).append(",true,false,true));\n");
+                if (indexEnum != null) {
+                    if (indexEnum.equals(IndexEnum.SEBTA)) {
+                        source.append("        int[] N = new int[]{").append(string).append(".length, width, height};\n\n");
+                    }
+                } else {
+                    source.append("        int[] N = new int[]{").append(string).append(".length};\n\n");
+                }
+                if (index == null) {
+                    source.append("        par.add(new ParameterGPU(").append(string).append(",true,false,true));\n");
+                } else {
+                    source.append("        par.add(new ParameterGPU(").append(string).append(",true));\n");
+                }
                 first = false;
             } else {
                 source.append("        par.add(new ParameterGPU(").append(string).append(",true));\n");
@@ -580,7 +616,7 @@ public class GenericSEB {
         for (String string : parameters.keySet()) {
             value = parameters.get(string);
             type = value.getData().getClass().getCanonicalName().substring(0, value.getData().getClass().getCanonicalName().length() - 2);
-            
+
             gpuCode.append("        ").append(type).append(" ").append(string).append(",\n");
             gpuCodeBody.append("        ").append(type).append(" * ").append(string).append(",\n");
             variables.add(string);
@@ -621,12 +657,30 @@ public class GenericSEB {
                 }
             }
         }
+
         if (forVariables != null && !forVariables.isEmpty()) {
             verifyEquations(forVariables, variables, false);
         }
         if (forEachValue != null && !forEachValue.isEmpty()) {
             verifyEquations(forEachValue, variables, true);
         }
+
+        if (index != null) {
+            if (indexEnum.equals(IndexEnum.SEBTA)) {
+//                source.append("        float tMax, tMin;\n"
+//                        + "        float indexMax, indexMin;\n"
+//                        + "        float RnHot = 0.0f, GHot = 0.0f;\n"
+//                        + "        float SAVI_hot = 0.0f;\n"
+//                        + "\n"
+//                        + "        tMax = 0.0f;\n"
+//                        + "        indexMax = 0.0f;\n"
+//                        + "\n"
+//                        + "        indexMin = Float.MAX_VALUE;\n"
+//                        + "        tMin = Float.MAX_VALUE;\n");
+            }
+            equations.add(index);
+        }
+
         Equation eq;
         StringBuilder cudaVariables = new StringBuilder();
         for (int i = 0; i < equations.size(); i++) {
@@ -660,7 +714,30 @@ public class GenericSEB {
                     break;
             }
         }
+        if (indexEnum != null) {
+            if (indexEnum.equals(IndexEnum.SEBTA)) {
+                String[] varsIndex = new String[]{"maxTsVet", "minIndexVet", "minTsVet", "maxIndexVet", "rnHotVet", "gHotVet", "saviHotVet"};
 
+                for (int i = 0; i < varsIndex.length; i++) {
+                    String string = varsIndex[i];
+                    source.append("        float[] ").append(string).append(" = new float[width];\n");
+                    if (i == 0) {
+                        gpuCode.append("\n");
+                        source.append("\n        par.add(new ParameterGPU(").append(string).append(", true, true, true));\n");
+                    } else {
+                        source.append("        par.add(new ParameterGPU(").append(string).append(", true, true));\n");
+                    }
+                    source.append("        ret.put(\"").append(string).append("\", ").append(string).append(");\n\n");
+
+                    gpuCode.append("        float * ").append(string);
+                    gpuCodeBody.append("        float * ").append(string).append(",\n");
+                    if (i + 1 < vet.length) {
+                        gpuCode.append(",");
+                    }
+                    gpuCode.append("\n");
+                }
+            }
+        }
         source.append("        par.add(new ParameterGPU(N,true));\n\n");
 
         source.append("        String pathNvcc = \"/usr/local/cuda/bin/\";\n");
@@ -669,7 +746,7 @@ public class GenericSEB {
         source.append("            JSeriesCUDA cuda = new JSeriesCUDA();\n");
         source.append("            cuda.setPathNvcc(pathNvcc);\n");
 //        source.append("            cuda.setPrint(true);\n");
-        source.append("            cuda.setMeasure(true);\n");
+//        source.append("            cuda.setMeasure(true);\n");
         source.append("            cuda.execute(par, System.getProperty(\"user.dir\") + \"/source/\" + source, \"execute\");\n");
         source.append("            File newFile = new File(System.getProperty(\"user.dir\") + \"/source/\" + source);\n");
         source.append("            //newFile.delete();\n");
@@ -681,14 +758,14 @@ public class GenericSEB {
         source.append("    }\n");
         source.append("}\n");
 
-        gpuCodeBody.append("        int size");
+        gpuCodeBody.append("        int * parameters");
 
         gpuCode.append("    ){\n\n");
 
         gpuCode.append(cudaVariables.toString());
 
         gpuCodeBody.append("){\n");
-
+        gpuCodeBody.append("        int size = parameters[0];\n");
         gpuCodeBody.append("        int idx = blockIdx.x*blockDim.x + threadIdx.x;\n");
         gpuCodeBody.append("        if(idx < size){\n");
 
@@ -898,7 +975,9 @@ public class GenericSEB {
         gpuCode.append(gpuCodeBody.toString());
 
         gpuCode.append("}\n");
+        
 
+        System.out.println(gpuCode.toString());
 //        System.out.println(source.toString());
         try {
             File dir = new File(System.getProperty("user.dir") + "/source");
@@ -909,7 +988,7 @@ public class GenericSEB {
         } catch (FileNotFoundException ex1) {
             Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
         }
-//        System.exit(1);
+        System.exit(1);
         return source.toString();
     }
 
@@ -1406,7 +1485,7 @@ public class GenericSEB {
 
         gpuCode.append(gpuCodeBody.toString());
 
-//        System.out.println(source.toString());
+        System.out.println(source.toString());
         try {
             PrintWriter pw = new PrintWriter(System.getProperty("user.dir") + "/source/code.cl");
             pw.println(gpuCode.toString());
@@ -1414,7 +1493,7 @@ public class GenericSEB {
         } catch (FileNotFoundException ex1) {
             Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
         }
-//        System.exit(1);
+        System.exit(1);
 
         return source.toString();
     }
@@ -1588,16 +1667,18 @@ public class GenericSEB {
         }
 
         if (index != null) {
-            source.append("        float tMax, tMin;\n"
-                    + "        float indexMax, indexMin;\n"
-                    + "        float RnHot = 0.0f, GHot = 0.0f;\n"
-                    + "        float SAVI_hot = 0.0f;\n"
-                    + "\n"
-                    + "        tMax = 0.0f;\n"
-                    + "        indexMax = 0.0f;\n"
-                    + "\n"
-                    + "        indexMin = Float.MAX_VALUE;\n"
-                    + "        tMin = Float.MAX_VALUE;\n");
+            if (indexEnum.equals(IndexEnum.SEBTA)) {
+                source.append("        float tMax, tMin;\n"
+                        + "        float indexMax, indexMin;\n"
+                        + "        float RnHot = 0.0f, GHot = 0.0f;\n"
+                        + "        float SAVI_hot = 0.0f;\n"
+                        + "\n"
+                        + "        tMax = 0.0f;\n"
+                        + "        indexMax = 0.0f;\n"
+                        + "\n"
+                        + "        indexMin = Float.MAX_VALUE;\n"
+                        + "        tMin = Float.MAX_VALUE;\n");
+            }
             equations.add(index);
         }
 
@@ -1779,44 +1860,46 @@ public class GenericSEB {
         }
 
         if (index != null) {
-            String ts = "Ts";
-            String rn = "Rn", g = "G0", savi = "SAVI";
-            for (int i = 0; i < equations.size(); i++) {
-                eq = equations.get(i);
-                if (eq.getIndex() != null) {
-                    switch (eq.getTerm()) {
-                        case "Ts":
-                            ts = "Ts[i]";
-                            break;
-                        case "Rn":
-                            rn = "Rn[i]";
-                            break;
-                        case "G0":
-                            g = "G0[i]";
-                            break;
-                        case "SAVI":
-                            savi = "SAVI[i]";
-                            break;
+            if (indexEnum.equals(IndexEnum.SEBTA)) {
+                String ts = "Ts";
+                String rn = "Rn", g = "G0", savi = "SAVI";
+                for (int i = 0; i < equations.size(); i++) {
+                    eq = equations.get(i);
+                    if (eq.getIndex() != null) {
+                        switch (eq.getTerm()) {
+                            case "Ts":
+                                ts = "Ts[i]";
+                                break;
+                            case "Rn":
+                                rn = "Rn[i]";
+                                break;
+                            case "G0":
+                                g = "G0[i]";
+                                break;
+                            case "SAVI":
+                                savi = "SAVI[i]";
+                                break;
+                        }
                     }
+
                 }
 
+                source.append(
+                        "            if (index >= indexMax) {\n"
+                        + "                if (" + ts + " <= tMin && " + ts + " > -300) {\n"
+                        + "                    tMin = " + ts + ";\n"
+                        + "                    indexMax = index;\n"
+                        + "                }\n"
+                        + "            } else if (index <= indexMin) {\n"
+                        + "                if (" + ts + " >= tMax && " + ts + " < 10000) {\n"
+                        + "                    tMax = " + ts + ";\n"
+                        + "                    indexMin = index;\n"
+                        + "                    RnHot = " + rn + ";\n"
+                        + "                    SAVI_hot = " + savi + ";\n"
+                        + "                    GHot = " + g + ";\n"
+                        + "                }\n"
+                        + "            }\n");
             }
-
-            source.append(
-                    "            if (index >= indexMax) {\n"
-                    + "                if (" + ts + " <= tMin && " + ts + " > -300) {\n"
-                    + "                    tMin = " + ts + ";\n"
-                    + "                    indexMax = index;\n"
-                    + "                }\n"
-                    + "            } else if (index <= indexMin) {\n"
-                    + "                if (" + ts + " >= tMax && " + ts + " < 10000) {\n"
-                    + "                    tMax = " + ts + ";\n"
-                    + "                    indexMin = index;\n"
-                    + "                    RnHot = " + rn + ";\n"
-                    + "                    SAVI_hot = " + savi + ";\n"
-                    + "                    GHot = " + g + ";\n"
-                    + "                }\n"
-                    + "            }\n");
         }
 
 //        source.append("        System.out.println(\"banda3:\"+banda3);\n");
@@ -1841,8 +1924,9 @@ public class GenericSEB {
         source.append("        }\n");
 
         if (index != null) {
-            source.append("        float[] coef = new float[2];\n"
-                    + "        GenericSEB.calculaAB(coef, RnHot, GHot, Uref, SAVI_hot, tMax, tMin);\n");
+            if (indexEnum.equals(IndexEnum.SEBTA)) {
+                source.append("        float[] coef = new float[2];\n"
+                        + "        GenericSEB.calculaAB(coef, RnHot, GHot, Uref, SAVI_hot, tMax, tMin);\n");
 //            source.append("        System.out.println(\"pixel1:\"+pixel1[10057582]);\n");
 //            source.append("        System.out.println(\"pixel2:\"+pixel2[10057582]);\n");
 //            source.append("        System.out.println(\"pixel3:\"+pixel3[10057582]);\n");
@@ -1873,7 +1957,8 @@ public class GenericSEB {
 //                source.append("        System.out.println(\"tMin:\"+tMin);\n");
 //            }
 //            source.append("        System.exit(1);\n");
-            source.append("        ret.put(\"coef\",coef);\n\n");
+                source.append("        ret.put(\"coef\",coef);\n\n");
+            }
         }
 
         source.append("        return ret;\n");
@@ -1889,56 +1974,54 @@ public class GenericSEB {
 
         List<VariableValue> parameters = new ArrayList<>();
         Map<String, Float> constants = new HashMap<>();
+        GenericSEB g;
 
-        parameters.add(new VariableValue("hora", new float[]{0.0f, 30.0f, 100.0f, 130.0f}));
-        parameters.add(new VariableValue("dj", new float[]{293.0f, 293.0f, 293.0f, 293.0f}));
-        parameters.add(new VariableValue("temp", new float[]{276.58f, 270.25f, 268.09f, 266.08f}));
-        parameters.add(new VariableValue("ed", new float[]{0.0f, -20.455844f, -21.494523f, -21.202263f}));
-        parameters.add(new VariableValue("rn", new float[]{3704.7237151078f, 3570.1247122853f, 3525.1109277698f, 3483.7200791505f}));
-
-        constants.put("albedo", 0.4f);
-        constants.put("razaoInsolacao", 0.05f);
-        constants.put("latitude", -0.05266f);
-        constants.put("a2", 0.5f);
-        constants.put("a3", 0.1f);
-        constants.put("b2", 0.05f);
-        constants.put("b3", 0.8f);
-        constants.put("stefan", 5.6697E-8f);
-        constants.put("pascal", 133.3224f);
-
-        GenericSEB g = new GenericSEB(LanguageType.JAVA);
-        String form = "O_dj2=dj\n"
-                + "//TESTANDO COMENTARIO\n"
-                + "O_hora2=hora //TESTANDO COMENTARIO\n"
-                + "O_nh=floor(hora/100) //TESTANDO COMENTARIO\n"
-                + "O_nh_(mod(hora,100) == 30)=nh+0.5\n"
-                + "O_constanteSolar = 1369.0*(1+cos((dj+84.0))/360.0)\n"
-                + "O_f = 2*pi*dj/365.2425\n"
-                + "O_h = ((15.0*(nh-12.0))/180.0)*pi\n"
-                + "O_declinacaoSolar=(pi/180.0)*(0.3964 + 3.631*sin(f)-22.97*cos(f) + 0.03838*sin(2*f)-0.3885*cos(2*f)+ 0.07659*sin(3*f)-0.1587*cos(3*f)- 0.01021*cos(4*f))   \n"
-                + "O_cosZ = sin(latitude)*sin(declinacaoSolar)+cos(latitude)*cos(declinacaoSolar)*cos(h)\n"
-                + "O_rn2 = rn\n"
-                + "O_rn2_(cosZ < 0) = 0\n"
-                + "O_rg=(rn2+stefan*(pow((temp+273.15),4))*(a2+b2*sqrt(ed/pascal))*(a3+b3*razaoInsolacao))/((1.0-albedo))\n"
-                + "O_transmitancia=pow((rg/(constanteSolar*cosZ)),(cosZ))";
-        try {
-            Map<String, float[]> ret = g.execute("", form, parameters, constants);
-            float[] resp = ret.get("declinacaoSolar");
-            for (int i = 0; i < resp.length; i++) {
-                float f = resp[i];
-                System.out.println(f);
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
+//        parameters.add(new VariableValue("hora", new float[]{0.0f, 30.0f, 100.0f, 130.0f}));
+//        parameters.add(new VariableValue("dj", new float[]{293.0f, 293.0f, 293.0f, 293.0f}));
+//        parameters.add(new VariableValue("temp", new float[]{276.58f, 270.25f, 268.09f, 266.08f}));
+//        parameters.add(new VariableValue("ed", new float[]{0.0f, -20.455844f, -21.494523f, -21.202263f}));
+//        parameters.add(new VariableValue("rn", new float[]{3704.7237151078f, 3570.1247122853f, 3525.1109277698f, 3483.7200791505f}));
+//
+//        constants.put("albedo", 0.4f);
+//        constants.put("razaoInsolacao", 0.05f);
+//        constants.put("latitude", -0.05266f);
+//        constants.put("a2", 0.5f);
+//        constants.put("a3", 0.1f);
+//        constants.put("b2", 0.05f);
+//        constants.put("b3", 0.8f);
+//        constants.put("stefan", 5.6697E-8f);
+//        constants.put("pascal", 133.3224f);
+//
+//        String form = "O_dj2=dj\n"
+//                + "//TESTANDO COMENTARIO\n"
+//                + "O_hora2=hora //TESTANDO COMENTARIO\n"
+//                + "O_nh=floor(hora/100) //TESTANDO COMENTARIO\n"
+//                + "O_nh_(mod(hora,100) == 30)=nh+0.5\n"
+//                + "O_constanteSolar = 1369.0*(1+cos((dj+84.0))/360.0)\n"
+//                + "O_f = 2*pi*dj/365.2425\n"
+//                + "O_h = ((15.0*(nh-12.0))/180.0)*pi\n"
+//                + "O_declinacaoSolar=(pi/180.0)*(0.3964 + 3.631*sin(f)-22.97*cos(f) + 0.03838*sin(2*f)-0.3885*cos(2*f)+ 0.07659*sin(3*f)-0.1587*cos(3*f)- 0.01021*cos(4*f))   \n"
+//                + "O_cosZ = sin(latitude)*sin(declinacaoSolar)+cos(latitude)*cos(declinacaoSolar)*cos(h)\n"
+//                + "O_rn2 = rn\n"
+//                + "O_rn2_(cosZ < 0) = 0\n"
+//                + "O_rg=(rn2+stefan*(pow((temp+273.15),4))*(a2+b2*sqrt(ed/pascal))*(a3+b3*razaoInsolacao))/((1.0-albedo))\n"
+//                + "O_transmitancia=pow((rg/(constanteSolar*cosZ)),(cosZ))";
+//        try {
+//            Map<String, float[]> ret = g.execute("", form, parameters, constants);
+//            float[] resp = ret.get("declinacaoSolar");
+//            for (int i = 0; i < resp.length; i++) {
+//                float f = resp[i];
+//                System.out.println(f);
+//            }
+//        } catch (Exception ex) {
+//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex);
+//        }
 //        float v = (float) Math.floor(30.0);
 //        if (Maths.mod(v, 100.0f) == 30.0f) {
 //            v = (float) (v + 0.5);
 //        }
 //        System.out.println(v);
-        System.exit(1);
-
+//        System.exit(1);
 //[64.0, 41.0, 62.0, 34.0, 8.0, 160.0, 3.0]
 //[59.0, 28.0, 20.0, 105.0, 70.0, 0.0, 20.0]
         parameters.add(new VariableValue("pixel1", new float[]{64.0f, 59.0f}));
@@ -1949,6 +2032,8 @@ public class GenericSEB {
         parameters.add(new VariableValue("pixel6", new float[]{160.0f, 0.0f}));
         parameters.add(new VariableValue("pixel7", new float[]{3.0f, 20.0f}));
 
+        constants.put("width", 1000f);
+        constants.put("height", 1000f);
         constants.put("reflectanciaAtmosfera", 0.03f);
         constants.put("Kt", 1.0f);
         constants.put("L", 0.1f);
@@ -2012,9 +2097,9 @@ public class GenericSEB {
                 + "LWd = emissivity * StefanBoltzman * (pow(Ts, 4))\n"
                 + "Rn = ((1.0 - albedo) * SWd) + (emissivity * (LWdAtm) - LWd)\n"
                 + "G0 = Rn * (((Ts - T0) / albedo) * (0.0038 * albedo + 0.0074 * albedo * albedo) * (1.0 - 0.98 * pow(NDVI, 4)))\n"
-                + "index = (0.5) * ((2.0 * bandaRefletida4 + 1) - sqrt((pow((2 * bandaRefletida4 + 1), 2) - 8 * (bandaRefletida4 - bandaRefletida3))))";
+                + "sebta = (0.5) * ((2.0 * bandaRefletida4 + 1) - sqrt((pow((2 * bandaRefletida4 + 1), 2) - 8 * (bandaRefletida4 - bandaRefletida3))))";
 
-        g = new GenericSEB(LanguageType.JAVA);
+        g = new GenericSEB(LanguageType.CUDA);
         try {
             g.execute(forVariables, forEachValue, parameters, constants, constVetor, constMatrix);
         } catch (Exception ex) {
