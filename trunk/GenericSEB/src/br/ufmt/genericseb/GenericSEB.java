@@ -1567,7 +1567,7 @@ public class GenericSEB {
         source.append("            BufferedReader bur = new BufferedReader(new FileReader(System.getProperty(\"user.dir\") + \"/source/\" + source));\n");
         source.append("            JSeriesCL opencl = new JSeriesCL();\n");
         source.append("            opencl.setMeasure(true);\n");
-//        source.append("            opencl.setPrint(true);\n");
+        source.append("            opencl.setPrint(true);\n");
         source.append("            String linha = bur.readLine();\n");
         source.append("            StringBuilder codigo = new StringBuilder(linha + \"\\n\");\n");
         source.append("            while (linha != null) {\n");
@@ -1694,13 +1694,13 @@ public class GenericSEB {
         source.append("    }\n");
         source.append("}\n");
 
-        gpuCode.append("        int idx");
         if (indexEnum != null) {
-            if (indexEnum.equals(IndexEnum.SEBTA) || indexEnum.equals(IndexEnum.SEBAL)) {
-                gpuCode.append(",\n        int ind");
-            } else if (indexEnum.equals(IndexEnum.SSEB)) {
-                gpuCodeBody.append("        short * gab,\n");
+            gpuCode.append("\n        int ind");
+            if (indexEnum.equals(IndexEnum.SSEB)) {
+                gpuCodeBody.append("        __global short * gab,\n");
             }
+        } else {
+            gpuCode.append("        int idx");
         }
         gpuCodeBody.append("        __global int * parameters");
 
@@ -1719,7 +1719,7 @@ public class GenericSEB {
 
         gpuCodeBody.append("        int idx = get_global_id(0);\n");
         if (indexEnum != null) {
-            if (indexEnum.equals(IndexEnum.SEBTA) || indexEnum.equals(IndexEnum.SEBAL)) {
+            if (indexEnum.equals(IndexEnum.SEBTA) || indexEnum.equals(IndexEnum.SEBAL) || indexEnum.equals(IndexEnum.SSEB)) {
                 gpuCodeBody.append("        int ind = idx;\n");
             }
         }
@@ -1736,9 +1736,9 @@ public class GenericSEB {
                 String[] varsIndex = null;
                 if (indexEnum.equals(IndexEnum.SEBTA)) {
                     varsIndex = varsIndexSEBTA;
-                }else if (indexEnum.equals(IndexEnum.SEBAL)) {
+                } else if (indexEnum.equals(IndexEnum.SEBAL)) {
                     varsIndex = varsIndexSEBAL;
-                }else if (indexEnum.equals(IndexEnum.SSEB)) {
+                } else if (indexEnum.equals(IndexEnum.SSEB)) {
                     varsIndex = varsIndexSSEB;
                     gpuCodeBody.append("            int nind = ind;\n");
                     gpuCodeBody.append("            ind = ind*3+indY;\n");
@@ -2011,11 +2011,13 @@ public class GenericSEB {
             }
         }
 
-        gpuCodeBody.append("                idx");
         if (indexEnum != null) {
-            if (indexEnum.equals(IndexEnum.SEBTA) || indexEnum.equals(IndexEnum.SEBAL) || indexEnum.equals(IndexEnum.SSEB)) {
-                gpuCodeBody.append(",\n                ind");
-            }
+//            if (indexEnum.equals(IndexEnum.SEBTA) || indexEnum.equals(IndexEnum.SEBAL) || indexEnum.equals(IndexEnum.SSEB)) {
+//                gpuCodeBody.append(",\n                ind");
+//            }
+            gpuCodeBody.append("                ind");
+        } else {
+            gpuCodeBody.append("                idx");
         }
         gpuCodeBody.append(");\n");
 
