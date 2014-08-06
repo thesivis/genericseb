@@ -11,6 +11,6 @@ package br.ufmt.genericseb;
  */
 public enum IndexEnum {
 
-    SEBTA, SEBI, SSEB;
+    SEBTA, SEBI, SSEB, SEBAL;
 
 }
