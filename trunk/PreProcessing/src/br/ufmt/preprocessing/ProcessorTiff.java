@@ -154,7 +154,8 @@ public class ProcessorTiff {
 
     private void execute(File tiff, Dataset entrada, List<DataFile> ret, String header, StringBuilder without, StringBuilder exec, List<VariableValue> parameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) {
         try {
-            System.out.println("Executing:" + exec.toString());
+//            System.out.println("Executing:" + exec.toString());
+            System.out.println("Executing");
 //            System.out.println("Whito:" + without.toString());
 //            System.out.println();
 
