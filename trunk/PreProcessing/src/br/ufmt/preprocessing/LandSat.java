@@ -110,7 +110,7 @@ public class LandSat {
                             linha = bur.readLine();
                         }
 
-                        ProcessorTiff processorTiff = new ProcessorTiff(LanguageType.OPENCL);
+                        ProcessorTiff processorTiff = new ProcessorTiff(LanguageType.CUDA);
                         try {
                             ret = processorTiff.execute(header.toString(), body.toString(), pathToOriginalTiff, nameParameters, variables, constVetor, constMatrix);
                         } catch (Exception ex) {
