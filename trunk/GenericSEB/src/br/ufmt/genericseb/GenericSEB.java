@@ -729,8 +729,7 @@ public class GenericSEB {
                     } else {
                         source.append("        par.add(new ParameterGPU(").append(string).append(", true, true));\n");
                     }
-                    source.append("        ret.put(\"").append(string).append("\", ").append(string).append(");\n\n");
-
+                    
                     gpuCode.append("        float * ").append(string);
                     gpuCodeBody.append("        float * ").append(string).append(",\n");
                     if (i + 1 < varsIndexSEBTA.length) {
@@ -1394,7 +1393,6 @@ public class GenericSEB {
                     } else {
                         source.append("        par.add(new ParameterGPU(").append(string).append(", true, true));\n");
                     }
-                    source.append("        ret.put(\"").append(string).append("\", ").append(string).append(");\n\n");
 
                     gpuCode.append("        __global float * ").append(string).append(",\n");
                     gpuCodeBody.append("        __global float * ").append(string).append(",\n");
