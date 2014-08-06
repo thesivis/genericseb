@@ -2062,6 +2062,11 @@ public class GenericSEB {
                         + "        indexMax = 0.0f;\n"
                         + "\n"
                         + "        indexMin = Float.MAX_VALUE;\n");
+            } else if (indexEnum.equals(IndexEnum.SSEB)) {
+                source.append("        float[] indexMax = new float[]{0.0f, 0.0f, 0.0f};\n"
+                        + "        float[] indexMin = new float[]{Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE};\n"
+                        + "        float[] TsMax = new float[]{0.0f, 0.0f, 0.0f};\n"
+                        + "        float[] TsMin = new float[]{Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE};\n");
             }
             equations.add(index);
         }
@@ -2312,6 +2317,47 @@ public class GenericSEB {
                         + "            } else if (sebal <= indexMin) {\n"
                         + "                indexMin = sebal;\n"
                         + "            }\n");
+            } else if (indexEnum.equals(IndexEnum.SSEB)) {
+                String ts = "Ts";
+                for (int i = 0; i < equations.size(); i++) {
+                    eq = equations.get(i);
+                    if (eq.getIndex() != null) {
+                        switch (eq.getTerm()) {
+                            case "Ts":
+                                ts = "Ts[i]";
+                                break;
+                        }
+                    }
+
+                }
+
+                source.append(
+                        "                for (int idx = 0; idx < indexMax.length; idx++) {\n"
+                        + "                    if (sseb >= indexMax[idx]) {\n"
+                        + "                        if (" + ts + " <= TsMin[idx]) {\n"
+                        + "                            for (int j = TsMin.length - 1; j > idx; j--) {\n"
+                        + "                                TsMin[j] = TsMin[j - 1];\n"
+                        + "                                indexMax[j] = indexMax[j - 1];\n"
+                        + "                            }\n"
+                        + "                            TsMin[idx] = " + ts + ";\n"
+                        + "                            indexMax[idx] = sseb;\n"
+                        + "                            break;\n"
+                        + "                        }\n"
+                        + "                    }\n"
+                        + "                }\n"
+                        + "                for (int idx = 0; idx < indexMin.length; idx++) {\n"
+                        + "                    if (sseb <= indexMin[idx]) {\n"
+                        + "                        if (" + ts + " >= TsMax[idx]) {\n"
+                        + "                            for (int j = TsMax.length - 1; j > idx; j--) {\n"
+                        + "                                TsMax[j] = TsMax[j - 1];\n"
+                        + "                                indexMin[j] = indexMin[j - 1];\n"
+                        + "                            }\n"
+                        + "                            TsMax[idx] = " + ts + ";\n"
+                        + "                            indexMin[idx] = sseb;\n"
+                        + "                            break;\n"
+                        + "                        }\n"
+                        + "                    }\n"
+                        + "                }\n");
             }
         }
 
@@ -2375,6 +2421,17 @@ public class GenericSEB {
                 source.append("        float[] coef = new float[2];\n"
                         + "        GenericSEB.calculaAB(coef, RnHot, GHot, Uref, SAVI_hot, indexMax, indexMin);\n");
                 source.append("        ret.put(\"coef\",coef);\n\n");
+            } else if (indexEnum.equals(IndexEnum.SSEB)) {
+                source.append("        float TC = 0.0f;\n"
+                        + "        float TH = 0.0f;\n"
+                        + "        for (int i = 0; i < indexMax.length; i++) {\n"
+                        + "            TC += TsMin[i];\n"
+                        + "            TH += TsMax[i];\n"
+                        + "        }\n"
+                        + "        TC = TC / indexMax.length;\n"
+                        + "        TH = TH / indexMax.length;\n"
+                        + "        ret.put(\"TC\", new float[]{TC});\n"
+                        + "        ret.put(\"TH\", new float[]{TH});\n\n");
             }
         }
 
