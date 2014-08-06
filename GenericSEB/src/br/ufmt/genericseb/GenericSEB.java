@@ -258,7 +258,7 @@ public class GenericSEB {
 
             if (isIndex(vet[0])) {
                 hasIndex = true;
-                isLast = (i == vet.length - 1);
+                isLast = (i == vets.length - 1);
             }
         }
 //        System.out.println(newBodyWithIndex.toString());
@@ -268,6 +268,7 @@ public class GenericSEB {
         String exec = forEachValue;
         firstRet = new HashMap<>();
         if (hasIndex && !isLast) {
+            System.out.println("Index");
             exec = newBodyWithoutIndex.toString();
 
             if (language.equals(LanguageType.CUDA)) {
@@ -309,6 +310,7 @@ public class GenericSEB {
 
         Object instanced = compile(source, "Equation");
         try {
+            System.out.println("source");
             Method method = instanced.getClass().getDeclaredMethod("execute", classes);
             ret = (Map<String, float[]>) method.invoke(instanced, pars);
             if (hasIndex && !isLast) {
@@ -1680,7 +1682,7 @@ public class GenericSEB {
                         }
                         equation += string;
                     }
-                    System.out.println(equation);
+//                    System.out.println(equation);
                     equation += "\n\n";
                     gpuCode.append(equation);
 
