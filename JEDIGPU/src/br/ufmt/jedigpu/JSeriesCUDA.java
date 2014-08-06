@@ -270,13 +270,33 @@ public class JSeriesCUDA extends GPU {
                         for (int i = 0; i < tam.size(); i++) {
                             sizes[i] = tam.get(i);
                         }
+                        int multThreads = 1;
                         grids = calculateBlocksPerGrid(blocks, sizes, dim);
                         for (int i = 0; i < grids.length; i++) {
+                            multThreads *= blocks[i];
                             if (grids[i] == -1) {
                                 right = true;
                                 break;
                             }
                         }
+                        if (!right && multThreads != maxThreadsPerBlock) {
+                            switch (dim) {
+                                case 2:
+                                    int lower = (blocks[0] > blocks[1] ? 1 : 0);
+                                    blocks[(lower == 0 ? 1 : 0)] = maxThreadsPerBlock / blocks[lower];
+                                    grids = calculateBlocksPerGrid(blocks, sizes, dim);
+                                    for (int i = 0; i < grids.length; i++) {
+                                        if (grids[i] == -1) {
+                                            right = true;
+                                            break;
+                                        }
+                                    }
+                                    break;
+                                case 3:
+                                    break;
+                            }
+                        }
+
                         right = !right;
                     } else {
                         throw new DataSizeException();
@@ -305,7 +325,7 @@ public class JSeriesCUDA extends GPU {
             System.out.println("Tam: " + tam + " Threads:" + (grids[0] * blocks[0]));
             System.out.println("BlockX: " + blocks[0] + " BlockY: " + blocks[1] + " BlockZ: " + blocks[2]);
             System.out.println("ThreadsPerBlock: " + maxThreadsPerBlock);
-            System.out.println("Used Shared Memory:"+usedSharedMemory);
+            System.out.println("Used Shared Memory:" + usedSharedMemory);
         }
 
         if (measure) {
@@ -726,6 +746,7 @@ public class JSeriesCUDA extends GPU {
 
                 break;
             case 2:
+
                 blocks[0] = warpSize;
                 blocks[1] = maxThreadsPerBlock / warpSize;
                 break;
