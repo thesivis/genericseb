@@ -11,6 +11,7 @@ import br.ufmt.preprocessing.utils.DataFile;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -184,7 +185,7 @@ public class ProcessorTiff {
             for (String resp : datas.keySet()) {
 //                System.out.println("Resp:"+resp);
                 vet = datas.get(resp);
-                if (!resp.equals("coef")) {
+                if (!resp.equals("coef") && !resp.equals("TC") && !resp.equals("TH")) {
                     pathTiff = parent + resp + ".tif";
                     novo = driver.Create(pathTiff, width, height, 1, gdalconstConstants.GDT_Float32);
                     novo.SetProjection(projecao);
@@ -197,19 +198,20 @@ public class ProcessorTiff {
                     ret.add(new DataFile(resp, new File(pathTiff)));
 //                    System.out.println("salvo");
                 } else {
-                    pathTiff = parent + "A.dat";
-                    PrintWriter pw = new PrintWriter(pathTiff);
-                    pw.print(vet[0]);
-                    pw.close();
-                    ret.add(new DataFile("A", new File(pathTiff)));
-                    constants.put("a", vet[0]);
-
-                    pathTiff = parent + "B.dat";
-                    pw = new PrintWriter(pathTiff);
-                    pw.print(vet[1]);
-                    constants.put("b", vet[1]);
-                    pw.close();
-                    ret.add(new DataFile("B", new File(pathTiff)));
+                    System.out.println(resp + "=" + Arrays.toString(vet));
+//                    pathTiff = parent + "A.dat";
+//                    PrintWriter pw = new PrintWriter(pathTiff);
+//                    pw.print(vet[0]);
+//                    pw.close();
+//                    ret.add(new DataFile("A", new File(pathTiff)));
+//                    constants.put("a", vet[0]);
+//
+//                    pathTiff = parent + "B.dat";
+//                    pw = new PrintWriter(pathTiff);
+//                    pw.print(vet[1]);
+//                    constants.put("b", vet[1]);
+//                    pw.close();
+//                    ret.add(new DataFile("B", new File(pathTiff)));
                 }
             }
         } catch (Exception ex) {
