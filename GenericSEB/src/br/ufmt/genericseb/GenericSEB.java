@@ -2354,7 +2354,7 @@ public class GenericSEB {
 
         gpuCode.append(gpuCodeBody.toString());
 
-        System.out.println(gpuCode.toString());
+//        System.out.println(gpuCode.toString());
 //        System.out.println("-------------------------------------------------------------------------------------------");
 //        System.out.println(source.toString());
         try {
