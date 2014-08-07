@@ -185,7 +185,7 @@ public class ProcessorTiff {
             for (String resp : datas.keySet()) {
 //                System.out.println("Resp:"+resp);
                 vet = datas.get(resp);
-                if (!resp.equals("coef") && !resp.equals("TC") && !resp.equals("TH")) {
+                if (!isCoeficients(resp)) {
                     pathTiff = parent + resp + ".tif";
                     novo = driver.Create(pathTiff, width, height, 1, gdalconstConstants.GDT_Float32);
                     novo.SetProjection(projecao);
@@ -217,5 +217,9 @@ public class ProcessorTiff {
         } catch (Exception ex) {
             Logger.getLogger(ProcessorTiff.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    private boolean isCoeficients(String coef){
+        return (coef.equals("coef") || coef.equals("TC") || coef.equals("TH")
+                 || coef.equals("aH") || coef.equals("bH") || coef.equals("aLE") || coef.equals("bLE"));
     }
 }
