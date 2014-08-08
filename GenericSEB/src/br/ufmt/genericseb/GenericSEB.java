@@ -274,7 +274,7 @@ public class GenericSEB {
         String exec = forEachValue;
         firstRet = new HashMap<>();
         if (hasIndex && !isLast) {
-            System.out.println("Index:" + newBodyWithoutIndex.toString());
+//            System.out.println("Index:" + newBodyWithoutIndex.toString());
             exec = newBodyWithoutIndex.toString();
 
             if (language.equals(LanguageType.CUDA)) {
@@ -327,7 +327,7 @@ public class GenericSEB {
 
         Object instanced = compile(source, "Equation");
         try {
-            System.out.println("source:" + exec);
+//            System.out.println("source:" + exec);
             Method method = instanced.getClass().getDeclaredMethod("execute", classes);
             ret = (Map<String, float[]>) method.invoke(instanced, pars);
             if (hasIndex && !isLast) {
