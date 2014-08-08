@@ -6,6 +6,7 @@ package br.ufmt.preprocessing;
 
 import br.ufmt.genericlexerseb.LanguageType;
 import br.ufmt.genericseb.GenericSEB;
+import br.ufmt.genericseb.IndexEnum;
 import br.ufmt.genericseb.VariableValue;
 import br.ufmt.preprocessing.utils.DataFile;
 import java.io.File;
@@ -132,12 +133,12 @@ public class ProcessorTiff {
                         exec.append(string);
                     }
                 } else {
-                    if (!string.startsWith("index")) {
+                    if (!isIndex(string)) {
                         without.append(string);
                     }
                     exec.append(string);
                 }
-                if (!string.startsWith("index")) {
+                if (!isIndex(string)) {
                     without.append("\n");
                 }
                 exec.append("\n");
@@ -151,6 +152,11 @@ public class ProcessorTiff {
 
         }
         return null;
+    }
+    
+    private boolean isIndex(String index) {
+        return index.startsWith(IndexEnum.SEBAL.toString().toLowerCase()) || index.startsWith(IndexEnum.SEBTA.toString().toLowerCase())
+                || index.startsWith(IndexEnum.SSEB.toString().toLowerCase()) || index.startsWith(IndexEnum.SSEBI.toString().toLowerCase());
     }
 
     private void execute(File tiff, Dataset entrada, List<DataFile> ret, String header, StringBuilder without, StringBuilder exec, List<VariableValue> parameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) {
