@@ -274,7 +274,7 @@ public class GenericSEB {
         String exec = forEachValue;
         firstRet = new HashMap<>();
         if (hasIndex && !isLast) {
-//            System.out.println("Index");
+            System.out.println("Index:" + newBodyWithoutIndex.toString());
             exec = newBodyWithoutIndex.toString();
 
             if (language.equals(LanguageType.CUDA)) {
@@ -292,7 +292,18 @@ public class GenericSEB {
                 if (indexEnum.equals(IndexEnum.SEBTA) || indexEnum.equals(IndexEnum.SEBAL)) {
                     constants.put("a", firstRet.get("coef")[0]);
                     constants.put("b", firstRet.get("coef")[1]);
+                } else if (indexEnum.equals(IndexEnum.SSEB)) {
+                    constants.put("TH", firstRet.get("TH")[0]);
+                    constants.put("TC", firstRet.get("TC")[0]);
+                } else if (indexEnum.equals(IndexEnum.SSEBI)) {
+                    constants.put("aH", firstRet.get("aH")[0]);
+                    constants.put("bH", firstRet.get("bH")[0]);
+                    constants.put("aLE", firstRet.get("aLE")[0]);
+                    constants.put("bLE", firstRet.get("bLE")[0]);
                 }
+
+                index = null;
+                indexEnum = null;
             } catch (NoSuchMethodException ex1) {
                 Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
             } catch (SecurityException ex1) {
@@ -316,7 +327,7 @@ public class GenericSEB {
 
         Object instanced = compile(source, "Equation");
         try {
-//            System.out.println("source");
+            System.out.println("source:" + exec);
             Method method = instanced.getClass().getDeclaredMethod("execute", classes);
             ret = (Map<String, float[]>) method.invoke(instanced, pars);
             if (hasIndex && !isLast) {
