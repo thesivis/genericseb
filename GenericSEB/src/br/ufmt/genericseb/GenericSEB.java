@@ -1381,9 +1381,9 @@ public class GenericSEB {
 
         gpuCode.append("}\n");
 
-        System.out.println(gpuCode.toString());
-        System.out.println("------------------------------------------------------------------------------------------------");
-        System.out.println(source.toString());
+//        System.out.println(gpuCode.toString());
+//        System.out.println("------------------------------------------------------------------------------------------------");
+//        System.out.println(source.toString());
         try {
             File dir = new File(System.getProperty("user.dir") + "/source");
             dir.mkdirs();
