@@ -239,7 +239,7 @@ public class JSeriesCUDA extends GPU {
             }
 
             List<Occupancy> occupancies = getMaxThreadsPerBlock(device, registers, sharedMemory);
-            System.out.println("occupancies:" + occupancies);
+//            System.out.println("occupancies:" + occupancies);
             if (occupancies != null) {
                 boolean right = false;
                 while (!right && occupancies.size() > 0) {
@@ -1019,7 +1019,7 @@ public class JSeriesCUDA extends GPU {
 
             Collections.sort(occupancies);
             Collections.reverse(occupancies);
-            System.out.println("Ret:" + occupancies);
+//            System.out.println("Ret:" + occupancies);
             return occupancies;
         }
         return null;
