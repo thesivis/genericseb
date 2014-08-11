@@ -239,6 +239,7 @@ public class JSeriesCUDA extends GPU {
             }
 
             List<Occupancy> occupancies = getMaxThreadsPerBlock(device, registers, sharedMemory);
+            System.out.println("occupancies:" + occupancies);
             if (occupancies != null) {
                 boolean right = false;
                 while (!right && occupancies.size() > 0) {
@@ -303,7 +304,7 @@ public class JSeriesCUDA extends GPU {
                     }
                 }
             }
-            if (occupancies.isEmpty()) {
+            if (occupancies == null || occupancies.isEmpty()) {
                 throw new IOException("GPU doesn't support this data size!");
             }
         } else {
@@ -344,7 +345,7 @@ public class JSeriesCUDA extends GPU {
                 blocks[0], blocks[1], blocks[2], // Block dimension
                 usedSharedMemory, null, // Shared memory size and stream
                 kernelParameters, null // Kernel- and extra parameters
-        );
+                );
 
         cuCtxSynchronize();
 
@@ -877,7 +878,19 @@ public class JSeriesCUDA extends GPU {
             vet = comp.split("|");
 //            System.out.println(comp);
 //            System.out.println(vet);
-            compute = gpuData.get(vet[0] + "." + vet[1]);
+//            System.out.println(compileOptions);
+//            System.out.println(vet[0] + "." + vet[1]);
+            String number1 = null;
+            String number2 = null;
+            for (int i = 0; i < vet.length; i++) {
+                String string = vet[i];
+                if (number1 == null && string.matches("[0-3]")) {
+                    number1 = string;
+                } else if (number2 == null && string.matches("[0-3]")) {
+                    number2 = string;
+                }
+            }
+            compute = gpuData.get(number1 + "." + number2);
         } else {
             // Obtain the compute capability
             int majorArray[] = {0};
@@ -1006,6 +1019,7 @@ public class JSeriesCUDA extends GPU {
 
             Collections.sort(occupancies);
             Collections.reverse(occupancies);
+            System.out.println("Ret:" + occupancies);
             return occupancies;
         }
         return null;
