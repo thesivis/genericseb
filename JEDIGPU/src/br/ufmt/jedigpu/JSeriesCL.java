@@ -9,9 +9,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import org.jocl.CL;
 import static org.jocl.CL.*;
 
-import org.jocl.CL;
+import org.jocl.CLException;
 import org.jocl.Pointer;
 import org.jocl.Sizeof;
 import org.jocl.cl_command_queue;
@@ -28,9 +29,17 @@ import org.jocl.cl_program;
  * @author raphael
  */
 public class JSeriesCL extends GPU {
-    
+
     private long[] workGroups = new long[]{1};
     private long[] workItems = new long[]{1};
+    private long deviceType = CL_DEVICE_TYPE_GPU;
+
+    public JSeriesCL() {
+    }
+
+    public JSeriesCL(OpenCLEnum deviceType) {
+        this.deviceType = deviceType.getType();
+    }
 
     public void execute(List<ParameterGPU> parametros, String codigoFonte, String metodo) {
         if (measure) {
@@ -68,7 +77,7 @@ public class JSeriesCL extends GPU {
         // The platform, device type and device number
         // that will be used
         final int platformIndex = 0;
-        final long deviceType = CL_DEVICE_TYPE_GPU;
+//        final long deviceType = CL_DEVICE_TYPE_CPU;
         final int deviceIndex = 0;
 
         // Enable exceptions and subsequently omit error checks in this sample
@@ -78,24 +87,39 @@ public class JSeriesCL extends GPU {
         int numPlatformsArray[] = new int[1];
         clGetPlatformIDs(0, null, numPlatformsArray);
         int numPlatforms = numPlatformsArray[0];
+//        System.out.println("numPlatforms:" + numPlatforms);
 
         // Obtain a platform ID
         cl_platform_id platforms[] = new cl_platform_id[numPlatforms];
         clGetPlatformIDs(platforms.length, platforms, null);
         cl_platform_id platform = platforms[platformIndex];
 
+        cl_device_id device = null;
+//        System.out.println(deviceType);
+
+        for (int i = 0; i < platforms.length; i++) {
+            platform = platforms[i];
+            try {
+//                System.out.println("Plat:"+platform);
+                // Obtain the number of devices for the platform
+                int numDevicesArray[] = new int[1];
+                clGetDeviceIDs(platform, deviceType, 0, null, numDevicesArray);
+                int numDevices = numDevicesArray[0];
+
+                // Obtain a device ID 
+                cl_device_id devices[] = new cl_device_id[numDevices];
+                clGetDeviceIDs(platform, deviceType, numDevices, devices, null);
+                device = devices[deviceIndex];
+                break;
+            } catch (CLException ex) {
+
+            }
+        }
+
+//        System.out.println("platform:" + platform);
         // Initialize the context properties
         cl_context_properties contextProperties = new cl_context_properties();
         contextProperties.addProperty(CL_CONTEXT_PLATFORM, platform);
-
-        // Obtain the number of devices for the platform
-        int numDevicesArray[] = new int[1];
-        clGetDeviceIDs(platform, deviceType, 0, null, numDevicesArray);
-        int numDevices = numDevicesArray[0];
-        // Obtain a device ID 
-        cl_device_id devices[] = new cl_device_id[numDevices];
-        clGetDeviceIDs(platform, deviceType, numDevices, devices, null);
-        cl_device_id device = devices[deviceIndex];
 
         // Create a context for the selected device
         cl_context context = clCreateContext(contextProperties, 1, new cl_device_id[]{device}, null, null, null);
@@ -129,7 +153,21 @@ public class JSeriesCL extends GPU {
         ParameterGPU parametro = null;
         for (int i = 0; i < parametros.size(); i++) {
             parametro = parametros.get(i);
-            if (parametro.isRead() && parametro.isWrite()) {
+            if (deviceType == CL_DEVICE_TYPE_CPU) {
+                if (parametro.getDataDouble() != null) {
+                    memObjects[i] = clCreateBuffer(context, CL_MEM_READ_WRITE, Sizeof.cl_double * parametro.getDataDouble().length, null, error);
+                } else if (parametro.getDataFloat() != null) {
+                    memObjects[i] = clCreateBuffer(context, CL_MEM_READ_WRITE, Sizeof.cl_float * parametro.getDataFloat().length, null, error);
+                } else if (parametro.getDataInt() != null) {
+                    memObjects[i] = clCreateBuffer(context, CL_MEM_READ_WRITE, Sizeof.cl_int * parametro.getDataInt().length, null, error);
+                } else if (parametro.getDataLong() != null) {
+                    memObjects[i] = clCreateBuffer(context, CL_MEM_READ_WRITE, Sizeof.cl_long * parametro.getDataLong().length, null, error);
+                } else if (parametro.getDataChar() != null) {
+                    memObjects[i] = clCreateBuffer(context, CL_MEM_READ_WRITE, Sizeof.cl_char * parametro.getDataChar().length, null, error);
+                } else if (parametro.getDataShort() != null) {
+                    memObjects[i] = clCreateBuffer(context, CL_MEM_READ_WRITE, Sizeof.cl_short * parametro.getDataShort().length, null, error);
+                }
+            } else if (parametro.isRead() && parametro.isWrite()) {
                 if (parametro.getDataDouble() != null) {
                     memObjects[i] = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, Sizeof.cl_double * parametro.getDataDouble().length, pointers.get(i), error);
                 } else if (parametro.getDataFloat() != null) {
@@ -263,7 +301,6 @@ public class JSeriesCL extends GPU {
                 proporcao[i - 1] = (((double) global_work_size[ordem.get(0)]) / ((double) global_work_size[ordem.get(i)]));
             }
 
-
             Pointer pointerLocal = Pointer.to(local_work_size);
 
             clGetKernelWorkGroupInfo(kernel, device, CL_KERNEL_WORK_GROUP_SIZE, Sizeof.cl_long, pointerLocal, null);
@@ -380,11 +417,12 @@ public class JSeriesCL extends GPU {
             measures.add(time);
             time.setBegin(new Date());
         }
-
+//        System.exit(1);
         // Execute the kernel
         clEnqueueNDRangeKernel(commandQueue, kernel, dim, null, global_work_size, local_work_size, 0, null, null);
 
         clFinish(commandQueue);
+//        System.out.println("executado");
 
         if (measure) {
             time.setEnd(new Date());
@@ -414,7 +452,6 @@ public class JSeriesCL extends GPU {
                 }
             }
         }
-
         if (measure) {
             time.setEnd(new Date());
 
@@ -425,9 +462,11 @@ public class JSeriesCL extends GPU {
         }
         // Release kernel, program, and memory objects
 
-        for (int i = 0; i < parametros.size(); i++) {
+        for (int i = 0; i < memObjects.length; i++) {
+//            System.out.println("Release:"+i);
             clReleaseMemObject(memObjects[i]);
         }
+//         System.out.println("executado2");
         clReleaseKernel(kernel);
         clReleaseProgram(program);
         clReleaseCommandQueue(commandQueue);

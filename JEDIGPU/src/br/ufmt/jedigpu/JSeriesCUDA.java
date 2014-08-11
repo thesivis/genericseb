@@ -886,10 +886,11 @@ public class JSeriesCUDA extends GPU {
                 String string = vet[i];
                 if (number1 == null && string.matches("[0-3]")) {
                     number1 = string;
-                } else if (number2 == null && string.matches("[0-3]")) {
+                } else if (number2 == null && string.matches("[0-5]")) {
                     number2 = string;
                 }
             }
+//            System.out.println(number1 + "." + number2);
             compute = gpuData.get(number1 + "." + number2);
         } else {
             // Obtain the compute capability
