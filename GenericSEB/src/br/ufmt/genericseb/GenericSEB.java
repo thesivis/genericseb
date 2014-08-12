@@ -1081,11 +1081,12 @@ public class GenericSEB {
                     }
                 }
 
-                gpuCodeBody.append("            for(int i=0;i<parameters[2];i++){\n");
                 if (indexEnum.equals(IndexEnum.SSEB) || indexEnum.equals(IndexEnum.SSEBI)) {
+                    gpuCodeBody.append("            for(int i=indY;i<parameters[2];i+=parameters[3]){\n");
                     gpuCodeBody.append("                idx = nind*parameters[2]+i;\n");
                 } else {
                     gpuCodeBody.append("                idx = ind*parameters[2]+i;\n");
+                    gpuCodeBody.append("            for(int i=0;i<parameters[2];i++){\n");
                 }
 
             }
@@ -2068,10 +2069,11 @@ public class GenericSEB {
                     }
                 }
 
-                gpuCodeBody.append("            for(int i=0;i<parameters[2];i++){\n");
                 if (indexEnum.equals(IndexEnum.SSEB) || indexEnum.equals(IndexEnum.SSEBI)) {
+                    gpuCodeBody.append("            for(int i=indY;i<parameters[2];i+=parameters[3]){\n");
                     gpuCodeBody.append("                idx = nind*parameters[2]+i;\n");
                 } else {
+                    gpuCodeBody.append("            for(int i=0;i<parameters[2];i++){\n");
                     gpuCodeBody.append("                idx = ind*parameters[2]+i;\n");
                 }
             }
