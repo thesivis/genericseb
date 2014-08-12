@@ -1085,8 +1085,8 @@ public class GenericSEB {
                     gpuCodeBody.append("            for(int i=indY;i<parameters[2];i+=parameters[3]){\n");
                     gpuCodeBody.append("                idx = nind*parameters[2]+i;\n");
                 } else {
-                    gpuCodeBody.append("                idx = ind*parameters[2]+i;\n");
                     gpuCodeBody.append("            for(int i=0;i<parameters[2];i++){\n");
+                    gpuCodeBody.append("                idx = ind*parameters[2]+i;\n");
                 }
 
             }
@@ -3023,12 +3023,12 @@ public class GenericSEB {
                 source.append("        ret.put(\"coef\",coef);\n\n");
             } else if (indexEnum.equals(IndexEnum.SSEB)) {
                 source.append(
-                        "            System.out.println(java.util.Arrays.toString(indexMax));\n"
-                        + "            System.out.println(java.util.Arrays.toString(indexMin));\n"
-                        + "            System.out.println(java.util.Arrays.toString(TsMax));\n"
-                        + "            System.out.println(java.util.Arrays.toString(TsMin));\n"
-                        + "            System.exit(1);\n"
-                        + "        float TC = 0.0f;\n"
+//                        "            System.out.println(java.util.Arrays.toString(indexMax));\n"
+//                        + "            System.out.println(java.util.Arrays.toString(indexMin));\n"
+//                        + "            System.out.println(java.util.Arrays.toString(TsMax));\n"
+//                        + "            System.out.println(java.util.Arrays.toString(TsMin));\n"
+//                        + "            System.exit(1);\n"
+                        "        float TC = 0.0f;\n"
                         + "        float TH = 0.0f;\n"
                         + "        for (int i = 0; i < indexMax.length; i++) {\n"
                         + "            TC += TsMin[i];\n"
