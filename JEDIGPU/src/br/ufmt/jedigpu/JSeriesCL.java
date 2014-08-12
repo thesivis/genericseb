@@ -153,21 +153,7 @@ public class JSeriesCL extends GPU {
         ParameterGPU parametro = null;
         for (int i = 0; i < parametros.size(); i++) {
             parametro = parametros.get(i);
-            if (deviceType == CL_DEVICE_TYPE_CPU) {
-                if (parametro.getDataDouble() != null) {
-                    memObjects[i] = clCreateBuffer(context, CL_MEM_READ_WRITE, Sizeof.cl_double * parametro.getDataDouble().length, null, error);
-                } else if (parametro.getDataFloat() != null) {
-                    memObjects[i] = clCreateBuffer(context, CL_MEM_READ_WRITE, Sizeof.cl_float * parametro.getDataFloat().length, null, error);
-                } else if (parametro.getDataInt() != null) {
-                    memObjects[i] = clCreateBuffer(context, CL_MEM_READ_WRITE, Sizeof.cl_int * parametro.getDataInt().length, null, error);
-                } else if (parametro.getDataLong() != null) {
-                    memObjects[i] = clCreateBuffer(context, CL_MEM_READ_WRITE, Sizeof.cl_long * parametro.getDataLong().length, null, error);
-                } else if (parametro.getDataChar() != null) {
-                    memObjects[i] = clCreateBuffer(context, CL_MEM_READ_WRITE, Sizeof.cl_char * parametro.getDataChar().length, null, error);
-                } else if (parametro.getDataShort() != null) {
-                    memObjects[i] = clCreateBuffer(context, CL_MEM_READ_WRITE, Sizeof.cl_short * parametro.getDataShort().length, null, error);
-                }
-            } else if (parametro.isRead() && parametro.isWrite()) {
+            if (deviceType == CL_DEVICE_TYPE_CPU || (parametro.isRead() && parametro.isWrite())) {
                 if (parametro.getDataDouble() != null) {
                     memObjects[i] = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, Sizeof.cl_double * parametro.getDataDouble().length, pointers.get(i), error);
                 } else if (parametro.getDataFloat() != null) {
