@@ -927,6 +927,8 @@ public class GenericSEB {
                         + "                    }\n"
                         + "\n"
                         + "                }\n"
+                        + "            }\n"
+                        + "            for (int idx = 0; idx < indexMaxBaixo.length; idx++) {\n"
                         + "                if (maxIndexBaixoVet[i] >= indexMaxBaixo[idx]) {\n"
                         + "                    if (minTsDirVet[i] <= TsMinDir[idx]) {\n"
                         + "                        for (int j = TsMinDir.length - 1; j > idx; j--) {\n"
@@ -939,6 +941,8 @@ public class GenericSEB {
                         + "                    }\n"
                         + "                }\n"
                         + "\n"
+                        + "            }\n"
+                        + "            for (int idx = 0; idx < indexMinCima.length; idx++) {\n"
                         + "                if (minIndexCimaVet[i] <= indexMinCima[idx]) {\n"
                         + "                    if (maxTsEsqVet[i] >= TsMaxEsq[idx]) {\n"
                         + "                        for (int j = TsMaxEsq.length - 1; j > idx; j--) {\n"
@@ -952,6 +956,8 @@ public class GenericSEB {
                         + "\n"
                         + "                }\n"
                         + "\n"
+                        + "            }\n"
+                        + "            for (int idx = 0; idx < indexMinBaixo.length; idx++) {\n"
                         + "                if (minIndexBaixoVet[i] <= indexMinBaixo[idx]) {\n"
                         + "                    if (minTsEsqVet[i] <= TsMinEsq[idx]) {\n"
                         + "//                            System.out.println(\"dentro:\"+idx);\n"
@@ -1897,6 +1903,8 @@ public class GenericSEB {
                         + "                    }\n"
                         + "\n"
                         + "                }\n"
+                        + "            }\n"
+                        + "            for (int idx = 0; idx < indexMaxBaixo.length; idx++) {\n"
                         + "                if (maxIndexBaixoVet[i] >= indexMaxBaixo[idx]) {\n"
                         + "                    if (minTsDirVet[i] <= TsMinDir[idx]) {\n"
                         + "                        for (int j = TsMinDir.length - 1; j > idx; j--) {\n"
@@ -1909,6 +1917,8 @@ public class GenericSEB {
                         + "                    }\n"
                         + "                }\n"
                         + "\n"
+                        + "            }\n"
+                        + "            for (int idx = 0; idx < indexMinCima.length; idx++) {\n"
                         + "                if (minIndexCimaVet[i] <= indexMinCima[idx]) {\n"
                         + "                    if (maxTsEsqVet[i] >= TsMaxEsq[idx]) {\n"
                         + "                        for (int j = TsMaxEsq.length - 1; j > idx; j--) {\n"
@@ -1922,6 +1932,8 @@ public class GenericSEB {
                         + "\n"
                         + "                }\n"
                         + "\n"
+                        + "            }\n"
+                        + "            for (int idx = 0; idx < indexMinBaixo.length; idx++) {\n"
                         + "                if (minIndexBaixoVet[i] <= indexMinBaixo[idx]) {\n"
                         + "                    if (minTsEsqVet[i] <= TsMinEsq[idx]) {\n"
                         + "//                            System.out.println(\"dentro:\"+idx);\n"
@@ -2873,6 +2885,7 @@ public class GenericSEB {
                         + "                        }\n"
                         + "                    }\n"
                         + "                }\n");
+
             } else if (indexEnum.equals(IndexEnum.SSEBI)) {
                 String ts = "Ts";
                 for (int i = 0; i < equations.size(); i++) {
@@ -2888,7 +2901,7 @@ public class GenericSEB {
                 }
 
                 source.append(
-                        "for (int idx = 0; idx < indexMaxCima.length; idx++) {\n"
+                        "                for (int idx = 0; idx < indexMaxCima.length; idx++) {\n"
                         + "                    if (ssebi >= indexMaxCima[idx]) {\n"
                         + "                        if (" + ts + " >= TsMaxDir[idx]) {\n"
                         + "                            for (int j = TsMaxDir.length - 1; j > idx; j--) {\n"
@@ -2901,6 +2914,8 @@ public class GenericSEB {
                         + "                        }\n"
                         + "\n"
                         + "                    }\n"
+                        + "                }\n"
+                        + "                for (int idx = 0; idx < indexMaxBaixo.length; idx++) {\n"
                         + "                    if (ssebi >= indexMaxBaixo[idx]) {\n"
                         + "                        if (" + ts + " <= TsMinDir[idx]) {\n"
                         + "                            for (int j = TsMinDir.length - 1; j > idx; j--) {\n"
@@ -2927,6 +2942,8 @@ public class GenericSEB {
                         + "\n"
                         + "                    }\n"
                         + "                    \n"
+                        + "                }\n"
+                        + "                for (int idx = 0; idx < indexMinBaixo.length; idx++) {\n"
                         + "                    if (ssebi <= indexMinBaixo[idx]) {\n"
                         + "                        if (" + ts + " <= TsMinEsq[idx]) {\n"
                         + "                            for (int j = TsMinEsq.length - 1; j > idx; j--) {\n"
@@ -3003,7 +3020,13 @@ public class GenericSEB {
                         + "        GenericSEB.calculaAB(coef, RnHot, GHot, Uref, SAVI_hot, indexMax, indexMin);\n");
                 source.append("        ret.put(\"coef\",coef);\n\n");
             } else if (indexEnum.equals(IndexEnum.SSEB)) {
-                source.append("        float TC = 0.0f;\n"
+                source.append(
+                        "            System.out.println(java.util.Arrays.toString(indexMax));\n"
+                        + "            System.out.println(java.util.Arrays.toString(indexMin));\n"
+                        + "            System.out.println(java.util.Arrays.toString(TsMax));\n"
+                        + "            System.out.println(java.util.Arrays.toString(TsMin));\n"
+                        + "            System.exit(1);\n"
+                        + "        float TC = 0.0f;\n"
                         + "        float TH = 0.0f;\n"
                         + "        for (int i = 0; i < indexMax.length; i++) {\n"
                         + "            TC += TsMin[i];\n"
