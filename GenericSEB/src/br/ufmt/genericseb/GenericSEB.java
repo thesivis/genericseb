@@ -3023,11 +3023,11 @@ public class GenericSEB {
                 source.append("        ret.put(\"coef\",coef);\n\n");
             } else if (indexEnum.equals(IndexEnum.SSEB)) {
                 source.append(
-//                        "            System.out.println(java.util.Arrays.toString(indexMax));\n"
-//                        + "            System.out.println(java.util.Arrays.toString(indexMin));\n"
-//                        + "            System.out.println(java.util.Arrays.toString(TsMax));\n"
-//                        + "            System.out.println(java.util.Arrays.toString(TsMin));\n"
-//                        + "            System.exit(1);\n"
+                        //                        "            System.out.println(java.util.Arrays.toString(indexMax));\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(indexMin));\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(TsMax));\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(TsMin));\n"
+                        //                        + "            System.exit(1);\n"
                         "        float TC = 0.0f;\n"
                         + "        float TH = 0.0f;\n"
                         + "        for (int i = 0; i < indexMax.length; i++) {\n"
