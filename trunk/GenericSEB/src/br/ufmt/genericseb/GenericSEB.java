@@ -33,6 +33,7 @@ import java.util.logging.Logger;
  */
 public class GenericSEB {
 
+    private static final long MEGABYTE = 1024L * 1024L;
     private LanguageType language;
     private Object[] pars;
     private Class[] classes;
@@ -50,6 +51,12 @@ public class GenericSEB {
 
     public GenericSEB() {
         this(LanguageType.JAVA);
+    }
+
+    public static void calcularMemoria(String text) {
+        long mem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        mem /= MEGABYTE;
+        System.out.println(text + ":" + mem);
     }
 
     public boolean verifyEquations(String forms, List<String> variables, boolean verifyIF) throws Exception {
@@ -214,7 +221,9 @@ public class GenericSEB {
     }
 
     public Map<String, float[]> execute(String forVariables, String forEachValue, List<VariableValue> parameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
-
+//        calcularMemoria("Memoria1");
+//        long total = System.currentTimeMillis();
+//        long tempo;
         Map<String, float[]> ret = new HashMap<>();
         Map<String, float[]> firstRet = null;
         String source = null;
@@ -273,10 +282,14 @@ public class GenericSEB {
 //        System.exit(1);
         String exec = forEachValue;
         firstRet = new HashMap<>();
+//        long compilacao = 0;
+//        long criacao = 0;
+//        long execucao = 0;
         if (hasIndex && !isLast) {
 //            System.out.println("Index:" + newBodyWithoutIndex.toString());
             exec = newBodyWithoutIndex.toString();
 
+//            criacao = System.currentTimeMillis();
             if (language.equals(LanguageType.CUDA)) {
                 sourceIndex = generateCUDA(forVariables, newBodyWithIndex.toString(), parameters, constants, constantsVetor, constantsMatrix);
             } else if (language.equals(LanguageType.OPENCL)) {
@@ -284,11 +297,16 @@ public class GenericSEB {
             } else {
                 sourceIndex = generateJava(forVariables, newBodyWithIndex.toString(), parameters, constants, constantsVetor, constantsMatrix);
             }
+//            criacao = System.currentTimeMillis() - criacao;
 
+//            compilacao = System.currentTimeMillis();
             Object instanced = compile(sourceIndex, "Equation");
+//            compilacao = System.currentTimeMillis() - compilacao;
             try {
+//                execucao = System.currentTimeMillis();
                 Method method = instanced.getClass().getDeclaredMethod("execute", classes);
                 firstRet = (Map<String, float[]>) method.invoke(instanced, pars);
+//                execucao = System.currentTimeMillis() - execucao;
                 if (indexEnum.equals(IndexEnum.SEBTA) || indexEnum.equals(IndexEnum.SEBAL)) {
                     constants.put("a", firstRet.get("coef")[0]);
                     constants.put("b", firstRet.get("coef")[1]);
@@ -317,6 +335,7 @@ public class GenericSEB {
             }
         }
 
+//        tempo = System.currentTimeMillis();
         if (language.equals(LanguageType.CUDA)) {
             source = generateCUDA(forVariables, exec, parameters, constants, constantsVetor, constantsMatrix);
         } else if (language.equals(LanguageType.OPENCL)) {
@@ -324,12 +343,23 @@ public class GenericSEB {
         } else {
             source = generateJava(forVariables, exec, parameters, constants, constantsVetor, constantsMatrix);
         }
-
+//        tempo = System.currentTimeMillis() - tempo;
+//        criacao += tempo;
+//
+//        tempo = System.currentTimeMillis();
+//        calcularMemoria("Memoria2");
         Object instanced = compile(source, "Equation");
+//        tempo = System.currentTimeMillis() - tempo;
+//        compilacao += tempo;
         try {
 //            System.out.println("source:" + exec);
+//            tempo = System.currentTimeMillis();
             Method method = instanced.getClass().getDeclaredMethod("execute", classes);
+//            calcularMemoria("Memoria3");
             ret = (Map<String, float[]>) method.invoke(instanced, pars);
+//            calcularMemoria("Memoria4");
+//            tempo = System.currentTimeMillis() - tempo;
+//            execucao += tempo;
             if (hasIndex && !isLast) {
                 ret.putAll(firstRet);
             }
@@ -350,6 +380,11 @@ public class GenericSEB {
             Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
         }
 
+//        System.out.println("Configuracao:" + conf);
+//        System.out.println("Criacao:" + criacao);
+//        System.out.println("Compilacao:" + compilacao);
+//        System.out.println("Execucao:" + execucao);
+//        System.out.println("Total:" + (System.currentTimeMillis() - total));
         return ret;
     }
 
