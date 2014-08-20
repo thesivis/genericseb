@@ -1452,7 +1452,7 @@ public class GenericSEB {
         source.append("import br.ufmt.jedigpu.ParameterGPU;\n");
         source.append("import java.util.ArrayList;\n");
         source.append("import br.ufmt.jedigpu.JSeriesCL;\n");
-        source.append("import br.ufmt.jedigpu.OpenCLEnum\n");
+        source.append("import br.ufmt.jedigpu.OpenCLEnum;\n");
         source.append("import java.io.File;\n");
         source.append("import java.io.IOException;\n");
         source.append("import java.util.logging.Level;\n");
@@ -1574,7 +1574,7 @@ public class GenericSEB {
         gpuCode.append("#else\n");
         gpuCode.append("	#pragma OPENCL EXTENSION cl_amd_fp64: enable\n");
         gpuCode.append("#endif\n\n");
-        gpuCode.append("\n#include \"./source/Constants.h\"\n\n");
+        gpuCode.append("\n#include \"" + System.getProperty("user.dir") + "/source/Constants.h\"\n\n");
 
         StringBuilder gpuCodeBody = new StringBuilder("    __kernel void execute(\n");
 
