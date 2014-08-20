@@ -292,7 +292,7 @@ public class GenericSEB {
 //            criacao = System.currentTimeMillis();
             if (language.equals(LanguageType.CUDA)) {
                 sourceIndex = generateCUDA(forVariables, newBodyWithIndex.toString(), parameters, constants, constantsVetor, constantsMatrix);
-            } else if (language.equals(LanguageType.OPENCL)) {
+            } else if (language.equals(LanguageType.OPENCL) || language.equals(LanguageType.OPENCL_CPU)) {
                 sourceIndex = generateOpenCL(forVariables, newBodyWithIndex.toString(), parameters, constants, constantsVetor, constantsMatrix);
             } else {
                 sourceIndex = generateJava(forVariables, newBodyWithIndex.toString(), parameters, constants, constantsVetor, constantsMatrix);
@@ -338,7 +338,7 @@ public class GenericSEB {
 //        tempo = System.currentTimeMillis();
         if (language.equals(LanguageType.CUDA)) {
             source = generateCUDA(forVariables, exec, parameters, constants, constantsVetor, constantsMatrix);
-        } else if (language.equals(LanguageType.OPENCL)) {
+        } else if (language.equals(LanguageType.OPENCL) || language.equals(LanguageType.OPENCL_CPU)) {
             source = generateOpenCL(forVariables, exec, parameters, constants, constantsVetor, constantsMatrix);
         } else {
             source = generateJava(forVariables, exec, parameters, constants, constantsVetor, constantsMatrix);
@@ -1452,6 +1452,7 @@ public class GenericSEB {
         source.append("import br.ufmt.jedigpu.ParameterGPU;\n");
         source.append("import java.util.ArrayList;\n");
         source.append("import br.ufmt.jedigpu.JSeriesCL;\n");
+        source.append("import br.ufmt.jedigpu.OpenCLEnum\n");
         source.append("import java.io.File;\n");
         source.append("import java.io.IOException;\n");
         source.append("import java.util.logging.Level;\n");
@@ -1777,7 +1778,11 @@ public class GenericSEB {
         source.append("        String source = \"code.cl\";\n");
         source.append("        try {\n");
         source.append("            BufferedReader bur = new BufferedReader(new FileReader(System.getProperty(\"user.dir\") + \"/source/\" + source));\n");
-        source.append("            JSeriesCL opencl = new JSeriesCL();\n");
+        if (language.equals(LanguageType.OPENCL_CPU)) {
+            source.append("            JSeriesCL opencl = new JSeriesCL(OpenCLEnum.CPU);\n");
+        } else {
+            source.append("            JSeriesCL opencl = new JSeriesCL();\n");
+        }
 //        source.append("            opencl.setMeasure(true);\n");
 //        source.append("            opencl.setPrint(true);\n");
         source.append("            String linha = bur.readLine();\n");
