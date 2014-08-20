@@ -73,7 +73,7 @@ public class Constants {
     public static float z1 = 0.1f;
     public static float p = 1.15f;
     public static float cp = 1004.0f;
-    static Map<String, Float> variables = new HashMap<>();
+    static Map<String, Float> variables = new HashMap<String, Float>();
 
     static {
         variables.put("pi", pi);

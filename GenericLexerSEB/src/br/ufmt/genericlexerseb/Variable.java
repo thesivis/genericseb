@@ -4,8 +4,6 @@
  */
 package br.ufmt.genericlexerseb;
 
-import java.util.Objects;
-
 /**
  *
  * @author raphael
@@ -61,7 +59,7 @@ public class Variable implements Comparable<Variable>{
     @Override
     public int hashCode() {
         int hash = 3;
-        hash = 37 * hash + Objects.hashCode(this.name);
+        hash = 37 * hash + (this.name.hashCode());
         return hash;
     }
     
