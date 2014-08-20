@@ -543,7 +543,7 @@ public class GenericSEB {
                     + "        }\n");
         }
 
-        source.append("        Map<String, float[]> ret = new HashMap<>();\n\n");
+        source.append("        Map<String, float[]> ret = new HashMap<String, float[]>();\n\n");
         source.append("        List<ParameterGPU> par = new ArrayList<ParameterGPU>();\n\n");
 
         boolean first = true;
@@ -1504,7 +1504,7 @@ public class GenericSEB {
             source.append("        int col = " + tam + ";\n");
         }
 
-        source.append("        Map<String, float[]> ret = new HashMap<>();\n\n");
+        source.append("        Map<String, float[]> ret = new HashMap<String, float[]>();\n\n");
         source.append("        List<ParameterGPU> par = new ArrayList<ParameterGPU>();\n\n");
 
         boolean first = true;
@@ -2459,7 +2459,7 @@ public class GenericSEB {
         }
         source.append("){\n\n");
 
-        source.append("        Map<String, float[]> ret = new HashMap<>();\n\n");
+        source.append("        Map<String, float[]> ret = new HashMap<String, float[]>();\n\n");
 
         if (constants != null) {
             for (String string : constants.keySet()) {
