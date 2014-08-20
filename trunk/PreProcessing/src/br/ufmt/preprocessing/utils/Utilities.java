@@ -69,7 +69,7 @@ import java.util.Map;
  */
 public class Utilities {
 
-    private static Map<String, br.ufmt.genericlexerseb.Variable> variables = new HashMap<>();
+    private static Map<String, br.ufmt.genericlexerseb.Variable> variables = new HashMap<String, br.ufmt.genericlexerseb.Variable>();
     private static GenericLexerSEB lexer = new GenericLexerSEB();
 
     static {
@@ -551,7 +551,7 @@ public class Utilities {
     }
 
     public static List<String> getVariables() {
-        List<String> variables = new ArrayList<>();
+        List<String> variables = new ArrayList<String>();
 
         variables.add("pi");
         variables.add("deg2rad");

@@ -712,7 +712,7 @@ public class JSeriesCUDA extends GPU {
 
                 int middle;
                 int div;
-                List<Integer> numbers = new ArrayList<>();
+                List<Integer> numbers = new ArrayList<Integer>();
                 while (factoration > 1) {
                     middle = factoration / 2;
                     div = 2;
@@ -868,7 +868,7 @@ public class JSeriesCUDA extends GPU {
     public List<Occupancy> getMaxThreadsPerBlock(CUdevice device, int registerPerThread, int sharedMemoryPerBlock) {
 
         int threadPerBlock;
-        List<Occupancy> occupancies = new ArrayList<>();
+        List<Occupancy> occupancies = new ArrayList<Occupancy>();
 
         ComputeCapability compute;
 

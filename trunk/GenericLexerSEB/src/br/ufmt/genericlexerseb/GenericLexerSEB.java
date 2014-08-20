@@ -22,7 +22,7 @@ import org.python.util.PythonInterpreter;
  */
 public class GenericLexerSEB {
 
-    public final static HashMap<LanguageType, HashMap<String, String>> functions = new HashMap<>();
+    public final static HashMap<LanguageType, HashMap<String, String>> functions = new HashMap<LanguageType, HashMap<String, String>>();
 
     static {
 
@@ -39,28 +39,35 @@ public class GenericLexerSEB {
 
                 funcs = functions.get(LanguageType.OPENCL);
                 if (funcs == null) {
-                    funcs = new HashMap<>();
+                    funcs = new HashMap<String, String>();
                     functions.put(LanguageType.OPENCL, funcs);
+                }
+                funcs.put(vet[0], vet[1]);
+                
+                funcs = functions.get(LanguageType.OPENCL_CPU);
+                if (funcs == null) {
+                    funcs = new HashMap<String, String>();
+                    functions.put(LanguageType.OPENCL_CPU, funcs);
                 }
                 funcs.put(vet[0], vet[1]);
 
                 funcs = functions.get(LanguageType.CUDA);
                 if (funcs == null) {
-                    funcs = new HashMap<>();
+                    funcs = new HashMap<String, String>();
                     functions.put(LanguageType.CUDA, funcs);
                 }
                 funcs.put(vet[0], vet[3]);
 
                 funcs = functions.get(LanguageType.JAVA);
                 if (funcs == null) {
-                    funcs = new HashMap<>();
+                    funcs = new HashMap<String, String>();
                     functions.put(LanguageType.JAVA, funcs);
                 }
                 funcs.put(vet[0], vet[4]);
 
                 funcs = functions.get(LanguageType.PYTHON);
                 if (funcs == null) {
-                    funcs = new HashMap<>();
+                    funcs = new HashMap<String, String>();
                     functions.put(LanguageType.PYTHON, funcs);
                 }
                 funcs.put(vet[0], vet[5]);
@@ -118,7 +125,7 @@ public class GenericLexerSEB {
                 terms[i] = "-";
             } else if (terms[i].matches("(-?)[0-9]+[\\.][0-9]+")) {
                 terms[i] = terms[i] + "";
-                if (language.equals(LanguageType.OPENCL) || language.equals(LanguageType.CUDA)) {
+                if (language.equals(LanguageType.OPENCL) || language.equals(LanguageType.CUDA) || language.equals(LanguageType.OPENCL_CPU)) {
                     terms[i] = terms[i].trim() + "f";
                 }
             } else if (terms[i].equals("pi") && language.equals(LanguageType.JAVA)) {

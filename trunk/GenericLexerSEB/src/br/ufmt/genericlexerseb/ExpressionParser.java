@@ -40,8 +40,8 @@ public class ExpressionParser {
     private static final int LEFT_ASSOC = 0;
     private static final int RIGHT_ASSOC = 1;
     // Operators      
-    private static final Map<String, int[]> OPERATORS = new HashMap<>();
-    private List<String> variables = new ArrayList<>();
+    private static final Map<String, int[]> OPERATORS = new HashMap<String, int[]>();
+    private List<String> variables = new ArrayList<String>();
     private String[] output;
 
     static {
@@ -163,8 +163,8 @@ public class ExpressionParser {
     }
 
     private String[] infixToRPN(String[] inputTokens) {
-        ArrayList<String> out = new ArrayList<>();
-        Stack<String> stack = new Stack<>();
+        ArrayList<String> out = new ArrayList<String>();
+        Stack<String> stack = new Stack<String>();
         if (debug) {
             System.out.println("Input:" + Arrays.toString(inputTokens));
         }
@@ -312,21 +312,21 @@ public class ExpressionParser {
         for (int i = 0; i < input.length - 1; i++) {
             String string = input[i];
             together.append(string);
-            switch (string) {
-                case "<":
-                case ">":
+            switch (string.charAt(0)) {
+                case '<':
+                case '>':
                     if (!(input[i + 1].equals("&") || input[i + 1].equals("|") || input[i + 1].equals("="))) {
                         together.append(" ");
                     }
                     break;
-                case "&":
-                case "|":
-                case "=":
+                case '&':
+                case '|':
+                case '=':
                     if (!(input[i + 1].equals("&") || input[i + 1].equals("|") || input[i + 1].equals("="))) {
                         together.append(" ");
                     }
                     break;
-                case "!":
+                case '!':
                     if (!(input[i + 1].equals("="))) {
                         together.append(" ");
                     }
@@ -340,7 +340,7 @@ public class ExpressionParser {
         }
         together.append(input[input.length - 1]);
         StringTokenizer strTokenizer = new StringTokenizer(together.toString());
-        List<String> list = new ArrayList<>();
+        List<String> list = new ArrayList<String>();
         while (strTokenizer.hasMoreTokens()) {
             String tok = strTokenizer.nextToken();
 //            System.out.println(tok);

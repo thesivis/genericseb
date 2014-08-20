@@ -44,7 +44,7 @@ public class LandSat {
             if (calibration != null && calibration.length == 7 && calibration[0].length == 3) {
                 SeekableStream s = null;
                 try {
-                    List<DataFile> ret = new ArrayList<>();
+                    List<DataFile> ret = new ArrayList<DataFile>();
 //                    System.out.println("Arq:" + tiff.getName());
                     s = new FileSeekableStream(tiff);
                     TIFFDecodeParam param = null;
@@ -62,7 +62,7 @@ public class LandSat {
 
                     if (bands == 7) {
 
-                        Map<String, Float> variables = new HashMap<>();
+                        Map<String, Float> variables = new HashMap<String, Float>();
                         variables.put("width", (float) width);
                         variables.put("height", (float) height);
                         variables.put("julianDay", (float) julianDay);
@@ -84,10 +84,10 @@ public class LandSat {
 
                         String[] nameParameters = new String[]{"pixel1", "pixel2", "pixel3", "pixel4", "pixel5", "pixel6", "pixel7"};
 
-                        Map<String, float[][]> constMatrix = new HashMap<>();
+                        Map<String, float[][]> constMatrix = new HashMap<String, float[][]>();
                         constMatrix.put("calibration", calibration);
 
-                        Map<String, float[]> constVetor = new HashMap<>();
+                        Map<String, float[]> constVetor = new HashMap<String, float[]>();
                         constVetor.put("parameterAlbedo", parameterAlbedo);
 
                         BufferedReader bur = new BufferedReader(new StringReader(equations));
@@ -116,6 +116,20 @@ public class LandSat {
                         } catch (Exception ex) {
                             Logger.getLogger(LandSat.class.getName()).log(Level.SEVERE, null, ex);
                         }
+                        
+//                        processorTiff = new ProcessorTiff(LanguageType.CUDA);
+//                        try {
+//                            ret = processorTiff.execute(header.toString(), body.toString(), pathToOriginalTiff, nameParameters, variables, constVetor, constMatrix);
+//                        } catch (Exception ex) {
+//                            Logger.getLogger(LandSat.class.getName()).log(Level.SEVERE, null, ex);
+//                        }
+//                        
+//                        processorTiff = new ProcessorTiff(LanguageType.JAVA);
+//                        try {
+//                            ret = processorTiff.execute(header.toString(), body.toString(), pathToOriginalTiff, nameParameters, variables, constVetor, constMatrix);
+//                        } catch (Exception ex) {
+//                            Logger.getLogger(LandSat.class.getName()).log(Level.SEVERE, null, ex);
+//                        }
 
                         System.out.println("End");
                     } else {
@@ -171,7 +185,7 @@ public class LandSat {
                 SeekableStream s = null;
                 try {
 
-                    List<DataFile> ret = new ArrayList<>();
+                    List<DataFile> ret = new ArrayList<DataFile>();
                     System.out.println("Looking Pixel Hot and Cold:" + tiff.getName());
                     s = new FileSeekableStream(tiff);
                     TIFFDecodeParam param = null;

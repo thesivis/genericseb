@@ -68,7 +68,7 @@ public class ProcessorTiff {
             short[][] pixel = new short[bands][height * width];
             System.out.println("Alocado");
 
-            List<VariableValue> parameters = new ArrayList<>();
+            List<VariableValue> parameters = new ArrayList<VariableValue>();
             for (int i = 1; i <= bands; i++) {
                 parameters.add(new VariableValue(nameParameters[i - 1], pixel[i - 1]));
             }
@@ -82,9 +82,9 @@ public class ProcessorTiff {
 
             System.out.println("Configuring Execution");
 
-            List<DataFile> ret = new ArrayList<>();
+            List<DataFile> ret = new ArrayList<DataFile>();
             String[] lines = body.split("\n");
-            Set<String> outputs = new HashSet<>();
+            Set<String> outputs = new HashSet<String>();
             StringBuilder without = new StringBuilder();
             StringBuilder exec = new StringBuilder();
             boolean executed = false;
