@@ -12,7 +12,7 @@ import java.util.Map;
  * @author raphael
  */
 public class Constants {
-
+    
     public static String ARQUIVO = "";
     public static float pi = 3.1415926536f;
     public static float deg2rad = 0.01745329252f;
