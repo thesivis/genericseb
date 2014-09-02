@@ -43,7 +43,7 @@ public class GenericSEB {
     private static final String[] varsIndexSEBTA = new String[]{"maxTsVet", "minIndexVet", "minTsVet", "maxIndexVet", "rnHotVet", "gHotVet", "saviHotVet"};
     private static final String[] varsIndexSEBAL = new String[]{"maxIndexVet", "minIndexVet", "rnHotVet", "gHotVet", "saviHotVet"};
     private static final String[] varsIndexSSEB = new String[]{"maxTsVet", "minIndexVet", "minTsVet", "maxIndexVet"};
-    private static final String[] varsIndexSSEBI = new String[]{"maxTsDirVet", "maxTsEsqVet", "minTsDirVet", "minTsEsqVet", "minIndexCimaVet", "minIndexBaixoVet", "maxIndexCimaVet", "maxIndexBaixoVet"};
+    private static final String[] varsIndexSSEBI = new String[]{"indexMax", "indexVet", "TsVet", "TsMax", "indexMinBaixoVet", "TsMinEsqVet"};
 
     public GenericSEB(LanguageType language) {
         this.language = language;
@@ -527,7 +527,7 @@ public class GenericSEB {
             source.append("        int width = (int)").append(constants.get("width")).append("f;\n");
             source.append("        int height = (int)").append(constants.get("height")).append("f;\n");
 
-            int tam = (indexEnum.equals(IndexEnum.SSEBI) ? 10 : 3);
+            int tam = (indexEnum.equals(IndexEnum.SSEBI) ? 40 : 3);
             source.append("        int col = " + tam + ";\n"
                     + "        int line = 5000000/col;\n"
                     + "        int w = 40*col;\n"
@@ -786,7 +786,18 @@ public class GenericSEB {
 
             for (int i = 0; i < varsIndex.length; i++) {
                 String string = varsIndex[i];
-                if (indexEnum.equals(IndexEnum.SSEB) || indexEnum.equals(IndexEnum.SSEBI)) {
+                if (indexEnum.equals(IndexEnum.SSEBI)) {
+                    source.append("        float[] ").append(string).append(" = new float[col];\n");
+                    if (string.toLowerCase().contains("min")) {
+                        source.append("        for (int i = 0; i < " + string + ".length; i++) {\n");
+                        source.append("             " + string + "[i] = Float.MAX_VALUE;\n");
+                        source.append("        }\n");
+                    } else if (string.toLowerCase().contains("max")) {
+                        source.append("        for (int i = 0; i < " + string + ".length; i++) {\n");
+                        source.append("             " + string + "[i] = Float.MIN_VALUE;\n");
+                        source.append("        }\n");
+                    }
+                } else if (indexEnum.equals(IndexEnum.SSEB)) {
                     source.append("        float[] ").append(string).append(" = new float[col*width];\n");
                 } else {
                     source.append("        float[] ").append(string).append(" = new float[width];\n");
@@ -813,7 +824,7 @@ public class GenericSEB {
         if (indexEnum != null && (indexEnum.equals(IndexEnum.SSEB) || indexEnum.equals(IndexEnum.SSEBI))) {
             source.append("        short[] gab = new short[width];\n"
                     + "        par.add(new ParameterGPU(gab, true, false, true));\n");
-            source.append("        short[] gab2 = new short[height];\n"
+            source.append("        short[] gab2 = new short[col];\n"
                     + "        par.add(new ParameterGPU(gab2, true, false, true));\n");
 
         }
@@ -932,77 +943,7 @@ public class GenericSEB {
                         + "        ret.put(\"TC\", new float[]{TC});\n"
                         + "        ret.put(\"TH\", new float[]{TH});\n\n");
             } else if (indexEnum.equals(IndexEnum.SSEBI)) {
-                source.append("        float[] indexMaxCima = new float[]{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};\n"
-                        + "        float[] indexMaxBaixo = new float[]{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};\n"
-                        + "        float[] indexMinCima = new float[]{Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE};\n"
-                        + "        float[] indexMinBaixo = new float[]{Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE};\n"
-                        + "        float[] TsMaxDir = new float[]{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};\n"
-                        + "        float[] TsMaxEsq = new float[]{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};\n"
-                        + "        float[] TsMinDir = new float[]{Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE};\n"
-                        + "        float[] TsMinEsq = new float[]{Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE};\n"
-                        + "\n"
-                        + "        \n"
-                        + "        for (int i = 0; i < minTsEsqVet.length; i++) {\n"
-                        + "            for (int idx = 0; idx < indexMaxCima.length; idx++) {\n"
-                        + "                if (maxIndexCimaVet[i] >= indexMaxCima[idx]) {\n"
-                        + "                    if (maxTsDirVet[i] >= TsMaxDir[idx]) {\n"
-                        + "                        for (int j = TsMaxDir.length - 1; j > idx; j--) {\n"
-                        + "                            TsMaxDir[j] = TsMaxDir[j - 1];\n"
-                        + "                            indexMaxCima[j] = indexMaxCima[j - 1];\n"
-                        + "                        }\n"
-                        + "                        TsMaxDir[idx] = maxTsDirVet[i];\n"
-                        + "                        indexMaxCima[idx] = maxIndexCimaVet[i];\n"
-                        + "                        break;\n"
-                        + "                    }\n"
-                        + "\n"
-                        + "                }\n"
-                        + "            }\n"
-                        + "            for (int idx = 0; idx < indexMaxBaixo.length; idx++) {\n"
-                        + "                if (maxIndexBaixoVet[i] >= indexMaxBaixo[idx]) {\n"
-                        + "                    if (minTsDirVet[i] <= TsMinDir[idx]) {\n"
-                        + "                        for (int j = TsMinDir.length - 1; j > idx; j--) {\n"
-                        + "                            TsMinDir[j] = TsMinDir[j - 1];\n"
-                        + "                            indexMaxBaixo[j] = indexMaxBaixo[j - 1];\n"
-                        + "                        }\n"
-                        + "                        TsMinDir[idx] = minTsDirVet[i];\n"
-                        + "                        indexMaxBaixo[idx] = maxIndexBaixoVet[i];\n"
-                        + "                        break;\n"
-                        + "                    }\n"
-                        + "                }\n"
-                        + "\n"
-                        + "            }\n"
-                        + "            for (int idx = 0; idx < indexMinCima.length; idx++) {\n"
-                        + "                if (minIndexCimaVet[i] <= indexMinCima[idx]) {\n"
-                        + "                    if (maxTsEsqVet[i] >= TsMaxEsq[idx]) {\n"
-                        + "                        for (int j = TsMaxEsq.length - 1; j > idx; j--) {\n"
-                        + "                            TsMaxEsq[j] = TsMaxEsq[j - 1];\n"
-                        + "                            indexMinCima[j] = indexMinCima[j - 1];\n"
-                        + "                        }\n"
-                        + "                        TsMaxEsq[idx] = maxTsEsqVet[i];\n"
-                        + "                        indexMinCima[idx] = minIndexCimaVet[i];\n"
-                        + "                        break;\n"
-                        + "                    }\n"
-                        + "\n"
-                        + "                }\n"
-                        + "\n"
-                        + "            }\n"
-                        + "            for (int idx = 0; idx < indexMinBaixo.length; idx++) {\n"
-                        + "                if (minIndexBaixoVet[i] <= indexMinBaixo[idx]) {\n"
-                        + "                    if (minTsEsqVet[i] <= TsMinEsq[idx]) {\n"
-                        + "//                            System.out.println(\"dentro:\"+idx);\n"
-                        + "                        for (int j = TsMinEsq.length - 1; j > idx; j--) {\n"
-                        + "                            TsMinEsq[j] = TsMinEsq[j - 1];\n"
-                        + "                            indexMinBaixo[j] = indexMinBaixo[j - 1];\n"
-                        + "                        }\n"
-                        + "                        TsMinEsq[idx] = minTsEsqVet[i];\n"
-                        + "                        indexMinBaixo[idx] = minIndexBaixoVet[i];\n"
-                        + "                        break;\n"
-                        + "                    }\n"
-                        + "                }\n"
-                        + "            }\n"
-                        + "        }\n"
-                        + "\n"
-                        + "        float mediaSupEsqTs = 0.0f;\n"
+                source.append("        float mediaSupEsqTs = 0.0f;\n"
                         + "        float mediaSupDirTs = 0.0f;\n"
                         + "        float mediaInfEsqTs = 0.0f;\n"
                         + "        float mediaInfDirTs = 0.0f;\n"
@@ -1011,6 +952,74 @@ public class GenericSEB {
                         + "        float mediaSupDirIndex = 0.0f;\n"
                         + "        float mediaInfEsqIndex = 0.0f;\n"
                         + "        float mediaInfDirIndex = 0.0f;\n"
+                        + "\n"
+                        + "        float[] indexMaxCima = new float[10];\n"
+                        + "        float[] indexMaxBaixo = new float[10];\n"
+                        + "        float[] indexMinCima = new float[10];\n"
+                        + "        float[] indexMinBaixo = new float[10];\n"
+                        + "\n"
+                        + "        float[] TsMaxDir = new float[10];\n"
+                        + "        float[] TsMaxEsq = new float[10];\n"
+                        + "        float[] TsMinDir = new float[10];\n"
+                        + "        float[] TsMinEsq = new float[10];\n"
+                        + "\n"
+                        + "        for (int i = 0; i < 10; i++) {\n"
+                        + "            indexMinCima[i] = Float.MAX_VALUE;\n"
+                        + "            TsMinDir[i] = Float.MAX_VALUE;\n"
+                        + "            indexMinBaixo[i] = Float.MAX_VALUE;\n"
+                        + "            TsMinEsq[i] = Float.MAX_VALUE;\n"
+                        + "        }\n"
+                        + "        for (int i = 0; i < indexMax.length; i++) {\n"
+                        + "            for (int idx = 0; idx < TsMaxDir.length; idx++) {\n"
+                        + "                if (TsVet[i] >= TsMaxDir[idx]) {\n"
+                        + "                    for (int j = TsMaxDir.length - 1; j > idx; j--) {\n"
+                        + "                        TsMaxDir[j] = TsMaxDir[j - 1];\n"
+                        + "                        indexMaxCima[j] = indexMaxCima[j - 1];\n"
+                        + "                    }\n"
+                        + "                    TsMaxDir[idx] = TsVet[i];\n"
+                        + "                    indexMaxCima[idx] = indexMax[i];\n"
+                        + "                    break;\n"
+                        + "                }\n"
+                        + "            }\n"
+                        + "\n"
+                        + "            for (int idx = 0; idx < TsMinDir.length; idx++) {\n"
+                        + "                if (TsVet[i] <= TsMinDir[idx]) {\n"
+                        + "                    for (int j = TsMinDir.length - 1; j > idx; j--) {\n"
+                        + "                        TsMinDir[j] = TsMinDir[j - 1];\n"
+                        + "                        indexMaxBaixo[j] = indexMaxBaixo[j - 1];\n"
+                        + "                    }\n"
+                        + "                    TsMinDir[idx] = TsVet[i];\n"
+                        + "                    indexMaxBaixo[idx] = indexMax[i];\n"
+                        + "                    break;\n"
+                        + "                }\n"
+                        + "            }\n"
+                        + "\n"
+                        + "            for (int idx = 0; idx < TsMaxEsq.length; idx++) {\n"
+                        + "                if (indexVet[i] <= indexMinCima[idx]) {\n"
+                        + "                    for (int j = TsMaxEsq.length - 1; j > idx; j--) {\n"
+                        + "                        TsMaxEsq[j] = TsMaxEsq[j - 1];\n"
+                        + "                        indexMinCima[j] = indexMinCima[j - 1];\n"
+                        + "                    }\n"
+                        + "                    TsMaxEsq[idx] = TsMax[i];\n"
+                        + "                    indexMinCima[idx] = indexVet[i];\n"
+                        + "                    break;\n"
+                        + "                }\n"
+                        + "            }\n"
+                        + "\n"
+                        + "            for (int idx = 0; idx < TsMinEsq.length; idx++) {\n"
+                        + "                if (indexMinBaixoVet[i] <= indexMinBaixo[idx]) {\n"
+                        + "                    if (TsMinEsqVet[i] <= TsMinEsq[idx]) {\n"
+                        + "                        for (int j = TsMinEsq.length - 1; j > idx; j--) {\n"
+                        + "                            TsMinEsq[j] = TsMinEsq[j - 1];\n"
+                        + "                            indexMinBaixo[j] = indexMinBaixo[j - 1];\n"
+                        + "                        }\n"
+                        + "                        TsMinEsq[idx] = TsMinEsqVet[i];\n"
+                        + "                        indexMinBaixo[idx] = indexMinBaixoVet[i];\n"
+                        + "                        break;\n"
+                        + "                    }\n"
+                        + "                }\n"
+                        + "            }\n"
+                        + "        }\n"
                         + "\n"
                         + "        for (int i = 0; i < TsMinEsq.length; i++) {\n"
                         + "            mediaSupEsqTs += TsMaxEsq[i];\n"
@@ -1098,15 +1107,21 @@ public class GenericSEB {
                         varsIndex = varsIndexSSEBI;
                     }
                     gpuCodeBody.append("            int nind = ind;\n");
-                    gpuCodeBody.append("            ind = ind*parameters[3]+indY;\n");
-                }
-                for (int i = 0; i < varsIndex.length; i++) {
-                    String string = varsIndex[i];
-                    gpuCodeBody.append("            ").append(string).append("[ind]");
-                    if (string.startsWith("min")) {
-                        gpuCodeBody.append("=99999.0f;\n");
+                    if (indexEnum.equals(IndexEnum.SSEB)) {
+                        gpuCodeBody.append("            ind = ind*parameters[3]+indY;\n");
                     } else {
-                        gpuCodeBody.append("=-99999.0f;\n");
+                        gpuCodeBody.append("            ind = indY;\n");
+                    }
+                }
+                if (!(indexEnum.equals(IndexEnum.SSEB) || indexEnum.equals(IndexEnum.SSEBI))) {
+                    for (int i = 0; i < varsIndex.length; i++) {
+                        String string = varsIndex[i];
+                        gpuCodeBody.append("            ").append(string).append("[ind]");
+                        if (string.startsWith("min")) {
+                            gpuCodeBody.append("=99999.0f;\n");
+                        } else {
+                            gpuCodeBody.append("=-99999.0f;\n");
+                        }
                     }
                 }
 
@@ -1375,28 +1390,18 @@ public class GenericSEB {
                             + "                }\n"
                             + "            }\n\n");
                 } else if (indexEnum.equals(IndexEnum.SSEBI)) {
-                    gpuCode.append("            if(ssebi >= *maxIndexCimaVet){\n"
-                            + "                if(Ts >= *maxTsDirVet){\n"
-                            + "                    *maxTsDirVet=Ts;\n"
-                            + "                    *maxIndexCimaVet=ssebi;\n"
-                            + "                }\n"
+                    gpuCode.append("            if(ssebi >= *indexMax){\n"
+                            + "		*TsVet=Ts;\n"
+                            + "		*indexMax=ssebi;\n"
                             + "            }\n"
-                            + "            if(ssebi >= *maxIndexBaixoVet){\n"
-                            + "                if(Ts <= *minTsDirVet){\n"
-                            + "                    *minTsDirVet=Ts;\n"
-                            + "                    *maxIndexBaixoVet=ssebi;\n"
-                            + "                }\n"
-                            + "            }\n"
-                            + "            if(ssebi <= *minIndexCimaVet){\n"
-                            + "                if(Ts >= *maxTsEsqVet){\n"
-                            + "                    *maxTsEsqVet=Ts;\n"
-                            + "                    *minIndexCimaVet=ssebi;\n"
-                            + "                }\n"
-                            + "            }\n"
-                            + "            if(ssebi <= *minIndexBaixoVet){\n"
-                            + "                if(Ts <= *minTsEsqVet){\n"
-                            + "                    *minTsEsqVet=Ts;\n"
-                            + "                    *minIndexBaixoVet=ssebi;\n"
+                            + "	    if(Ts >= *TsMax){\n"
+                            + "		*TsMax=Ts;\n"
+                            + "		*indexVet=ssebi;\n"
+                            + "	    }\n"
+                            + "            if(ssebi <= *indexMinBaixoVet){\n"
+                            + "                if(Ts <= *TsMinEsqVet){\n"
+                            + "                    *TsMinEsqVet=Ts;\n"
+                            + "                    *indexMinBaixoVet=ssebi;\n"
                             + "                }\n"
                             + "            }\n\n");
                 }
@@ -1500,7 +1505,7 @@ public class GenericSEB {
             source.append("        int width = (int)").append(constants.get("width")).append("f;\n");
             source.append("        int height = (int)").append(constants.get("height")).append("f;\n");
 
-            int tam = (indexEnum.equals(IndexEnum.SSEBI) ? 10 : 3);
+            int tam = (indexEnum.equals(IndexEnum.SSEBI) ? 40 : 3);
             source.append("        int col = " + tam + ";\n");
         }
 
@@ -1743,8 +1748,17 @@ public class GenericSEB {
 
             for (int i = 0; i < varsIndex.length; i++) {
                 String string = varsIndex[i];
-                if (indexEnum.equals(IndexEnum.SSEB) || indexEnum.equals(IndexEnum.SSEBI)) {
-                    source.append("        float[] ").append(string).append(" = new float[col*width];\n");
+                if (indexEnum.equals(IndexEnum.SSEBI) || indexEnum.equals(IndexEnum.SSEB)) {
+                    source.append("        float[] ").append(string).append(" = new float[col];\n");
+                    if (string.toLowerCase().contains("min")) {
+                        source.append("        for (int i = 0; i < " + string + ".length; i++) {\n");
+                        source.append("             " + string + "[i] = Float.MAX_VALUE;\n");
+                        source.append("        }\n");
+                    } else if (string.toLowerCase().contains("max")) {
+                        source.append("        for (int i = 0; i < " + string + ".length; i++) {\n");
+                        source.append("             " + string + "[i] = Float.MIN_VALUE;\n");
+                        source.append("        }\n");
+                    }
                 } else {
                     source.append("        float[] ").append(string).append(" = new float[width];\n");
                 }
@@ -1769,7 +1783,7 @@ public class GenericSEB {
         if (indexEnum != null && (indexEnum.equals(IndexEnum.SSEB) || indexEnum.equals(IndexEnum.SSEBI))) {
             source.append("        short[] gab = new short[width];\n"
                     + "        par.add(new ParameterGPU(gab, true, false, true));\n");
-            source.append("        short[] gab2 = new short[height];\n"
+            source.append("        short[] gab2 = new short[col];\n"
                     + "        par.add(new ParameterGPU(gab2, true, false, true));\n");
 
         }
@@ -1905,77 +1919,7 @@ public class GenericSEB {
                         + "        ret.put(\"TC\", new float[]{TC});\n"
                         + "        ret.put(\"TH\", new float[]{TH});\n\n");
             } else if (indexEnum.equals(IndexEnum.SSEBI)) {
-                source.append("        float[] indexMaxCima = new float[]{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};\n"
-                        + "        float[] indexMaxBaixo = new float[]{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};\n"
-                        + "        float[] indexMinCima = new float[]{Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE};\n"
-                        + "        float[] indexMinBaixo = new float[]{Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE};\n"
-                        + "        float[] TsMaxDir = new float[]{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};\n"
-                        + "        float[] TsMaxEsq = new float[]{0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};\n"
-                        + "        float[] TsMinDir = new float[]{Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE};\n"
-                        + "        float[] TsMinEsq = new float[]{Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE};\n"
-                        + "\n"
-                        + "        \n"
-                        + "        for (int i = 0; i < minTsEsqVet.length; i++) {\n"
-                        + "            for (int idx = 0; idx < indexMaxCima.length; idx++) {\n"
-                        + "                if (maxIndexCimaVet[i] >= indexMaxCima[idx]) {\n"
-                        + "                    if (maxTsDirVet[i] >= TsMaxDir[idx]) {\n"
-                        + "                        for (int j = TsMaxDir.length - 1; j > idx; j--) {\n"
-                        + "                            TsMaxDir[j] = TsMaxDir[j - 1];\n"
-                        + "                            indexMaxCima[j] = indexMaxCima[j - 1];\n"
-                        + "                        }\n"
-                        + "                        TsMaxDir[idx] = maxTsDirVet[i];\n"
-                        + "                        indexMaxCima[idx] = maxIndexCimaVet[i];\n"
-                        + "                        break;\n"
-                        + "                    }\n"
-                        + "\n"
-                        + "                }\n"
-                        + "            }\n"
-                        + "            for (int idx = 0; idx < indexMaxBaixo.length; idx++) {\n"
-                        + "                if (maxIndexBaixoVet[i] >= indexMaxBaixo[idx]) {\n"
-                        + "                    if (minTsDirVet[i] <= TsMinDir[idx]) {\n"
-                        + "                        for (int j = TsMinDir.length - 1; j > idx; j--) {\n"
-                        + "                            TsMinDir[j] = TsMinDir[j - 1];\n"
-                        + "                            indexMaxBaixo[j] = indexMaxBaixo[j - 1];\n"
-                        + "                        }\n"
-                        + "                        TsMinDir[idx] = minTsDirVet[i];\n"
-                        + "                        indexMaxBaixo[idx] = maxIndexBaixoVet[i];\n"
-                        + "                        break;\n"
-                        + "                    }\n"
-                        + "                }\n"
-                        + "\n"
-                        + "            }\n"
-                        + "            for (int idx = 0; idx < indexMinCima.length; idx++) {\n"
-                        + "                if (minIndexCimaVet[i] <= indexMinCima[idx]) {\n"
-                        + "                    if (maxTsEsqVet[i] >= TsMaxEsq[idx]) {\n"
-                        + "                        for (int j = TsMaxEsq.length - 1; j > idx; j--) {\n"
-                        + "                            TsMaxEsq[j] = TsMaxEsq[j - 1];\n"
-                        + "                            indexMinCima[j] = indexMinCima[j - 1];\n"
-                        + "                        }\n"
-                        + "                        TsMaxEsq[idx] = maxTsEsqVet[i];\n"
-                        + "                        indexMinCima[idx] = minIndexCimaVet[i];\n"
-                        + "                        break;\n"
-                        + "                    }\n"
-                        + "\n"
-                        + "                }\n"
-                        + "\n"
-                        + "            }\n"
-                        + "            for (int idx = 0; idx < indexMinBaixo.length; idx++) {\n"
-                        + "                if (minIndexBaixoVet[i] <= indexMinBaixo[idx]) {\n"
-                        + "                    if (minTsEsqVet[i] <= TsMinEsq[idx]) {\n"
-                        + "//                            System.out.println(\"dentro:\"+idx);\n"
-                        + "                        for (int j = TsMinEsq.length - 1; j > idx; j--) {\n"
-                        + "                            TsMinEsq[j] = TsMinEsq[j - 1];\n"
-                        + "                            indexMinBaixo[j] = indexMinBaixo[j - 1];\n"
-                        + "                        }\n"
-                        + "                        TsMinEsq[idx] = minTsEsqVet[i];\n"
-                        + "                        indexMinBaixo[idx] = minIndexBaixoVet[i];\n"
-                        + "                        break;\n"
-                        + "                    }\n"
-                        + "                }\n"
-                        + "            }\n"
-                        + "        }\n"
-                        + "\n"
-                        + "        float mediaSupEsqTs = 0.0f;\n"
+                source.append("        float mediaSupEsqTs = 0.0f;\n"
                         + "        float mediaSupDirTs = 0.0f;\n"
                         + "        float mediaInfEsqTs = 0.0f;\n"
                         + "        float mediaInfDirTs = 0.0f;\n"
@@ -1984,6 +1928,74 @@ public class GenericSEB {
                         + "        float mediaSupDirIndex = 0.0f;\n"
                         + "        float mediaInfEsqIndex = 0.0f;\n"
                         + "        float mediaInfDirIndex = 0.0f;\n"
+                        + "\n"
+                        + "        float[] indexMaxCima = new float[10];\n"
+                        + "        float[] indexMaxBaixo = new float[10];\n"
+                        + "        float[] indexMinCima = new float[10];\n"
+                        + "        float[] indexMinBaixo = new float[10];\n"
+                        + "\n"
+                        + "        float[] TsMaxDir = new float[10];\n"
+                        + "        float[] TsMaxEsq = new float[10];\n"
+                        + "        float[] TsMinDir = new float[10];\n"
+                        + "        float[] TsMinEsq = new float[10];\n"
+                        + "\n"
+                        + "        for (int i = 0; i < 10; i++) {\n"
+                        + "            indexMinCima[i] = Float.MAX_VALUE;\n"
+                        + "            TsMinDir[i] = Float.MAX_VALUE;\n"
+                        + "            indexMinBaixo[i] = Float.MAX_VALUE;\n"
+                        + "            TsMinEsq[i] = Float.MAX_VALUE;\n"
+                        + "        }\n"
+                        + "        for (int i = 0; i < indexMax.length; i++) {\n"
+                        + "            for (int idx = 0; idx < TsMaxDir.length; idx++) {\n"
+                        + "                if (TsVet[i] >= TsMaxDir[idx]) {\n"
+                        + "                    for (int j = TsMaxDir.length - 1; j > idx; j--) {\n"
+                        + "                        TsMaxDir[j] = TsMaxDir[j - 1];\n"
+                        + "                        indexMaxCima[j] = indexMaxCima[j - 1];\n"
+                        + "                    }\n"
+                        + "                    TsMaxDir[idx] = TsVet[i];\n"
+                        + "                    indexMaxCima[idx] = indexMax[i];\n"
+                        + "                    break;\n"
+                        + "                }\n"
+                        + "            }\n"
+                        + "\n"
+                        + "            for (int idx = 0; idx < TsMinDir.length; idx++) {\n"
+                        + "                if (TsVet[i] <= TsMinDir[idx]) {\n"
+                        + "                    for (int j = TsMinDir.length - 1; j > idx; j--) {\n"
+                        + "                        TsMinDir[j] = TsMinDir[j - 1];\n"
+                        + "                        indexMaxBaixo[j] = indexMaxBaixo[j - 1];\n"
+                        + "                    }\n"
+                        + "                    TsMinDir[idx] = TsVet[i];\n"
+                        + "                    indexMaxBaixo[idx] = indexMax[i];\n"
+                        + "                    break;\n"
+                        + "                }\n"
+                        + "            }\n"
+                        + "\n"
+                        + "            for (int idx = 0; idx < TsMaxEsq.length; idx++) {\n"
+                        + "                if (indexVet[i] <= indexMinCima[idx]) {\n"
+                        + "                    for (int j = TsMaxEsq.length - 1; j > idx; j--) {\n"
+                        + "                        TsMaxEsq[j] = TsMaxEsq[j - 1];\n"
+                        + "                        indexMinCima[j] = indexMinCima[j - 1];\n"
+                        + "                    }\n"
+                        + "                    TsMaxEsq[idx] = TsMax[i];\n"
+                        + "                    indexMinCima[idx] = indexVet[i];\n"
+                        + "                    break;\n"
+                        + "                }\n"
+                        + "            }\n"
+                        + "\n"
+                        + "            for (int idx = 0; idx < TsMinEsq.length; idx++) {\n"
+                        + "                if (indexMinBaixoVet[i] <= indexMinBaixo[idx]) {\n"
+                        + "                    if (TsMinEsqVet[i] <= TsMinEsq[idx]) {\n"
+                        + "                        for (int j = TsMinEsq.length - 1; j > idx; j--) {\n"
+                        + "                            TsMinEsq[j] = TsMinEsq[j - 1];\n"
+                        + "                            indexMinBaixo[j] = indexMinBaixo[j - 1];\n"
+                        + "                        }\n"
+                        + "                        TsMinEsq[idx] = TsMinEsqVet[i];\n"
+                        + "                        indexMinBaixo[idx] = indexMinBaixoVet[i];\n"
+                        + "                        break;\n"
+                        + "                    }\n"
+                        + "                }\n"
+                        + "            }\n"
+                        + "        }\n"
                         + "\n"
                         + "        for (int i = 0; i < TsMinEsq.length; i++) {\n"
                         + "            mediaSupEsqTs += TsMaxEsq[i];\n"
@@ -2081,16 +2093,18 @@ public class GenericSEB {
                         varsIndex = varsIndexSSEBI;
                     }
                     gpuCodeBody.append("            int nind = ind;\n");
-                    gpuCodeBody.append("            ind = ind*parameters[3]+indY;\n");
+                    gpuCodeBody.append("            ind = indY;\n");
                 }
 
-                for (int i = 0; i < varsIndex.length; i++) {
-                    String string = varsIndex[i];
-                    gpuCodeBody.append("            ").append(string).append("[ind]");
-                    if (string.startsWith("min")) {
-                        gpuCodeBody.append("=99999.0f;\n");
-                    } else {
-                        gpuCodeBody.append("=-99999.0f;\n");
+                if (!(indexEnum.equals(IndexEnum.SSEB) || indexEnum.equals(IndexEnum.SSEBI))) {
+                    for (int i = 0; i < varsIndex.length; i++) {
+                        String string = varsIndex[i];
+                        gpuCodeBody.append("            ").append(string).append("[ind]");
+                        if (string.startsWith("min")) {
+                            gpuCodeBody.append("=99999.0f;\n");
+                        } else {
+                            gpuCodeBody.append("=-99999.0f;\n");
+                        }
                     }
                 }
 
@@ -2344,30 +2358,21 @@ public class GenericSEB {
                             + "                }\n"
                             + "            }\n\n");
                 } else if (indexEnum.equals(IndexEnum.SSEBI)) {
-                    gpuCode.append("            if(ssebi >= maxIndexCimaVet[ind]){\n"
-                            + "                if(Ts >= maxTsDirVet[ind]){\n"
-                            + "                    maxTsDirVet[ind]=Ts;\n"
-                            + "                    maxIndexCimaVet[ind]=ssebi;\n"
-                            + "                }\n"
+                    gpuCode.append("            if(ssebi >= indexMax[ind]){\n"
+                            + "		TsVet[ind]=Ts;\n"
+                            + "		indexMax[ind]=ssebi;\n"
                             + "            }\n"
-                            + "            if(ssebi >= maxIndexBaixoVet[ind]){\n"
-                            + "                if(Ts <= minTsDirVet[ind]){\n"
-                            + "                    minTsDirVet[ind]=Ts;\n"
-                            + "                    maxIndexBaixoVet[ind]=ssebi;\n"
-                            + "                }\n"
-                            + "            }\n"
-                            + "            if(ssebi <= minIndexCimaVet[ind]){\n"
-                            + "                if(Ts >= maxTsEsqVet[ind]){\n"
-                            + "                    maxTsEsqVet[ind]=Ts;\n"
-                            + "                    minIndexCimaVet[ind]=ssebi;\n"
-                            + "                }\n"
-                            + "            }\n"
-                            + "            if(ssebi <= minIndexBaixoVet[ind]){\n"
-                            + "                if(Ts <= minTsEsqVet[ind]){\n"
-                            + "                    minTsEsqVet[ind]=Ts;\n"
-                            + "                    minIndexBaixoVet[ind]=ssebi;\n"
+                            + "	    if(Ts >= TsMax[ind]){\n"
+                            + "		TsMax[ind]=Ts;\n"
+                            + "		indexVet[ind]=ssebi;\n"
+                            + "	    }\n"
+                            + "            if(ssebi <= indexMinBaixoVet[ind]){\n"
+                            + "                if(Ts <= TsMinEsqVet[ind]){\n"
+                            + "                    TsMinEsqVet[ind]=Ts;\n"
+                            + "                    indexMinBaixoVet[ind]=ssebi;\n"
                             + "                }\n"
                             + "            }\n\n");
+
                 }
 
             }

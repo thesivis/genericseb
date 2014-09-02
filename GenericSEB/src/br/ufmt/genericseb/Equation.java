@@ -9,7 +9,6 @@ package br.ufmt.genericseb;
  * @author raphael
  */
 public class Equation {
-
     private String term;
     private String index;
     private String[] condition;
