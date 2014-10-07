@@ -78,11 +78,9 @@ public class JSeriesCL extends GPU {
 
         List<List<ParameterGPU>> parametrosByGPU = new ArrayList<List<ParameterGPU>>();
 
-        if (devices.size() == 1) {
-            parametrosByGPU.add(parametros);
-        } else {
-            parametrosByGPU.add(new ArrayList<ParameterGPU>());
-        }
+
+        parametrosByGPU.add(new ArrayList<ParameterGPU>());
+
         for (int i = 1; i < devices.size(); i++) {
             if (devices.get(i).getCores() < minCores) {
                 minCores = devices.get(i).getCores();
@@ -125,7 +123,7 @@ public class JSeriesCL extends GPU {
         Thread[] threads = new Thread[devices.size()];
         for (int i = 0; i < devices.size(); i++) {
             System.out.println("Thread:" + i);
-            ExecuteOpenCL executeOpenCL = new ExecuteOpenCL(parametros, codigoFonte, metodo, workGroups, workItems);
+            ExecuteOpenCL executeOpenCL = new ExecuteOpenCL(parametrosByGPU.get(i), codigoFonte, metodo, workGroups, workItems, i);
             threads[i] = new Thread(executeOpenCL);
             threads[i].start();
         }
@@ -236,6 +234,7 @@ public class JSeriesCL extends GPU {
         cl_platform_id platforms[] = new cl_platform_id[numPlatforms[0]];
         clGetPlatformIDs(platforms.length, platforms, null);
 
+        devices = new ArrayList<Device>();
         // Collect all devices of all platforms
         List<cl_device_id> devicesCL = new ArrayList<cl_device_id>();
         for (int i = 0; i < platforms.length; i++) {
@@ -248,19 +247,23 @@ public class JSeriesCL extends GPU {
                 clGetDeviceIDs(platforms[i], deviceType, numDevices[0], devicesArray, null);
 
                 devicesCL.addAll(Arrays.asList(devicesArray));
+
+                // Print the infos about all devices
+                for (cl_device_id deviceID : devicesCL) {
+                    // CL_DEVICE_NAME
+                    String deviceName = getString(deviceID, CL_DEVICE_NAME);
+                    // CL_DEVICE_MAX_COMPUTE_UNITS
+                    int maxComputeUnits = getInt(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS);
+                    devices.add(new Device(deviceName, maxComputeUnits, deviceID, platforms[i]));
+                }
+
+                devicesCL.clear();
             } catch (CLException ex) {
             }
         }
 
-        devices = new ArrayList<Device>();
-        // Print the infos about all devices
-        for (cl_device_id deviceID : devicesCL) {
-            // CL_DEVICE_NAME
-            String deviceName = getString(deviceID, CL_DEVICE_NAME);
-            // CL_DEVICE_MAX_COMPUTE_UNITS
-            int maxComputeUnits = getInt(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS);
-            devices.add(new Device(deviceName, maxComputeUnits));
-        }
+
+
     }
 
     class ExecuteOpenCL implements Runnable {
@@ -270,13 +273,15 @@ public class JSeriesCL extends GPU {
         private String metodo;
         private long[] workGroups;
         private long[] workItems;
+        private int indexThreads;
 
-        public ExecuteOpenCL(List<ParameterGPU> parametros, String codigoFonte, String metodo, long[] workGroups, long[] workItems) {
+        public ExecuteOpenCL(List<ParameterGPU> parametros, String codigoFonte, String metodo, long[] workGroups, long[] workItems, int indexThreads) {
             this.parametros = parametros;
             this.codigoFonte = codigoFonte;
             this.metodo = metodo;
             this.workGroups = workGroups;
             this.workItems = workItems;
+            this.indexThreads = indexThreads;
         }
 
         @Override
@@ -313,46 +318,11 @@ public class JSeriesCL extends GPU {
                 pointers.add(dst);
             }
 
-            // The platform, device type and device number
-            // that will be used
-            final int platformIndex = 0;
-//        final long deviceType = CL_DEVICE_TYPE_CPU;
-            final int deviceIndex = 0;
-
             // Enable exceptions and subsequently omit error checks in this sample
             CL.setExceptionsEnabled(true);
 
-            // Obtain the number of platforms
-            int numPlatformsArray[] = new int[1];
-            clGetPlatformIDs(0, null, numPlatformsArray);
-            int numPlatforms = numPlatformsArray[0];
-//        System.out.println("numPlatforms:" + numPlatforms);
-
-            // Obtain a platform ID
-            cl_platform_id platforms[] = new cl_platform_id[numPlatforms];
-            clGetPlatformIDs(platforms.length, platforms, null);
-            cl_platform_id platform = platforms[platformIndex];
-
-            cl_device_id device = null;
-//        System.out.println(deviceType);
-
-            for (int i = 0; i < platforms.length; i++) {
-                platform = platforms[i];
-                try {
-//                System.out.println("Plat:"+platform);
-                    // Obtain the number of devices for the platform
-                    int numDevicesArray[] = new int[1];
-                    clGetDeviceIDs(platform, deviceType, 0, null, numDevicesArray);
-                    int numDevices = numDevicesArray[0];
-
-                    // Obtain a device ID 
-                    cl_device_id devices[] = new cl_device_id[numDevices];
-                    clGetDeviceIDs(platform, deviceType, numDevices, devices, null);
-                    device = devices[deviceIndex];
-                    break;
-                } catch (CLException ex) {
-                }
-            }
+            cl_device_id device = (cl_device_id) devices.get(indexThreads).getDevice();
+            cl_platform_id platform = (cl_platform_id) devices.get(indexThreads).getPlataform();
 
 //        System.out.println("platform:" + platform);
             // Initialize the context properties

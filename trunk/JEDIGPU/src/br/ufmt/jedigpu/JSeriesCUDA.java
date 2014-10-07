@@ -71,9 +71,9 @@ public class JSeriesCUDA extends GPU {
         devices = new ArrayList<Device>();
 
         // Initialize the driver and create a context for the first device.
-        CUdevice device = new CUdevice();
+        CUdevice device;
         for (int i = 0; i < count[0]; i++) {
-
+            device = new CUdevice();
             cuDeviceGet(device, i);
             // Obtain the device name
             byte deviceName[] = new byte[1024];
@@ -89,7 +89,8 @@ public class JSeriesCUDA extends GPU {
             int array[] = {0};
             cuDeviceGetAttribute(array, CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT, device);
             int numberCores = convertSMVer2Cores(major, minor);
-            devices.add(new Device(name, numberCores * array[0]));
+
+            devices.add(new Device(name, numberCores * array[0], device));
         }
     }
 
@@ -124,11 +125,9 @@ public class JSeriesCUDA extends GPU {
 
         List<List<ParameterGPU>> parametrosByGPU = new ArrayList<List<ParameterGPU>>();
 
-        if (devices.size() == 1) {
-            parametrosByGPU.add(parametros);
-        } else {
-            parametrosByGPU.add(new ArrayList<ParameterGPU>());
-        }
+
+        parametrosByGPU.add(new ArrayList<ParameterGPU>());
+       
         for (int i = 1; i < devices.size(); i++) {
             if (devices.get(i).getCores() < minCores) {
                 minCores = devices.get(i).getCores();
@@ -553,9 +552,7 @@ public class JSeriesCUDA extends GPU {
 
                 JCudaDriver.setExceptionsEnabled(ExceptionsEnabled);
 
-                CUdevice device = new CUdevice();
-
-                cuDeviceGet(device, indexThread);
+                CUdevice device = (CUdevice) devices.get(indexThread).getDevice();
 
 //                int array2[] = {0};
 //                cuDeviceGetAttribute(array2, CU_DEVICE_ATTRIBUTE_PCI_BUS_ID, device);
