@@ -17,6 +17,7 @@ public class MeasureTimeGPU {
     private long beginLong;
     private long endLong;
     private float time;
+    private long execution;
     private String description;
 
     public String getDescription() {
@@ -73,5 +74,22 @@ public class MeasureTimeGPU {
 
     public void setBeginLong(long beginLong) {
         this.beginLong = beginLong;
+    }
+
+    public long getExecution() {
+        return execution;
+    }
+
+    public void setExecution(long execution) {
+        this.execution = execution;
+    }
+
+    public void sum() {
+        execution += getDiferenceNano();
+        begin = null;
+        end = null;
+        beginLong = 0l;
+        endLong = 0l;
+        time = 0;
     }
 }
