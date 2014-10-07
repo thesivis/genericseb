@@ -43,15 +43,27 @@ public class JSeriesCL extends GPU {
 
     public void execute(List<ParameterGPU> parametros, String codigoFonte, String metodo) {
         if (measure) {
-            measures = new ArrayList<MeasureTimeGPU>();
-            allTimes = new MeasureTimeGPU();
+            allTimes = measures.get(EnumMeasure.ALL_TIME);
+            if (allTimes == null) {
+                allTimes = new MeasureTimeGPU();
+                allTimes.setDescription("Tempo de execução total");
+                measures.put(EnumMeasure.ALL_TIME, allTimes);
+            } else {
+                time.sum();
+            }
+            allTimes.setBeginLong(System.nanoTime());
             allTimes.setBegin(new Date());
-            allTimes.setDescription("Tempo de execução total");
-            measures.add(allTimes);
 
-            time = new MeasureTimeGPU();
-            time.setDescription("Tempo de execução das configurações");
-            measures.add(time);
+
+            time = measures.get(EnumMeasure.CONFIG_TIME);
+            if (time == null) {
+                time = new MeasureTimeGPU();
+                time.setDescription("Tempo de execução das configurações");
+                measures.put(EnumMeasure.CONFIG_TIME, time);
+            } else {
+                time.sum();
+            }
+            time.setBeginLong(System.nanoTime());
             time.setBegin(new Date());
         }
 
@@ -112,7 +124,6 @@ public class JSeriesCL extends GPU {
                 device = devices[deviceIndex];
                 break;
             } catch (CLException ex) {
-
             }
         }
 
@@ -142,11 +153,19 @@ public class JSeriesCL extends GPU {
         cl_mem memObjects[] = new cl_mem[parametros.size()];
 
         if (measure) {
+            time.setEndLong(System.nanoTime());
             time.setEnd(new Date());
+            time.sum();
 
-            time = new MeasureTimeGPU();
-            time.setDescription("Tempo de execução das alocações e envios de parâmetros");
-            measures.add(time);
+            time = measures.get(EnumMeasure.ALLOCATE_TIME);
+            if (time == null) {
+                time = new MeasureTimeGPU();
+                time.setDescription("Tempo de execução das alocações e envios de parâmetros");
+                measures.put(EnumMeasure.ALLOCATE_TIME, time);
+            } else {
+                time.sum();
+            }
+            time.setBeginLong(System.nanoTime());
             time.setBegin(new Date());
         }
 
@@ -245,11 +264,19 @@ public class JSeriesCL extends GPU {
         }
 
         if (measure) {
+            time.setEndLong(System.nanoTime());
             time.setEnd(new Date());
+            time.sum();
 
-            time = new MeasureTimeGPU();
-            time.setDescription("Tempo de execução dos cálculos de Threads");
-            measures.add(time);
+            time = measures.get(EnumMeasure.CALCULATE_THREADS_TIME);
+            if (time == null) {
+                time = new MeasureTimeGPU();
+                time.setDescription("Tempo de execução dos cálculos de Threads");
+                measures.put(EnumMeasure.CALCULATE_THREADS_TIME, time);
+            } else {
+                time.sum();
+            }
+            time.setBeginLong(System.nanoTime());
             time.setBegin(new Date());
         }
 
@@ -396,11 +423,19 @@ public class JSeriesCL extends GPU {
         }
 
         if (measure) {
+            time.setEndLong(System.nanoTime());
             time.setEnd(new Date());
+            time.sum();
 
-            time = new MeasureTimeGPU();
-            time.setDescription("Tempo de execução na placa");
-            measures.add(time);
+            time = measures.get(EnumMeasure.EXECUTION_TIME);
+            if (time == null) {
+                time = new MeasureTimeGPU();
+                time.setDescription("Tempo de execução na placa");
+                measures.put(EnumMeasure.EXECUTION_TIME, time);
+            } else {
+                time.sum();
+            }
+            time.setBeginLong(System.nanoTime());
             time.setBegin(new Date());
         }
 //        System.exit(1);
@@ -411,11 +446,19 @@ public class JSeriesCL extends GPU {
 //        System.out.println("executado");
 
         if (measure) {
+            time.setEndLong(System.nanoTime());
             time.setEnd(new Date());
+            time.sum();
 
-            time = new MeasureTimeGPU();
-            time.setDescription("Tempo de execução de recebimento das saídas");
-            measures.add(time);
+            time = measures.get(EnumMeasure.OUTPUT_TIME);
+            if (time == null) {
+                time = new MeasureTimeGPU();
+                time.setDescription("Tempo de execução de recebimento das saídas");
+                measures.put(EnumMeasure.OUTPUT_TIME, time);
+            } else {
+                time.sum();
+            }
+            time.setBeginLong(System.nanoTime());
             time.setBegin(new Date());
         }
 
@@ -439,11 +482,19 @@ public class JSeriesCL extends GPU {
             }
         }
         if (measure) {
+            time.setEndLong(System.nanoTime());
             time.setEnd(new Date());
+            time.sum();
 
-            time = new MeasureTimeGPU();
-            time.setDescription("Tempo de execução para liberar as memórias");
-            measures.add(time);
+            time = measures.get(EnumMeasure.FREE_TIME);
+            if (time == null) {
+                time = new MeasureTimeGPU();
+                time.setDescription("Tempo de execução para liberar as memórias");
+                measures.put(EnumMeasure.FREE_TIME, time);
+            } else {
+                time.sum();
+            }
+            time.setBeginLong(System.nanoTime());
             time.setBegin(new Date());
         }
         // Release kernel, program, and memory objects
@@ -459,9 +510,13 @@ public class JSeriesCL extends GPU {
         clReleaseContext(context);
 
         if (measure) {
+            time.setEndLong(System.nanoTime());
             time.setEnd(new Date());
+            time.sum();
 
+            allTimes.setEndLong(System.nanoTime());
             allTimes.setEnd(new Date());
+            allTimes.sum();
         }
     }
 
