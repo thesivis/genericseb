@@ -83,8 +83,7 @@ public class JSeriesCUDA extends GPU {
             // Obtain the compute capability
             int majorArray[] = {0};
             int minorArray[] = {0};
-            cuDeviceComputeCapability(
-                    majorArray, minorArray, device);
+            cuDeviceComputeCapability(majorArray, minorArray, device);
             int major = majorArray[0];
             int minor = minorArray[0];
             int array[] = {0};
@@ -171,8 +170,8 @@ public class JSeriesCUDA extends GPU {
 
         Thread[] threads = new Thread[devices.size()];
         for (int i = 0; i < devices.size(); i++) {
-            System.out.println("Thread:"+i);
-            ExecuteCUDA executeCUDA = new ExecuteCUDA(threadsPerBlock, blocksPerGrid, compileOptions, pathNvcc, parametrosByGPU.get(i), arquivo, metodo,i);
+            System.out.println("Thread:" + i);
+            ExecuteCUDA executeCUDA = new ExecuteCUDA(threadsPerBlock, blocksPerGrid, compileOptions, pathNvcc, parametrosByGPU.get(i), arquivo, metodo, i);
             threads[i] = new Thread(executeCUDA);
             threads[i].start();
         }
@@ -556,7 +555,11 @@ public class JSeriesCUDA extends GPU {
 
                 CUdevice device = new CUdevice();
 
-                cuDeviceGet(device, 0);
+                cuDeviceGet(device, indexThread);
+
+//                int array2[] = {0};
+//                cuDeviceGetAttribute(array2, CU_DEVICE_ATTRIBUTE_PCI_BUS_ID, device);
+//                System.out.println(array2[0]);
 
                 CUcontext context = new CUcontext();
                 cuCtxCreate(context, 0, device);
