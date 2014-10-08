@@ -828,7 +828,7 @@ public class GenericSEB {
                     + "        par.add(new ParameterGPU(gab2, true, false, true));\n");
 
         }
-        source.append("        par.add(new ParameterGPU(N,true));\n\n");
+        source.append("        par.add(new ParameterGPU(N,true,false,false,false));\n\n");
 
         source.append("        String pathNvcc = \"/usr/local/cuda/bin/\";\n");
         source.append("        String source = \"code.cu\";\n");
@@ -1787,7 +1787,7 @@ public class GenericSEB {
                     + "        par.add(new ParameterGPU(gab2, true, false, true));\n");
 
         }
-        source.append("        par.add(new ParameterGPU(N,true));\n\n");
+        source.append("        par.add(new ParameterGPU(N,true,false,false,false));\n\n");
 
         source.append("        String source = \"code.cl\";\n");
         source.append("        try {\n");
