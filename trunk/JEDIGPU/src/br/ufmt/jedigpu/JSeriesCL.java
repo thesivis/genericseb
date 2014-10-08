@@ -74,71 +74,31 @@ public class JSeriesCL extends GPU {
             time.setBegin(new Date());
         }
 
-        int minCores = devices.get(0).getCores();
+        if (devices.size() > 1) {
+            int minCores = devices.get(0).getCores();
 
-        List<List<ParameterGPU>> parametrosByGPU = new ArrayList<List<ParameterGPU>>();
+            List<List<ParameterGPU>> parametrosByGPU = new ArrayList<List<ParameterGPU>>();
 
 
-        parametrosByGPU.add(new ArrayList<ParameterGPU>());
-
-        for (int i = 1; i < devices.size(); i++) {
-            if (devices.get(i).getCores() < minCores) {
-                minCores = devices.get(i).getCores();
-            }
             parametrosByGPU.add(new ArrayList<ParameterGPU>());
-        }
-        int[] proporcao = new int[devices.size()];
-        int sum = 0;
-        for (int i = 0; i < devices.size(); i++) {
-            proporcao[i] = (int) Math.round(devices.get(i).getCores() / (float) minCores);
-            sum += proporcao[i];
-        }
 
-        ParameterGPU parametro = null;
-        for (int i = 0; i < parametros.size(); i++) {
-            parametro = parametros.get(i);
-
-            long size = parametro.getSize();
-            int step = (int) size / sum;
-
-            int begin = 0;
-            int end;
-
-            for (int j = 0; j < proporcao.length; j++) {
-                if (parametro.isDivide()) {
-                    if (j < proporcao.length - 1) {
-                        end = begin + step * proporcao[j];
-                    } else {
-                        end = (int) (size);
-                    }
-                    parametrosByGPU.get(j).add(parametro.cloneIndex(begin, end));
-                    begin = end;
-                } else {
-                    parametrosByGPU.get(j).add(parametro);
+            for (int i = 1; i < devices.size(); i++) {
+                if (devices.get(i).getCores() < minCores) {
+                    minCores = devices.get(i).getCores();
                 }
+                parametrosByGPU.add(new ArrayList<ParameterGPU>());
+            }
+            int[] proporcao = new int[devices.size()];
+            int sum = 0;
+            for (int i = 0; i < devices.size(); i++) {
+                proporcao[i] = (int) Math.round(devices.get(i).getCores() / (float) minCores);
+                sum += proporcao[i];
             }
 
-        }
+            ParameterGPU parametro = null;
+            for (int i = 0; i < parametros.size(); i++) {
+                parametro = parametros.get(i);
 
-        Thread[] threads = new Thread[devices.size()];
-        for (int i = 0; i < devices.size(); i++) {
-            System.out.println("Thread:" + i);
-            ExecuteOpenCL executeOpenCL = new ExecuteOpenCL(parametrosByGPU.get(i), codigoFonte, metodo, workGroups, workItems, i);
-            threads[i] = new Thread(executeOpenCL);
-            threads[i].start();
-        }
-
-        for (int i = 0; i < threads.length; i++) {
-            try {
-                threads[i].join();
-            } catch (InterruptedException ex) {
-                Logger.getLogger(JSeriesCL.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-
-        for (int i = 0; i < parametros.size(); i++) {
-            parametro = parametros.get(i);
-            if (parametro.isDivide()) {
                 long size = parametro.getSize();
                 int step = (int) size / sum;
 
@@ -146,15 +106,63 @@ public class JSeriesCL extends GPU {
                 int end;
 
                 for (int j = 0; j < proporcao.length; j++) {
-                    if (j < proporcao.length - 1) {
-                        end = begin + step * proporcao[j];
+                    if (parametro.isDivide()) {
+                        if (j < proporcao.length - 1) {
+                            end = begin + step * proporcao[j];
+                        } else {
+                            end = (int) (size);
+                        }
+                        parametrosByGPU.get(j).add(parametro.cloneIndex(begin, end));
+                        begin = end;
                     } else {
-                        end = (int) (size);
+                        parametrosByGPU.get(j).add(parametro);
                     }
-                    parametro.copyFrom(parametrosByGPU.get(j).get(i), begin, end);
-                    begin = end;
+                }
+
+            }
+
+            Thread[] threads = new Thread[devices.size()];
+            for (int i = 0; i < devices.size(); i++) {
+                System.out.println("Thread:" + i);
+                ExecuteOpenCL executeOpenCL = new ExecuteOpenCL(parametrosByGPU.get(i), codigoFonte, metodo, workGroups, workItems, i);
+                threads[i] = new Thread(executeOpenCL);
+                threads[i].start();
+            }
+
+            for (int i = 0; i < threads.length; i++) {
+                try {
+                    threads[i].join();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(JSeriesCL.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
+
+            for (int i = 0; i < parametros.size(); i++) {
+                parametro = parametros.get(i);
+                if (parametro.isWrite()) {
+                    if (parametro.isDivide()) {
+                        long size = parametro.getSize();
+                        int step = (int) size / sum;
+
+                        int begin = 0;
+                        int end;
+
+                        for (int j = 0; j < proporcao.length; j++) {
+                            if (j < proporcao.length - 1) {
+                                end = begin + step * proporcao[j];
+                            } else {
+                                end = (int) (size);
+                            }
+                            parametro.copyFrom(parametrosByGPU.get(j).get(i), begin, end);
+                            begin = end;
+                        }
+                    }
+                }
+            }
+        } else {
+            ExecuteOpenCL executeOpenCL = new ExecuteOpenCL(parametros, codigoFonte, metodo, workGroups, workItems, 0);
+            executeOpenCL.run();
+            System.out.println("dentro");
         }
 
         if (measure) {
