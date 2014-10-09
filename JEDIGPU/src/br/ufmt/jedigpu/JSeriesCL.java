@@ -5,6 +5,9 @@
 package br.ufmt.jedigpu;
 
 import br.ufmt.jedigpu.GPU;
+import java.io.PrintWriter;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -46,8 +49,7 @@ public class JSeriesCL extends GPU {
         setDevices();
     }
 
-    public void execute(List<ParameterGPU> parametros, String codigoFonte, String metodo) {
-
+    public void execute(List<ParameterGPU> parametros, String source, String metodo) {
 
         if (measure) {
             allTimes = measures.get(EnumMeasure.ALL_TIME);
@@ -61,7 +63,6 @@ public class JSeriesCL extends GPU {
             allTimes.setBeginLong(System.nanoTime());
             allTimes.setBegin(new Date());
 
-
             time = measures.get(EnumMeasure.LOAD_BALANCE_TIME);
             if (time == null) {
                 time = new MeasureTimeGPU();
@@ -74,11 +75,12 @@ public class JSeriesCL extends GPU {
             time.setBegin(new Date());
         }
 
+        boolean hasSizeof = source.contains("#SIZEOF");
+
         if (devices.size() > 1) {
             int minCores = devices.get(0).getCores();
 
             List<List<ParameterGPU>> parametrosByGPU = new ArrayList<List<ParameterGPU>>();
-
 
             parametrosByGPU.add(new ArrayList<ParameterGPU>());
 
@@ -90,9 +92,20 @@ public class JSeriesCL extends GPU {
             }
             int[] proporcao = new int[devices.size()];
             int sum = 0;
+
+            List<String> sources = null;
+
+            if (hasSizeof) {
+                sources = new ArrayList<String>();
+            }
+
             for (int i = 0; i < devices.size(); i++) {
                 proporcao[i] = (int) Math.round(devices.get(i).getCores() / (float) minCores);
                 sum += proporcao[i];
+
+                if (hasSizeof) {
+                    sources.add(new String(source));
+                }
             }
 
             ParameterGPU parametro = null;
@@ -117,14 +130,21 @@ public class JSeriesCL extends GPU {
                     } else {
                         parametrosByGPU.get(j).add(parametro);
                     }
+                    if (hasSizeof) {
+                        sources.set(j, sources.get(j).replace("#SIZEOF" + i + "#", "" + parametrosByGPU.get(j).get(i).getSize()));
+                    }
                 }
 
             }
 
             Thread[] threads = new Thread[devices.size()];
+            ExecuteOpenCL executeOpenCL;
             for (int i = 0; i < devices.size(); i++) {
                 System.out.println("Thread:" + i);
-                ExecuteOpenCL executeOpenCL = new ExecuteOpenCL(parametrosByGPU.get(i), codigoFonte, metodo, workGroups, workItems, i);
+                if (hasSizeof) {
+                    source = sources.get(i);
+                }
+                executeOpenCL = new ExecuteOpenCL(parametrosByGPU.get(i), source, metodo, workGroups, workItems, i);
                 threads[i] = new Thread(executeOpenCL);
                 threads[i].start();
             }
@@ -160,9 +180,14 @@ public class JSeriesCL extends GPU {
                 }
             }
         } else {
-            ExecuteOpenCL executeOpenCL = new ExecuteOpenCL(parametros, codigoFonte, metodo, workGroups, workItems, 0);
+            if (hasSizeof) {
+                for (int i = 0; i < parametros.size(); i++) {
+                    source = source.replace("#SIZEOF" + i + "#", "" + parametros.get(i).getSize());
+                }
+            }
+            ExecuteOpenCL executeOpenCL = new ExecuteOpenCL(parametros, source, metodo, workGroups, workItems, 0);
             executeOpenCL.run();
-            System.out.println("dentro");
+//            System.out.println("dentro");
         }
 
         if (measure) {
@@ -262,6 +287,18 @@ public class JSeriesCL extends GPU {
                     String deviceName = getString(deviceID, CL_DEVICE_NAME);
                     // CL_DEVICE_MAX_COMPUTE_UNITS
                     int maxComputeUnits = getInt(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS);
+
+                    // CL_DEVICE_VENDOR
+                    String deviceVendor = getString(deviceID, CL_DEVICE_VENDOR);
+                    if (deviceVendor.toUpperCase().contains("NVIDIA")) {
+                        // CL_DEVICE_MAX_WORK_GROUP_SIZE
+                        long maxWorkGroupSize = getSize(deviceID, CL_DEVICE_MAX_WORK_GROUP_SIZE);
+                        if (maxWorkGroupSize <= 512) {
+                            maxComputeUnits *= 8;
+                        } else {
+                            maxComputeUnits *= 32;
+                        }
+                    }
                     devices.add(new Device(deviceName, maxComputeUnits, deviceID, platforms[i]));
                 }
 
@@ -269,8 +306,6 @@ public class JSeriesCL extends GPU {
             } catch (CLException ex) {
             }
         }
-
-
 
     }
 
@@ -720,5 +755,44 @@ public class JSeriesCL extends GPU {
                 time.sum();
             }
         }
+    }
+
+    /**
+     * Returns the value of the device info parameter with the given name
+     *
+     * @param device The device
+     * @param paramName The parameter name
+     * @return The value
+     */
+    private static long getSize(cl_device_id device, int paramName) {
+        return getSizes(device, paramName, 1)[0];
+    }
+
+    /**
+     * Returns the values of the device info parameter with the given name
+     *
+     * @param device The device
+     * @param paramName The parameter name
+     * @param numValues The number of values
+     * @return The value
+     */
+    static long[] getSizes(cl_device_id device, int paramName, int numValues) {
+        // The size of the returned data has to depend on 
+        // the size of a size_t, which is handled here
+        ByteBuffer buffer = ByteBuffer.allocate(
+                numValues * Sizeof.size_t).order(ByteOrder.nativeOrder());
+        clGetDeviceInfo(device, paramName, Sizeof.size_t * numValues,
+                Pointer.to(buffer), null);
+        long values[] = new long[numValues];
+        if (Sizeof.size_t == 4) {
+            for (int i = 0; i < numValues; i++) {
+                values[i] = buffer.getInt(i * Sizeof.size_t);
+            }
+        } else {
+            for (int i = 0; i < numValues; i++) {
+                values[i] = buffer.getLong(i * Sizeof.size_t);
+            }
+        }
+        return values;
     }
 }
