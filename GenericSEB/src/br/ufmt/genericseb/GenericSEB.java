@@ -546,8 +546,10 @@ public class GenericSEB {
         source.append("        Map<String, float[]> ret = new HashMap<String, float[]>();\n\n");
         source.append("        List<ParameterGPU> par = new ArrayList<ParameterGPU>();\n\n");
 
+        int sizeofNumber = 0;
         boolean first = true;
         for (String string : parameters.keySet()) {
+            sizeofNumber++;
             if (first) {
                 if (indexEnum != null) {
                     if (indexEnum.equals(IndexEnum.SEBTA) || indexEnum.equals(IndexEnum.SEBAL)) {
@@ -583,6 +585,7 @@ public class GenericSEB {
                     vector = vet[i].startsWith("O_rad_espectral");
                     for (int j = 0; j < numbers.size(); j++) {
                         if (vector) {
+                            sizeofNumber++;
                             source.append("        float[] banda").append(numbers.get(j)).append(" = new float[").append(vet1).append(".length];\n");
                             source.append("        par.add(new ParameterGPU(banda").append(numbers.get(j)).append(",true,true));\n");
                             source.append("        ret.put(\"banda").append(numbers.get(j)).append("\",banda").append(numbers.get(j)).append(");\n\n");
@@ -597,6 +600,7 @@ public class GenericSEB {
                     for (int j = 0; j < numbers.size(); j++) {
                         variables.add("bandaRefletida" + numbers.get(j));
                         if (vector) {
+                            sizeofNumber++;
                             source.append("        float[] bandaRefletida").append(numbers.get(j)).append(" = new float[").append(vet1).append(".length];\n");
                             source.append("        par.add(new ParameterGPU(bandaRefletida").append(numbers.get(j)).append(",true,true));\n");
                             source.append("        ret.put(\"bandaRefletida").append(numbers.get(j)).append("\",bandaRefletida").append(numbers.get(j)).append(");\n\n");
@@ -760,6 +764,7 @@ public class GenericSEB {
                         }
                         gpuCode.append("\n");
 
+                        sizeofNumber++;
                         source.append("        float[] ").append(term).append(" = new float[").append(vet1).append(".length];\n");
                         source.append("        par.add(new ParameterGPU(").append(term).append(",true,true));\n");
                         source.append("        ret.put(\"").append(term).append("\",").append(term).append(");\n\n");
@@ -825,7 +830,7 @@ public class GenericSEB {
             source.append("        short[] gab = new short[width];\n"
                     + "        par.add(new ParameterGPU(gab, true, false, true));\n");
             source.append("        short[] gab2 = new short[col];\n"
-                    + "        par.add(new ParameterGPU(gab2, true, false, true));\n");
+                    + "        par.add(new ParameterGPU(gab2, true, false, true, false));\n");
 
         }
         source.append("        par.add(new ParameterGPU(N,true,false,false,false));\n\n");
@@ -1078,10 +1083,13 @@ public class GenericSEB {
         gpuCodeBody.append("){\n");
         if (indexEnum != null) {
             if (indexEnum.equals(IndexEnum.SEBTA) || indexEnum.equals(IndexEnum.SEBAL) || indexEnum.equals(IndexEnum.SSEB) || indexEnum.equals(IndexEnum.SSEBI)) {
-                gpuCodeBody.append("        int size = parameters[1];\n");
+//                gpuCodeBody.append("        int size = parameters[1];\n");
+                gpuCodeBody.append("        int size = #SIZEOF" + sizeofNumber + "#;\n");
+
             }
         } else {
-            gpuCodeBody.append("        int size = parameters[0];\n");
+//            gpuCodeBody.append("        int size = parameters[0];\n");
+            gpuCodeBody.append("        int size = #SIZEOF0#;\n");
         }
         gpuCodeBody.append("        int idx = blockIdx.x*blockDim.x + threadIdx.x;\n");
         gpuCodeBody.append("        int ind = idx;\n");
@@ -1137,7 +1145,8 @@ public class GenericSEB {
         }
 
         if (numbers.size() > 0) {
-            gpuCodeBody.append("            if(idx < parameters[0] && !(");
+//            gpuCodeBody.append("            if(idx < parameters[0] && !(");
+            gpuCodeBody.append("            if(idx < #SIZEOF0# && !(");
             for (int j = 1; j < numbers.size() - 1; j++) {
                 gpuCodeBody.append("pixel").append(numbers.get(0)).append("[idx] == ").append("pixel").append(numbers.get(j)).append("[idx]").append(" && ");
             }
