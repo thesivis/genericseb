@@ -6,10 +6,13 @@ package br.ufmt.jedigpu;
 
 import static br.ufmt.jedigpu.GPU.convertSMVer2Cores;
 import static br.ufmt.jedigpu.GPU.createString;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -108,7 +111,6 @@ public class JSeriesCUDA extends GPU {
             allTimes.setBeginLong(System.nanoTime());
             allTimes.setBegin(new Date());
 
-
             time = measures.get(EnumMeasure.LOAD_BALANCE_TIME);
             if (time == null) {
                 time = new MeasureTimeGPU();
@@ -120,11 +122,24 @@ public class JSeriesCUDA extends GPU {
             time.setBeginLong(System.nanoTime());
             time.setBegin(new Date());
         }
+
+        BufferedReader bur = new BufferedReader(new FileReader(arquivo));
+
+        StringBuilder sourceBuilder = new StringBuilder();
+        String line = bur.readLine();
+        while (line != null) {
+            sourceBuilder.append(line).append("\n");
+            line = bur.readLine();
+        }
+        bur.close();
+        File file = new File(arquivo);
+        String source = sourceBuilder.toString();
+        boolean hasSizeof = source.contains("#SIZEOF");
+
         if (devices.size() > 1) {
             int minCores = devices.get(0).getCores();
 
             List<List<ParameterGPU>> parametrosByGPU = new ArrayList<List<ParameterGPU>>();
-
 
             parametrosByGPU.add(new ArrayList<ParameterGPU>());
 
@@ -136,9 +151,19 @@ public class JSeriesCUDA extends GPU {
             }
             int[] proporcao = new int[devices.size()];
             int sum = 0;
+
+            List<String> sources = null;
+
+            if (hasSizeof) {
+                sources = new ArrayList<String>();
+            }
+
             for (int i = 0; i < devices.size(); i++) {
                 proporcao[i] = (int) Math.round(devices.get(i).getCores() / (float) minCores);
                 sum += proporcao[i];
+                if (hasSizeof) {
+                    sources.add(new String(source));
+                }
             }
 
             ParameterGPU parametro = null;
@@ -163,14 +188,24 @@ public class JSeriesCUDA extends GPU {
                     } else {
                         parametrosByGPU.get(j).add(parametro);
                     }
+                    if (hasSizeof) {
+                        sources.set(j, sources.get(j).replace("#SIZEOF" + i + "#", "" + parametrosByGPU.get(j).get(i).getSize()));
+                    }
                 }
-
             }
 
+            ExecuteCUDA executeCUDA;
             Thread[] threads = new Thread[devices.size()];
             for (int i = 0; i < devices.size(); i++) {
                 System.out.println("Thread:" + i);
-                ExecuteCUDA executeCUDA = new ExecuteCUDA(threadsPerBlock, blocksPerGrid, compileOptions, pathNvcc, parametrosByGPU.get(i), arquivo, metodo, i);
+
+                if (hasSizeof) {
+                    arquivo = file.getParent() + "code" + i + ".cu";
+                    PrintWriter pw = new PrintWriter(arquivo);
+                    pw.println(sources.get(i));
+                    pw.close();
+                }
+                executeCUDA = new ExecuteCUDA(threadsPerBlock, blocksPerGrid, compileOptions, pathNvcc, parametrosByGPU.get(i), arquivo, metodo, i);
                 threads[i] = new Thread(executeCUDA);
                 threads[i].start();
             }
@@ -206,6 +241,15 @@ public class JSeriesCUDA extends GPU {
                 }
             }
         } else {
+            if (hasSizeof) {
+                for (int i = 0; i < parametros.size(); i++) {
+                    source = source.replace("#SIZEOF" + i + "#", "" + parametros.get(i).getSize());
+                }
+                PrintWriter pw = new PrintWriter(arquivo);
+                pw.println(source);
+                pw.close();
+            }
+
             ExecuteCUDA executeCUDA = new ExecuteCUDA(threadsPerBlock, blocksPerGrid, compileOptions, pathNvcc, parametros, arquivo, metodo, 0);
             executeCUDA.run();
         }
@@ -562,7 +606,6 @@ public class JSeriesCUDA extends GPU {
 //                int array2[] = {0};
 //                cuDeviceGetAttribute(array2, CU_DEVICE_ATTRIBUTE_PCI_BUS_ID, device);
 //                System.out.println(array2[0]);
-
                 CUcontext context = new CUcontext();
                 cuCtxCreate(context, 0, device);
 
@@ -579,7 +622,6 @@ public class JSeriesCUDA extends GPU {
                 // Obtain a function pointer to the "add" function.
                 CUfunction function = new CUfunction();
                 cuModuleGetFunction(function, module, metodo);
-
 
                 // Allocate the device input data, and copy the
                 // host input data to the device
@@ -830,7 +872,7 @@ public class JSeriesCUDA extends GPU {
                         blocks[0], blocks[1], blocks[2], // Block dimension
                         usedSharedMemory, null, // Shared memory size and stream
                         kernelParameters, null // Kernel- and extra parameters
-                        );
+                );
 
                 cuCtxSynchronize();
 
