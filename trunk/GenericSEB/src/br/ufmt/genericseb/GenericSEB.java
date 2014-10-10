@@ -791,8 +791,13 @@ public class GenericSEB {
 
             for (int i = 0; i < varsIndex.length; i++) {
                 String string = varsIndex[i];
-                if (indexEnum.equals(IndexEnum.SSEBI)) {
-                    source.append("        float[] ").append(string).append(" = new float[col];\n");
+                if (indexEnum.equals(IndexEnum.SSEBI) || indexEnum.equals(IndexEnum.SSEB)) {
+                    sizeofNumber++;
+                    if (indexEnum.equals(IndexEnum.SSEBI)) {
+                        source.append("        float[] ").append(string).append(" = new float[col];\n");
+                    } else {
+                        source.append("        float[] ").append(string).append(" = new float[col * width];\n");
+                    }
                     if (string.toLowerCase().contains("min")) {
                         source.append("        for (int i = 0; i < " + string + ".length; i++) {\n");
                         source.append("             " + string + "[i] = Float.MAX_VALUE;\n");
@@ -802,8 +807,6 @@ public class GenericSEB {
                         source.append("             " + string + "[i] = Float.MIN_VALUE;\n");
                         source.append("        }\n");
                     }
-                } else if (indexEnum.equals(IndexEnum.SSEB)) {
-                    source.append("        float[] ").append(string).append(" = new float[col*width];\n");
                 } else {
                     source.append("        float[] ").append(string).append(" = new float[width];\n");
                 }
@@ -883,6 +886,9 @@ public class GenericSEB {
                             + "                }\n"
                             + "            }\n"
                             + "        }\n");
+                    source.append("        float[] coef = new float[2];\n"
+                            + "        GenericSEB.calculaAB(coef, rnHot, gHot, Uref, saviHot, maxTs, minTs);\n");
+                    source.append("        ret.put(\"coef\",coef);\n\n");
                 } else if (indexEnum.equals(IndexEnum.SEBAL)) {
                     source.append(
                             "        for (int i = 1; i < maxIndexVet.length; i++) {\n"
@@ -897,11 +903,18 @@ public class GenericSEB {
                             + "                saviHot = saviHotVet[i];\n"
                             + "            }\n"
                             + "        }\n");
+                    source.append("        float[] coef = new float[2];\n"
+                            + "        GenericSEB.calculaAB(coef, rnHot, gHot, Uref, saviHot, maxIndex, minIndex);\n");
+                    source.append("        ret.put(\"coef\",coef);\n\n");
                 }
 
-                source.append("        float[] coef = new float[2];\n"
-                        + "        GenericSEB.calculaAB(coef, rnHot, gHot, Uref, saviHot, maxIndex, minIndex);\n");
-                source.append("        ret.put(\"coef\",coef);\n\n");
+//                source.append("System.out.println(\"SEBTA CUDA\");");
+//                source.append("System.out.println(rnHot);");
+//                source.append("System.out.println(gHot);");
+//                source.append("System.out.println(Uref);");
+//                source.append("System.out.println(saviHot);");
+//                source.append("System.out.println(maxIndex);");
+//                source.append("System.out.println(minIndex);");
             } else if (indexEnum.equals(IndexEnum.SSEB)) {
                 source.append("        float[] indexMax = new float[]{0.0f, 0.0f, 0.0f};\n"
                         + "        float[] indexMin = new float[]{Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE};\n"
@@ -961,12 +974,12 @@ public class GenericSEB {
                         + "        float[] indexMaxCima = new float[10];\n"
                         + "        float[] indexMaxBaixo = new float[10];\n"
                         + "        float[] indexMinCima = new float[10];\n"
-                        + "        float[] indexMinBaixo = new float[10];\n"
+                        + "	   float[] indexMinBaixo = new float[10];\n"
                         + "\n"
                         + "        float[] TsMaxDir = new float[10];\n"
                         + "        float[] TsMaxEsq = new float[10];\n"
                         + "        float[] TsMinDir = new float[10];\n"
-                        + "        float[] TsMinEsq = new float[10];\n"
+                        + "	   float[] TsMinEsq = new float[10];\n"
                         + "\n"
                         + "        for (int i = 0; i < 10; i++) {\n"
                         + "            indexMinCima[i] = Float.MAX_VALUE;\n"
@@ -974,8 +987,9 @@ public class GenericSEB {
                         + "            indexMinBaixo[i] = Float.MAX_VALUE;\n"
                         + "            TsMinEsq[i] = Float.MAX_VALUE;\n"
                         + "        }\n"
+                        + "\n"
                         + "        for (int i = 0; i < indexMax.length; i++) {\n"
-                        + "            for (int idx = 0; idx < TsMaxDir.length; idx++) {\n"
+                        + "            for (int idx = 0; idx < TsMinEsq.length; idx++) {\n"
                         + "                if (TsVet[i] >= TsMaxDir[idx]) {\n"
                         + "                    for (int j = TsMaxDir.length - 1; j > idx; j--) {\n"
                         + "                        TsMaxDir[j] = TsMaxDir[j - 1];\n"
@@ -986,8 +1000,8 @@ public class GenericSEB {
                         + "                    break;\n"
                         + "                }\n"
                         + "            }\n"
-                        + "\n"
-                        + "            for (int idx = 0; idx < TsMinDir.length; idx++) {\n"
+                        + "            \n"
+                        + "            for (int idx = 0; idx < TsMinEsq.length; idx++) {\n"
                         + "                if (TsVet[i] <= TsMinDir[idx]) {\n"
                         + "                    for (int j = TsMinDir.length - 1; j > idx; j--) {\n"
                         + "                        TsMinDir[j] = TsMinDir[j - 1];\n"
@@ -998,7 +1012,7 @@ public class GenericSEB {
                         + "                    break;\n"
                         + "                }\n"
                         + "            }\n"
-                        + "\n"
+                        + "            \n"
                         + "            for (int idx = 0; idx < TsMaxEsq.length; idx++) {\n"
                         + "                if (indexVet[i] <= indexMinCima[idx]) {\n"
                         + "                    for (int j = TsMaxEsq.length - 1; j > idx; j--) {\n"
@@ -1010,20 +1024,19 @@ public class GenericSEB {
                         + "                    break;\n"
                         + "                }\n"
                         + "            }\n"
-                        + "\n"
                         + "            for (int idx = 0; idx < TsMinEsq.length; idx++) {\n"
                         + "                if (indexMinBaixoVet[i] <= indexMinBaixo[idx]) {\n"
-                        + "                    if (TsMinEsqVet[i] <= TsMinEsq[idx]) {\n"
-                        + "                        for (int j = TsMinEsq.length - 1; j > idx; j--) {\n"
-                        + "                            TsMinEsq[j] = TsMinEsq[j - 1];\n"
-                        + "                            indexMinBaixo[j] = indexMinBaixo[j - 1];\n"
-                        + "                        }\n"
-                        + "                        TsMinEsq[idx] = TsMinEsqVet[i];\n"
-                        + "                        indexMinBaixo[idx] = indexMinBaixoVet[i];\n"
-                        + "                        break;\n"
+                        + "		     if (TsMinEsqVet[i] <= TsMinEsq[idx]) {\n"
+                        + "                    for (int j = TsMinEsq.length - 1; j > idx; j--) {\n"
+                        + "                        TsMinEsq[j] = TsMinEsq[j - 1];\n"
+                        + "                        indexMinBaixo[j] = indexMinBaixo[j - 1];\n"
                         + "                    }\n"
+                        + "                    TsMinEsq[idx] = TsMinEsqVet[i];\n"
+                        + "                    indexMinBaixo[idx] = indexMinBaixoVet[i];\n"
+                        + "                    break;\n"
+                        + "		     }\n"
                         + "                }\n"
-                        + "            }\n"
+                        + "            }"
                         + "        }\n"
                         + "\n"
                         + "        for (int i = 0; i < TsMinEsq.length; i++) {\n"
@@ -1037,6 +1050,7 @@ public class GenericSEB {
                         + "            mediaInfEsqIndex += indexMinBaixo[i];\n"
                         + "            mediaInfDirIndex += indexMaxBaixo[i];\n"
                         + "        }\n"
+                        + "\n"
                         + "        mediaSupEsqTs /= TsMaxEsq.length;\n"
                         + "        mediaSupDirTs /= TsMaxDir.length;\n"
                         + "        mediaInfEsqTs /= TsMinEsq.length;\n"
@@ -1046,6 +1060,23 @@ public class GenericSEB {
                         + "        mediaSupDirIndex /= indexMaxCima.length;\n"
                         + "        mediaInfEsqIndex /= indexMinBaixo.length;\n"
                         + "        mediaInfDirIndex /= indexMaxBaixo.length;\n"
+                        //                        + "System.out.println(\"SSEBI CUDA\");\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(indexMaxBaixo));\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(indexMinBaixo));\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(indexMaxCima));\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(indexMinCima));\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(TsMaxEsq));\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(TsMaxDir));\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(TsMinDir));\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(TsMinEsq));\n"
+                        //                        + "            System.out.println(\"mediaSupEsqTs:\"+mediaSupEsqTs);\n"
+                        //                        + "            System.out.println(\"mediaSupDirTs:\"+mediaSupDirTs);\n"
+                        //                        + "            System.out.println(\"mediaInfEsqTs:\"+mediaInfEsqTs);\n"
+                        //                        + "            System.out.println(\"mediaInfDirTs:\"+mediaInfDirTs);\n"
+                        //                        + "            System.out.println(\"mediaSupEsqIndex:\"+mediaSupEsqIndex);\n"
+                        //                        + "            System.out.println(\"mediaSupDirIndex:\"+mediaSupDirIndex);\n"
+                        //                        + "            System.out.println(\"mediaInfEsqIndex:\"+mediaInfEsqIndex);\n"
+                        //                        + "            System.out.println(\"mediaInfDirIndex:\"+mediaInfDirIndex);\n"
                         + "\n"
                         + "        float aH = 0.0f;\n"
                         + "        float aLE = 0.0f;\n"
@@ -1057,7 +1088,10 @@ public class GenericSEB {
                         + "\n"
                         + "        aLE = (mediaInfDirTs - mediaInfEsqTs) / (mediaInfDirIndex - mediaInfEsqIndex);\n"
                         + "        bLE = (mediaInfEsqTs * mediaInfDirIndex - mediaInfDirTs * mediaInfEsqIndex) / (mediaInfDirIndex - mediaInfEsqIndex);\n"
-                        + "\n"
+                        //                        + "System.out.println(\"ah:\"+aH);\n"
+                        //                        + "        System.out.println(\"bH:\"+bH);\n"
+                        //                        + "        System.out.println(\"aLE:\"+aLE);\n"
+                        //                        + "        System.out.println(\"bLE:\"+bLE);\n"
                         + "        ret.put(\"aH\", new float[]{aH});\n"
                         + "        ret.put(\"bH\", new float[]{bH});\n"
                         + "\n"
@@ -1399,14 +1433,15 @@ public class GenericSEB {
                             + "                }\n"
                             + "            }\n\n");
                 } else if (indexEnum.equals(IndexEnum.SSEBI)) {
-                    gpuCode.append("            if(ssebi >= *indexMax){\n"
-                            + "		*TsVet=Ts;\n"
-                            + "		*indexMax=ssebi;\n"
+                    gpuCode.append(
+                            "              if(ssebi >= *indexMax){\n"
+                            + "		       *TsVet=Ts;\n"
+                            + "		       *indexMax=ssebi;\n"
                             + "            }\n"
-                            + "	    if(Ts >= *TsMax){\n"
-                            + "		*TsMax=Ts;\n"
-                            + "		*indexVet=ssebi;\n"
-                            + "	    }\n"
+                            + "	    	   if(Ts >= *TsMax){\n"
+                            + "		       *TsMax=Ts;\n"
+                            + "		       *indexVet=ssebi;\n"
+                            + "	           }\n"
                             + "            if(ssebi <= *indexMinBaixoVet){\n"
                             + "                if(Ts <= *TsMinEsqVet){\n"
                             + "                    *TsMinEsqVet=Ts;\n"
@@ -1763,7 +1798,12 @@ public class GenericSEB {
             for (int i = 0; i < varsIndex.length; i++) {
                 String string = varsIndex[i];
                 if (indexEnum.equals(IndexEnum.SSEBI) || indexEnum.equals(IndexEnum.SSEB)) {
-                    source.append("        float[] ").append(string).append(" = new float[col];\n");
+                    sizeofNumber++;
+                    if (indexEnum.equals(IndexEnum.SSEBI)) {
+                        source.append("        float[] ").append(string).append(" = new float[col];\n");
+                    } else {
+                        source.append("        float[] ").append(string).append(" = new float[col * width];\n");
+                    }
                     if (string.toLowerCase().contains("min")) {
                         source.append("        for (int i = 0; i < " + string + ".length; i++) {\n");
                         source.append("             " + string + "[i] = Float.MAX_VALUE;\n");
@@ -1860,6 +1900,13 @@ public class GenericSEB {
                         + "            }\n"
                         + "        }\n");
 
+//                source.append("System.out.println(\"SEBTA OPENCL\");");
+//                source.append("System.out.println(rnHot);");
+//                source.append("System.out.println(gHot);");
+//                source.append("System.out.println(Uref);");
+//                source.append("System.out.println(saviHot);");
+//                source.append("System.out.println(maxTs);");
+//                source.append("System.out.println(minTs);");
                 source.append("        float[] coef = new float[2];\n"
                         + "        GenericSEB.calculaAB(coef, rnHot, gHot, Uref, saviHot, maxTs, minTs);\n");
                 source.append("        ret.put(\"coef\",coef);\n\n");
@@ -1960,8 +2007,9 @@ public class GenericSEB {
                         + "            indexMinBaixo[i] = Float.MAX_VALUE;\n"
                         + "            TsMinEsq[i] = Float.MAX_VALUE;\n"
                         + "        }\n"
+                        + "\n"
                         + "        for (int i = 0; i < indexMax.length; i++) {\n"
-                        + "            for (int idx = 0; idx < TsMaxDir.length; idx++) {\n"
+                        + "            for (int idx = 0; idx < TsMinEsq.length; idx++) {\n"
                         + "                if (TsVet[i] >= TsMaxDir[idx]) {\n"
                         + "                    for (int j = TsMaxDir.length - 1; j > idx; j--) {\n"
                         + "                        TsMaxDir[j] = TsMaxDir[j - 1];\n"
@@ -1973,7 +2021,7 @@ public class GenericSEB {
                         + "                }\n"
                         + "            }\n"
                         + "\n"
-                        + "            for (int idx = 0; idx < TsMinDir.length; idx++) {\n"
+                        + "            for (int idx = 0; idx < TsMinEsq.length; idx++) {\n"
                         + "                if (TsVet[i] <= TsMinDir[idx]) {\n"
                         + "                    for (int j = TsMinDir.length - 1; j > idx; j--) {\n"
                         + "                        TsMinDir[j] = TsMinDir[j - 1];\n"
@@ -1996,7 +2044,6 @@ public class GenericSEB {
                         + "                    break;\n"
                         + "                }\n"
                         + "            }\n"
-                        + "\n"
                         + "            for (int idx = 0; idx < TsMinEsq.length; idx++) {\n"
                         + "                if (indexMinBaixoVet[i] <= indexMinBaixo[idx]) {\n"
                         + "                    if (TsMinEsqVet[i] <= TsMinEsq[idx]) {\n"
@@ -2010,8 +2057,7 @@ public class GenericSEB {
                         + "                    }\n"
                         + "                }\n"
                         + "            }\n"
-                        + "        }\n"
-                        + "\n"
+                        + "        }"
                         + "        for (int i = 0; i < TsMinEsq.length; i++) {\n"
                         + "            mediaSupEsqTs += TsMaxEsq[i];\n"
                         + "            mediaSupDirTs += TsMaxDir[i];\n"
@@ -2032,6 +2078,23 @@ public class GenericSEB {
                         + "        mediaSupDirIndex /= indexMaxCima.length;\n"
                         + "        mediaInfEsqIndex /= indexMinBaixo.length;\n"
                         + "        mediaInfDirIndex /= indexMaxBaixo.length;\n"
+                        //                        + "System.out.println(\"SSEBI OPENCL\");\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(indexMaxBaixo));\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(indexMinBaixo));\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(indexMaxCima));\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(indexMinCima));\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(TsMaxEsq));\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(TsMaxDir));\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(TsMinDir));\n"
+                        //                        + "            System.out.println(java.util.Arrays.toString(TsMinEsq));\n"
+                        //                        + "            System.out.println(\"mediaSupEsqTs:\"+mediaSupEsqTs);\n"
+                        //                        + "            System.out.println(\"mediaSupDirTs:\"+mediaSupDirTs);\n"
+                        //                        + "            System.out.println(\"mediaInfEsqTs:\"+mediaInfEsqTs);\n"
+                        //                        + "            System.out.println(\"mediaInfDirTs:\"+mediaInfDirTs);\n"
+                        //                        + "            System.out.println(\"mediaSupEsqIndex:\"+mediaSupEsqIndex);\n"
+                        //                        + "            System.out.println(\"mediaSupDirIndex:\"+mediaSupDirIndex);\n"
+                        //                        + "            System.out.println(\"mediaInfEsqIndex:\"+mediaInfEsqIndex);\n"
+                        //                        + "            System.out.println(\"mediaInfDirIndex:\"+mediaInfDirIndex);\n"
                         + "\n"
                         + "        float aH = 0.0f;\n"
                         + "        float aLE = 0.0f;\n"
@@ -2044,6 +2107,10 @@ public class GenericSEB {
                         + "        aLE = (mediaInfDirTs - mediaInfEsqTs) / (mediaInfDirIndex - mediaInfEsqIndex);\n"
                         + "        bLE = (mediaInfEsqTs * mediaInfDirIndex - mediaInfDirTs * mediaInfEsqIndex) / (mediaInfDirIndex - mediaInfEsqIndex);\n"
                         + "\n"
+                        //                        + "System.out.println(\"ah:\"+aH);\n"
+                        //                        + "        System.out.println(\"bH:\"+bH);\n"
+                        //                        + "        System.out.println(\"aLE:\"+aLE);\n"
+                        //                        + "        System.out.println(\"bLE:\"+bLE);\n"
                         + "        ret.put(\"aH\", new float[]{aH});\n"
                         + "        ret.put(\"bH\", new float[]{bH});\n"
                         + "\n"
@@ -2991,6 +3058,13 @@ public class GenericSEB {
 
         if (index != null) {
             if (indexEnum.equals(IndexEnum.SEBTA)) {
+//                source.append("System.out.println(\"SEBTA JAVA\");");
+//                source.append("System.out.println(RnHot);");
+//                source.append("System.out.println(GHot);");
+//                source.append("System.out.println(Uref);");
+//                source.append("System.out.println(SAVI_hot);");
+//                source.append("System.out.println(tMax);");
+//                source.append("System.out.println(tMin);");
                 source.append("        float[] coef = new float[2];\n"
                         + "        GenericSEB.calculaAB(coef, RnHot, GHot, Uref, SAVI_hot, tMax, tMin);\n");
 //            source.append("        System.out.println(\"pixel1:\"+pixel1[10057582]);\n");
@@ -3059,10 +3133,12 @@ public class GenericSEB {
                         + "        float[] indexMaxCima = new float[10];\n"
                         + "        float[] indexMaxBaixo = new float[10];\n"
                         + "        float[] indexMinCima = new float[10];\n"
+                        //                        + "	   float[] indexMinBaixo = new float[10];\n"
                         + "\n"
                         + "        float[] TsMaxDir = new float[10];\n"
                         + "        float[] TsMaxEsq = new float[10];\n"
                         + "        float[] TsMinDir = new float[10];\n"
+                        //                        + "	   float[] TsMinEsq = new float[10];\n"
                         + "\n"
                         + "        for (int i = 0; i < 10; i++) {\n"
                         + "            indexMinCima[i] = Float.MAX_VALUE;\n"
@@ -3128,6 +3204,7 @@ public class GenericSEB {
                         + "        mediaSupDirIndex /= indexMaxCima.length;\n"
                         + "        mediaInfEsqIndex /= indexMinBaixo.length;\n"
                         + "        mediaInfDirIndex /= indexMaxBaixo.length;\n"
+                        //                        + "System.out.println(\"SSEBI JAVA\");\n"
                         //                        + "            System.out.println(java.util.Arrays.toString(indexMaxBaixo));\n"
                         //                        + "            System.out.println(java.util.Arrays.toString(indexMinBaixo));\n"
                         //                        + "            System.out.println(java.util.Arrays.toString(indexMaxCima));\n"
@@ -3136,7 +3213,6 @@ public class GenericSEB {
                         //                        + "            System.out.println(java.util.Arrays.toString(TsMaxDir));\n"
                         //                        + "            System.out.println(java.util.Arrays.toString(TsMinDir));\n"
                         //                        + "            System.out.println(java.util.Arrays.toString(TsMinEsq));\n"
-                        //                        
                         //                        + "            System.out.println(\"mediaSupEsqTs:\"+mediaSupEsqTs);\n"
                         //                        + "            System.out.println(\"mediaSupDirTs:\"+mediaSupDirTs);\n"
                         //                        + "            System.out.println(\"mediaInfEsqTs:\"+mediaInfEsqTs);\n"
@@ -3156,6 +3232,10 @@ public class GenericSEB {
                         + "\n"
                         + "        aLE = (mediaInfDirTs - mediaInfEsqTs) / (mediaInfDirIndex - mediaInfEsqIndex);\n"
                         + "        bLE = (mediaInfEsqTs * mediaInfDirIndex - mediaInfDirTs * mediaInfEsqIndex) / (mediaInfDirIndex - mediaInfEsqIndex);\n\n"
+                        //                        + "System.out.println(\"ah:\"+aH);\n"
+                        //                        + "        System.out.println(\"bH:\"+bH);\n"
+                        //                        + "        System.out.println(\"aLE:\"+aLE);\n"
+                        //                        + "        System.out.println(\"bLE:\"+bLE);\n"
                         + "        ret.put(\"aH\", new float[]{aH});\n"
                         + "        ret.put(\"bH\", new float[]{bH});\n"
                         + "        ret.put(\"aLE\", new float[]{aLE});\n"
