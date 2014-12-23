@@ -751,18 +751,19 @@ public class GenericSEB {
 
         Equation eq;
         StringBuilder cudaVariables = new StringBuilder();
+        boolean firstComa = true;
         for (int i = 0; i < equations.size(); i++) {
             eq = equations.get(i);
             if (!eq.getTerm().endsWith("rad_espectral") && !eq.getTerm().endsWith("reflectancia")) {
                 if (variablesDeclared.add(eq.getTerm())) {
                     if (eq.getIndex() != null) {
                         term = eq.getTerm();
-                        gpuCode.append("        float * ").append(term);
-                        gpuCodeBody.append("        float * ").append(term).append(",\n");
-                        if (i + 1 < vet.length) {
-                            gpuCode.append(",");
+                        if (!firstComa) {
+                            gpuCode.append(",\n");
                         }
-                        gpuCode.append("\n");
+                        firstComa = false;
+                        gpuCode.append("        float * ").append(term);
+                        gpuCodeBody.append("        float * ").append(term);
 
                         sizeofNumber++;
                         source.append("        float[] ").append(term).append(" = new float[").append(vet1).append(".length];\n");
@@ -788,7 +789,11 @@ public class GenericSEB {
             } else if (indexEnum.equals(IndexEnum.SSEBI)) {
                 varsIndex = varsIndexSSEBI;
             }
-
+            if (!firstComa) {
+                gpuCode.append(",\n");
+                gpuCodeBody.append(",\n");
+                firstComa = true;
+            }
             for (int i = 0; i < varsIndex.length; i++) {
                 String string = varsIndex[i];
                 if (indexEnum.equals(IndexEnum.SSEBI) || indexEnum.equals(IndexEnum.SSEB)) {
@@ -958,6 +963,13 @@ public class GenericSEB {
                         + "        }\n"
                         + "        TC = TC / indexMax.length;\n"
                         + "        TH = TH / indexMax.length;\n"
+                        + "        System.out.println(\"SSEB CUDA\");\n"
+                        + "        System.out.println(java.util.Arrays.toString(indexMax));\n"
+                        + "        System.out.println(java.util.Arrays.toString(TsMin));\n"
+                        + "        System.out.println(java.util.Arrays.toString(indexMin));\n"
+                        + "        System.out.println(java.util.Arrays.toString(TsMax));\n"
+                        + "        System.out.println(TC);\n"
+                        + "        System.out.println(TH);\n"
                         + "        ret.put(\"TC\", new float[]{TC});\n"
                         + "        ret.put(\"TH\", new float[]{TH});\n\n");
             } else if (indexEnum.equals(IndexEnum.SSEBI)) {
@@ -1108,6 +1120,10 @@ public class GenericSEB {
             gpuCodeBody.append("        short * gab,\n");
             gpuCodeBody.append("        short * gab2,\n");
         }
+        if (!firstComa) {
+            gpuCodeBody.append(",\n");
+            firstComa = true;
+        }
         gpuCodeBody.append("        int * parameters");
 
         gpuCode.append("    ){\n\n");
@@ -1198,7 +1214,7 @@ public class GenericSEB {
         boolean rad_espectral = false;
         String ident;
         Equation eq2;
-
+        firstComa = true;
         variablesDeclared = new HashSet<String>();
         for (int i = 0; i < vet.length; i++) {
             eq = equations.get(i);
@@ -1317,11 +1333,17 @@ public class GenericSEB {
                     equation = ident + "            *" + term + " = ";
 
                     if (variablesDeclared.add(term)) {
-                        gpuCodeBody.append("                    (").append(term).append("+idx)");
-                        if (i + 1 < vet.length) {
-                            gpuCodeBody.append(",");
+//                        if (i + 1 < vet.length) {
+                        if (!firstComa) {
+                            gpuCodeBody.append(",\n");
                         }
-                        gpuCodeBody.append("\n");
+                        firstComa = false;
+//                        }
+                        gpuCodeBody.append("                    (").append(term).append("+idx)");
+//                        if (i + 1 < vet.length) {
+//                            gpuCodeBody.append(",");
+//                        }
+//                        gpuCodeBody.append("\n");
                     }
 
                 } else {
@@ -1978,6 +2000,13 @@ public class GenericSEB {
                         + "        }\n"
                         + "        TC = TC / indexMax.length;\n"
                         + "        TH = TH / indexMax.length;\n"
+                        + "        System.out.println(\"SSEB OPENCL\");\n"
+                        + "        System.out.println(java.util.Arrays.toString(indexMax));\n"
+                        + "        System.out.println(java.util.Arrays.toString(TsMin));\n"
+                        + "        System.out.println(java.util.Arrays.toString(indexMin));\n"
+                        + "        System.out.println(java.util.Arrays.toString(TsMax));\n"
+                        + "        System.out.println(TC);\n"
+                        + "        System.out.println(TH);\n"
                         + "        ret.put(\"TC\", new float[]{TC});\n"
                         + "        ret.put(\"TH\", new float[]{TH});\n\n");
             } else if (indexEnum.equals(IndexEnum.SSEBI)) {
@@ -2125,6 +2154,13 @@ public class GenericSEB {
 
         if (indexEnum != null) {
             gpuCode.append("\n        int ind");
+            for (int i = 0; i < vet.length; i++) {
+                eq = equations.get(i);
+                if (eq.getIndex() != null) {
+                    gpuCode.append(",\n        int idx");
+                    break;
+                }
+            }
             if (indexEnum.equals(IndexEnum.SSEB) || indexEnum.equals(IndexEnum.SSEBI)) {
                 gpuCodeBody.append("        __global short * gab,\n");
                 gpuCodeBody.append("        __global short * gab2,\n");
@@ -2468,6 +2504,13 @@ public class GenericSEB {
 //                gpuCodeBody.append(",\n                ind");
 //            }
             gpuCodeBody.append("                ind");
+            for (int i = 0; i < vet.length; i++) {
+                eq = equations.get(i);
+                if (eq.getIndex() != null) {
+                    gpuCodeBody.append(",\n                idx");
+                    break;
+                }
+            }
         } else {
             gpuCodeBody.append("                idx");
         }
@@ -3117,6 +3160,13 @@ public class GenericSEB {
                         + "        }\n"
                         + "        TC = TC / indexMax.length;\n"
                         + "        TH = TH / indexMax.length;\n"
+                        + "        System.out.println(\"SSEB JAVA\");\n"
+                        + "        System.out.println(java.util.Arrays.toString(indexMax));\n"
+                        + "        System.out.println(java.util.Arrays.toString(TsMin));\n"
+                        + "        System.out.println(java.util.Arrays.toString(indexMin));\n"
+                        + "        System.out.println(java.util.Arrays.toString(TsMax));\n"
+                        + "        System.out.println(TC);\n"
+                        + "        System.out.println(TH);\n"
                         + "        ret.put(\"TC\", new float[]{TC});\n"
                         + "        ret.put(\"TH\", new float[]{TH});\n\n");
             } else if (indexEnum.equals(IndexEnum.SSEBI)) {
