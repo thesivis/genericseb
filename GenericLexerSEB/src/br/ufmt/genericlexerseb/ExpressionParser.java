@@ -265,7 +265,7 @@ public class ExpressionParser {
 
     public boolean evaluateExprIf(String expr) {
         String str = preprocessExpr(expr);
-        String[] input = tokenizeIf(str);
+        String[] input = tokenizeIf(str, false);
 
 //        debug = true;
         String[] output2 = infixToRPN(input);
@@ -289,7 +289,7 @@ public class ExpressionParser {
         return result;
     }
 
-    public String[] tokenizeIf(String expr) {
+    public String[] tokenizeIf(String expr, boolean changeMinus) {
         tokenideIf = true;
         String str = preprocessExpr(expr);
         if (debug) {
@@ -342,15 +342,24 @@ public class ExpressionParser {
         StringTokenizer strTokenizer = new StringTokenizer(together.toString());
         List<String> list = new ArrayList<String>();
         while (strTokenizer.hasMoreTokens()) {
-            String tok = strTokenizer.nextToken();
-//            System.out.println(tok);
-            list.add(tok.trim());
+            String tok = strTokenizer.nextToken().trim();
+            if (debug) {
+                System.out.println(tok);
+            }
+            if (changeMinus && tok.equals("~")) {
+                tok = "-";
+            }
+            list.add(tok);
         }
         input = new String[list.size()];
         input = (String[]) list.toArray(input);
 //        System.out.println(Arrays.toString(input));
         this.output = input;
         return input;
+    }
+
+    public String[] tokenizeIf(String expr) {
+        return tokenizeIf(expr, true);
     }
 
     public boolean evaluateExprIf(String expr, List<String> variables) {
@@ -396,6 +405,7 @@ public class ExpressionParser {
 
         //case #2 - minus after (
         str = str.replaceAll("\\(-", "\\(~");
+        str = str.replaceAll("=-", "=~");
 
         //case #3 - minus after operators
         str = fixUnaryMinus(str, "\\+-");
@@ -459,14 +469,18 @@ public class ExpressionParser {
     public static void main(String[] args) {
 
 //        String str = "-2*ln(2)-(a-(b^-2))";
-        String str = "nh=mod(1000,100)";
-        GenericLexerSEB g = new GenericLexerSEB();
-        Structure d = new Structure();
-        d.setToken("nh");
-        System.out.println(g.analyse(str, d, null, LanguageType.JAVA));
+        String str = "NDVI<-1";
+//        GenericLexerSEB g = new GenericLexerSEB();
+//        Structure d = new Structure();
+//        d.setToken("NVDI");
+//        System.out.println(g.analyse(str, d, null, LanguageType.JAVA));
         //String str = "a^-2";  
 //        System.out.println(Maths.mod(100, 30));
+        ArrayList<String> l = new ArrayList<String>();
+        l.add("a");
+        l.add("NDVI");
         ExpressionParser parser = new ExpressionParser(true);
+        System.out.println(Arrays.toString(parser.tokenizeIf(str)));
         boolean result = parser.evaluateExprIf(str);
         System.out.println("result = " + result);
 
