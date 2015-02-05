@@ -40,6 +40,7 @@ public class GenericSEB {
     private List<Equation> equations;
     private Equation index;
     private IndexEnum indexEnum;
+    private Integer indexSEBALLine = null;
     private static final String[] varsIndexSEBTA = new String[]{"maxTsVet", "minIndexVet", "minTsVet", "maxIndexVet", "rnHotVet", "gHotVet", "saviHotVet"};
     private static final String[] varsIndexSEBAL = new String[]{"maxIndexVet", "minIndexVet", "rnHotVet", "gHotVet", "saviHotVet"};
     private static final String[] varsIndexSSEB = new String[]{"maxTsVet", "minIndexVet", "minTsVet", "maxIndexVet"};
@@ -222,8 +223,8 @@ public class GenericSEB {
 
     public Map<String, float[]> execute(String forVariables, String forEachValue, List<VariableValue> parameters, Map<String, Float> constants, Map<String, float[]> constantsVetor, Map<String, float[][]> constantsMatrix) throws Exception {
 //        calcularMemoria("Memoria1");
-//        long total = System.currentTimeMillis();
-//        long tempo;
+        long total = System.currentTimeMillis();
+        long tempo;
         Map<String, float[]> ret = new HashMap<String, float[]>();
         Map<String, float[]> firstRet = null;
         String source = null;
@@ -238,6 +239,7 @@ public class GenericSEB {
         boolean isLast = false;
 
         String line;
+        Integer sebalIndex = null;
         for (int i = 0; i < vets.length; i++) {
             line = vets[i];
 
@@ -264,8 +266,12 @@ public class GenericSEB {
                 newBodyWithIndex.append(vets[i]).append("\n");
                 if (vets[i].startsWith("O_")) {
                     newBodyWithoutIndex.append(vets[i].substring(2)).append("\n");
-                } else if (!isIndex(vet[0])) {
-                    newBodyWithoutIndex.append(vets[i]).append("\n");
+                } else {
+                    if (!isIndex(vet[0])) {
+                        newBodyWithoutIndex.append(vets[i]).append("\n");
+                    } else if (indexEnum.equals(IndexEnum.SEBAL) || indexEnum.equals(IndexEnum.SEBTA)) {
+                        sebalIndex = i;
+                    }
                 }
             } else {
                 newBodyWithoutIndex.append(vets[i]).append("\n");
@@ -282,14 +288,14 @@ public class GenericSEB {
 //        System.exit(1);
         String exec = forEachValue;
         firstRet = new HashMap<String, float[]>();
-//        long compilacao = 0;
-//        long criacao = 0;
-//        long execucao = 0;
+        long compilacao = 0;
+        long criacao = 0;
+        long execucao = 0;
         if (hasIndex && !isLast) {
 //            System.out.println("Index:" + newBodyWithoutIndex.toString());
             exec = newBodyWithoutIndex.toString();
 
-//            criacao = System.currentTimeMillis();
+            criacao = System.currentTimeMillis();
             if (language.equals(LanguageType.CUDA)) {
                 sourceIndex = generateCUDA(forVariables, newBodyWithIndex.toString(), parameters, constants, constantsVetor, constantsMatrix);
             } else if (language.equals(LanguageType.OPENCL) || language.equals(LanguageType.OPENCL_CPU)) {
@@ -297,19 +303,35 @@ public class GenericSEB {
             } else {
                 sourceIndex = generateJava(forVariables, newBodyWithIndex.toString(), parameters, constants, constantsVetor, constantsMatrix);
             }
-//            criacao = System.currentTimeMillis() - criacao;
+            criacao = System.currentTimeMillis() - criacao;
 
-//            compilacao = System.currentTimeMillis();
+            compilacao = System.currentTimeMillis();
             Object instanced = compile(sourceIndex, "Equation");
-//            compilacao = System.currentTimeMillis() - compilacao;
+            compilacao = System.currentTimeMillis() - compilacao;
             try {
-//                execucao = System.currentTimeMillis();
+                execucao = System.currentTimeMillis();
                 Method method = instanced.getClass().getDeclaredMethod("execute", classes);
                 firstRet = (Map<String, float[]>) method.invoke(instanced, pars);
-//                execucao = System.currentTimeMillis() - execucao;
+                execucao = System.currentTimeMillis() - execucao;
                 if (indexEnum.equals(IndexEnum.SEBTA) || indexEnum.equals(IndexEnum.SEBAL)) {
-                    constants.put("a", firstRet.get("coef")[0]);
-                    constants.put("b", firstRet.get("coef")[1]);
+//                    constants.put("a", firstRet.get("coef")[0]);
+//                    constants.put("b", firstRet.get("coef")[1]);
+
+                    constants.put("indexMax", firstRet.get("indexMax")[0]);
+                    constants.put("RnHot", firstRet.get("RnHot")[0]);
+                    constants.put("SAVI_hot", firstRet.get("SAVI_hot")[0]);
+                    constants.put("GHot", firstRet.get("GHot")[0]);
+                    constants.put("indexMin", firstRet.get("indexMin")[0]);
+
+//                    constants.put("z0m", 0f);
+//                    constants.put("U_star", 0f);
+//                    constants.put("H", 0f);
+//                    constants.put("r_ah", 0f);
+                    exec = "z0m=0\n" + "U_star=0\n" + "H=0\n" + "r_ah=0\n" + exec;
+//                    constants.put("r_ah", 0f);
+//                    constants.put("r_ah", 0f);
+//                    constants.put("r_ah", 0f);
+
                 } else if (indexEnum.equals(IndexEnum.SSEB)) {
                     constants.put("TH", firstRet.get("TH")[0]);
                     constants.put("TC", firstRet.get("TC")[0]);
@@ -322,6 +344,7 @@ public class GenericSEB {
 
                 index = null;
                 indexEnum = null;
+                indexSEBALLine = sebalIndex;
             } catch (NoSuchMethodException ex1) {
                 Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
             } catch (SecurityException ex1) {
@@ -335,7 +358,8 @@ public class GenericSEB {
             }
         }
 
-//        tempo = System.currentTimeMillis();
+//        System.out.println(exec);
+        tempo = System.currentTimeMillis();
         if (language.equals(LanguageType.CUDA)) {
             source = generateCUDA(forVariables, exec, parameters, constants, constantsVetor, constantsMatrix);
         } else if (language.equals(LanguageType.OPENCL) || language.equals(LanguageType.OPENCL_CPU)) {
@@ -343,21 +367,21 @@ public class GenericSEB {
         } else {
             source = generateJava(forVariables, exec, parameters, constants, constantsVetor, constantsMatrix);
         }
-//        tempo = System.currentTimeMillis() - tempo;
-//        criacao += tempo;
+        tempo = System.currentTimeMillis() - tempo;
+        criacao += tempo;
 //
-//        tempo = System.currentTimeMillis();
+        tempo = System.currentTimeMillis();
 //        calcularMemoria("Memoria2");
         Object instanced = compile(source, "Equation");
-//        tempo = System.currentTimeMillis() - tempo;
-//        compilacao += tempo;
+        tempo = System.currentTimeMillis() - tempo;
+        compilacao += tempo;
         try {
 //            System.out.println("source:" + exec);
 //            tempo = System.currentTimeMillis();
             Method method = instanced.getClass().getDeclaredMethod("execute", classes);
-//            calcularMemoria("Memoria3");
+////            calcularMemoria("Memoria3");
             ret = (Map<String, float[]>) method.invoke(instanced, pars);
-//            calcularMemoria("Memoria4");
+////            calcularMemoria("Memoria4");
 //            tempo = System.currentTimeMillis() - tempo;
 //            execucao += tempo;
             if (hasIndex && !isLast) {
@@ -367,24 +391,25 @@ public class GenericSEB {
             classes = null;
             equations.clear();
             index = null;
+            indexSEBALLine = null;
             indexEnum = null;
-        } catch (NoSuchMethodException ex1) {
-            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+//        } catch (NoSuchMethodException ex1) {
+//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
         } catch (SecurityException ex1) {
             Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
-        } catch (IllegalAccessException ex1) {
-            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+//        } catch (IllegalAccessException ex1) {
+//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
         } catch (IllegalArgumentException ex1) {
             Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
-        } catch (InvocationTargetException ex1) {
-            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
+//        } catch (InvocationTargetException ex1) {
+//            Logger.getLogger(GenericSEB.class.getName()).log(Level.SEVERE, null, ex1);
         }
 
 //        System.out.println("Configuracao:" + conf);
-//        System.out.println("Criacao:" + criacao);
-//        System.out.println("Compilacao:" + compilacao);
-//        System.out.println("Execucao:" + execucao);
-//        System.out.println("Total:" + (System.currentTimeMillis() - total));
+        System.out.println("Criacao:" + criacao);
+        System.out.println("Compilacao:" + compilacao);
+        System.out.println("Execucao:" + execucao);
+        System.out.println("Total:" + (System.currentTimeMillis() - total));
         return ret;
     }
 
@@ -613,6 +638,39 @@ public class GenericSEB {
 
         //gpu part
         StringBuilder gpuCode = new StringBuilder("#include \"Constants.h\"\n\n");
+        
+        if (indexSEBALLine != null) {
+            gpuCode.append("    __device__ float X(float Zref_m, float L) {\n"
+                    + "        return (float) (sqrtf(sqrtf((1.0f - 16.0f * Zref_m / L))));\n"
+                    + "    }\n"
+                    + "\n"
+                    + "    __device__ float Psim(float L) {\n"
+                    + "        if (L < 0.0f) {\n"
+                    + "            /* unstable */\n"
+                    + "            float x200 = X(200, L);\n"
+                    + "            return (float) (2.0f * logf((1.0f + x200) / 2.0f) + logf((1.0f + x200 * x200) / (2.0f)) - 2.0f * atanf(x200) + 0.5f * pi);\n"
+                    + "        } else if (L > 0.0f) {\n"
+                    + "            /* stable */\n"
+                    + "            return (-5 * (2 / L));\n"
+                    + "        } else {\n"
+                    + "            return (0);\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "\n"
+                    + "    __device__ float Psih(float Zref_h, float L) {\n"
+                    + "        if (L < 0.0f) {\n"
+                    + "            /* unstable */\n"
+                    + "            float x = X(Zref_h, L);\n"
+                    + "            return (float) (2.0f * logf((1.0f + x * x) / 2.0f));\n"
+                    + "        } else if (L > 0.0f) {\n"
+                    + "            /* stable */\n"
+                    + "            return (-5 * (2 / L));\n"
+                    + "        } else {\n"
+                    + "            return (0);\n"
+                    + "        }\n"
+                    + "    }\n\n");
+        }
+        
         gpuCode.append("extern \"C\"{\n\n");
 
         StringBuilder gpuCodeBody = new StringBuilder("    __global__ void execute(\n");
@@ -692,6 +750,7 @@ public class GenericSEB {
         gpuCode.append("\n");
         VariableValue value;
         String type;
+
         gpuCode.append("    __device__ void execute_sub(\n");
         for (String string : parameters.keySet()) {
             value = parameters.get(string);
@@ -891,9 +950,16 @@ public class GenericSEB {
                             + "                }\n"
                             + "            }\n"
                             + "        }\n");
-                    source.append("        float[] coef = new float[2];\n"
-                            + "        GenericSEB.calculaAB(coef, rnHot, gHot, Uref, saviHot, maxTs, minTs);\n");
-                    source.append("        ret.put(\"coef\",coef);\n\n");
+//                    source.append("        float[] coef = new float[2];\n"
+//                            + "        GenericSEB.calculaAB(coef, rnHot, gHot, Uref, saviHot, maxTs, minTs);\n");
+//                    source.append("        ret.put(\"coef\",coef);\n\n");
+
+                    source.append("        ret.put(\"RnHot\",new float[]{rnHot});\n\n");
+                    source.append("        ret.put(\"GHot\",new float[]{gHot});\n\n");
+                    source.append("        ret.put(\"SAVI_hot\",new float[]{saviHot});\n\n");
+                    source.append("        ret.put(\"indexMax\",new float[]{maxTs});\n\n");
+                    source.append("        ret.put(\"indexMin\",new float[]{minTs});\n\n");
+
                 } else if (indexEnum.equals(IndexEnum.SEBAL)) {
                     source.append(
                             "        for (int i = 1; i < maxIndexVet.length; i++) {\n"
@@ -908,9 +974,15 @@ public class GenericSEB {
                             + "                saviHot = saviHotVet[i];\n"
                             + "            }\n"
                             + "        }\n");
-                    source.append("        float[] coef = new float[2];\n"
-                            + "        GenericSEB.calculaAB(coef, rnHot, gHot, Uref, saviHot, maxIndex, minIndex);\n");
-                    source.append("        ret.put(\"coef\",coef);\n\n");
+//                    source.append("        float[] coef = new float[2];\n"
+//                            + "        GenericSEB.calculaAB(coef, rnHot, gHot, Uref, saviHot, maxIndex, minIndex);\n");
+//                    source.append("        ret.put(\"coef\",coef);\n\n");
+
+                    source.append("        ret.put(\"RnHot\",new float[]{rnHot});\n\n");
+                    source.append("        ret.put(\"GHot\",new float[]{gHot});\n\n");
+                    source.append("        ret.put(\"SAVI_hot\",new float[]{saviHot});\n\n");
+                    source.append("        ret.put(\"indexMax\",new float[]{maxIndex});\n\n");
+                    source.append("        ret.put(\"indexMin\",new float[]{minIndex});\n\n");
                 }
 
 //                source.append("System.out.println(\"SEBTA CUDA\");");
@@ -963,13 +1035,13 @@ public class GenericSEB {
                         + "        }\n"
                         + "        TC = TC / indexMax.length;\n"
                         + "        TH = TH / indexMax.length;\n"
-                        + "        System.out.println(\"SSEB CUDA\");\n"
-                        + "        System.out.println(java.util.Arrays.toString(indexMax));\n"
-                        + "        System.out.println(java.util.Arrays.toString(TsMin));\n"
-                        + "        System.out.println(java.util.Arrays.toString(indexMin));\n"
-                        + "        System.out.println(java.util.Arrays.toString(TsMax));\n"
-                        + "        System.out.println(TC);\n"
-                        + "        System.out.println(TH);\n"
+                        //                        + "        System.out.println(\"SSEB CUDA\");\n"
+                        //                        + "        System.out.println(java.util.Arrays.toString(indexMax));\n"
+                        //                        + "        System.out.println(java.util.Arrays.toString(TsMin));\n"
+                        //                        + "        System.out.println(java.util.Arrays.toString(indexMin));\n"
+                        //                        + "        System.out.println(java.util.Arrays.toString(TsMax));\n"
+                        //                        + "        System.out.println(TC);\n"
+                        //                        + "        System.out.println(TH);\n"
                         + "        ret.put(\"TC\", new float[]{TC});\n"
                         + "        ret.put(\"TH\", new float[]{TH});\n\n");
             } else if (indexEnum.equals(IndexEnum.SSEBI)) {
@@ -1324,7 +1396,67 @@ public class GenericSEB {
 
                 }
             } else {
+                //AQUI
+                if (indexSEBALLine != null && i == indexSEBALLine) {
 
+                    gpuCode.append(
+                              "                z0m = (float) expf(-5.809f + 5.62f * SAVI);\n"
+                            + "                U_star = (float) (k * Uref / logf(z200 / z0m));\n"
+                            + "                r_ah = (float) (logf(z2 / z1) / (U_star * k));\n"
+                            + "\n"
+                            + "                float LHot = 0.0f;\n"
+                            + "                float tm_200Hot = 0.0f;\n"
+                            + "                float th_2Hot = 0.0f;\n"
+                            + "                float th_0_1Hot = 0.0f;\n"
+                            + "\n"
+                            + "                float LPixel = 0.0f;\n"
+                            + "                float tm_200Pixel = 0.0f;\n"
+                            + "                float th_2Pixel = 0.0f;\n"
+                            + "                float th_0_1Pixel = 0.0f;\n"
+                            + "\n"
+                            + "                float HHot = RnHot - GHot;\n"
+                            + "                float a = 0.0f;\n"
+                            + "                float b = 0.0f;\n"
+                            + "                float errorH = 10.0f;\n"
+                            + "                float r_ah_anteriorHot = 0.0f;\n"
+                            + "                int step = 1;\n"
+                            + "                float z0mHot = (float) expf(-5.809f + 5.62f * SAVI_hot);\n"
+                            + "                float U_starHot = (float) (k * Uref / logf(z200 / z0mHot));\n"
+                            + "                float r_ahHot = (float) (logf(z2 / z1) / (U_starHot * k));\n"
+                            + "                while (errorH > MaxAllowedError && step < 15) {\n"
+                            + "\n"
+                            + "                    a = ((HHot) * r_ahHot) / (p * cp * (indexMax - indexMin));\n"
+                            + "                    b = -a * (indexMin - T0);\n"
+                            + "\n"
+                            + "                    //PARTE DO PIXEL QUENTE\n"
+                            + "                    HHot = p * cp * (b + a * (indexMax - T0)) / r_ahHot;\n"
+                            + "                    LHot = (float) (-(p * cp * U_starHot * U_starHot * U_starHot * (indexMax)) / (k * g * HHot));\n"
+                            + "\n"
+                            + "                    tm_200Hot = Psim(LHot);\n"
+                            + "                    th_2Hot = Psih(z2, LHot);\n"
+                            + "                    th_0_1Hot = Psih(z1, LHot);\n"
+                            + "\n"
+                            + "                    U_starHot = (float) (k * Uref / (logf(z200 / z0mHot) - tm_200Hot));\n"
+                            + "                    r_ah_anteriorHot = r_ahHot;\n"
+                            + "                    r_ahHot = (float) ((logf(z2 / z1) - th_2Hot + th_0_1Hot) / (U_starHot * k));\n"
+                            + "\n"
+                            + "                    //PARTE DE CADA PIXEL\n"
+                            + "                    H = p * cp * (b + a * (Ts - T0)) / r_ah;\n"
+                            + "                    LPixel = (float) (-(p * cp * U_star * U_star * U_star * (Ts)) / (k * g * H));\n"
+                            + "\n"
+                            + "                    tm_200Pixel = Psim(LPixel);\n"
+                            + "                    th_2Pixel = Psih(z2, LPixel);\n"
+                            + "                    th_0_1Pixel = Psih(z1, LPixel);\n"
+                            + "\n"
+                            + "                    U_star = (float) (k * Uref / (logf(z200 / z0m) - tm_200Pixel));\n"
+                            + "                    r_ah = (float) ((logf(z2 / z1) - th_2Pixel + th_0_1Pixel) / (U_star * k));\n"
+                            + "\n"
+                            + "                    errorH = fabsf(((r_ahHot - r_ah_anteriorHot) * 100) / r_ahHot);\n"
+                            + "\n"
+                            + "                    step++;\n"
+                            + "                }\n\n");
+
+                }
                 equation = ident + "        " + lexer.analyse(equation, structure, null, language) + ";\n";
                 ex.evaluateExpr(equation);
                 outEquation = ex.getOutput();
@@ -2000,13 +2132,13 @@ public class GenericSEB {
                         + "        }\n"
                         + "        TC = TC / indexMax.length;\n"
                         + "        TH = TH / indexMax.length;\n"
-                        + "        System.out.println(\"SSEB OPENCL\");\n"
-                        + "        System.out.println(java.util.Arrays.toString(indexMax));\n"
-                        + "        System.out.println(java.util.Arrays.toString(TsMin));\n"
-                        + "        System.out.println(java.util.Arrays.toString(indexMin));\n"
-                        + "        System.out.println(java.util.Arrays.toString(TsMax));\n"
-                        + "        System.out.println(TC);\n"
-                        + "        System.out.println(TH);\n"
+                        //                        + "        System.out.println(\"SSEB OPENCL\");\n"
+                        //                        + "        System.out.println(java.util.Arrays.toString(indexMax));\n"
+                        //                        + "        System.out.println(java.util.Arrays.toString(TsMin));\n"
+                        //                        + "        System.out.println(java.util.Arrays.toString(indexMin));\n"
+                        //                        + "        System.out.println(java.util.Arrays.toString(TsMax));\n"
+                        //                        + "        System.out.println(TC);\n"
+                        //                        + "        System.out.println(TH);\n"
                         + "        ret.put(\"TC\", new float[]{TC});\n"
                         + "        ret.put(\"TH\", new float[]{TH});\n\n");
             } else if (indexEnum.equals(IndexEnum.SSEBI)) {
@@ -2758,6 +2890,33 @@ public class GenericSEB {
                         + "        }\n\n");
             }
             equations.add(index);
+        } else if (indexSEBALLine != null) {
+            source.append(""
+                    //                    + "                float z0m;\n"
+                    //                    + "                float U_star;\n"
+                    //                    + "                float r_ah;\n"
+                    //                    + "\n"
+                    //                    + "                float H = 0;\n"
+                    + "\n"
+                    + "        float z0mHot;\n"
+                    + "        float U_starHot;\n"
+                    + "        float r_ahHot;\n"
+                    + "        float LHot;\n"
+                    + "        float tm_200Hot;\n"
+                    + "        float th_2Hot;\n"
+                    + "        float th_0_1Hot;\n"
+                    + "\n"
+                    + "        float LPixel;\n"
+                    + "        float tm_200Pixel;\n"
+                    + "        float th_2Pixel;\n"
+                    + "        float th_0_1Pixel;\n"
+                    + "\n"
+                    + "        float HHot = RnHot - GHot;\n"
+                    + "        float a = 0.0f;\n"
+                    + "        float b = 0.0f;\n"
+                    + "        float errorH = 10.0f;\n"
+                    + "        int step = 1;\n"
+                    + "        float r_ah_anteriorHot;\n");
         }
 
         for (int i = 0; i < equations.size(); i++) {
@@ -2880,6 +3039,80 @@ public class GenericSEB {
                     }
                 }
             } else {
+//                boolean print = false;
+                if (indexSEBALLine != null && i == indexSEBALLine) {
+                    String ts = "Ts", savi = "SAVI";
+                    for (int j = 0; j < equations.size(); j++) {
+                        Equation eq3 = equations.get(j);
+                        if (eq3.getIndex() != null) {
+                            if (eq3.getTerm().equals("Ts")) {
+                                ts = "Ts[i]";
+                            } else if (eq3.getTerm().equals("SAVI")) {
+                                savi = "SAVI[i]";
+                            }
+                        }
+
+                    }
+                    source.append(
+                            "                z0m = (float) Math.exp(-5.809f + 5.62f * " + savi + ");\n"
+                            + "                U_star = (float) (k * Uref / Math.log(z200 / z0m));\n"
+                            + "                r_ah = (float) (Math.log(z2 / z1) / (U_star * k));\n"
+                            + "\n"
+                            + "                H = 0f;\n"
+                            + "                LHot = 0f;\n"
+                            + "                tm_200Hot = 0f;\n"
+                            + "                th_2Hot = 0f;\n"
+                            + "                th_0_1Hot = 0f;\n"
+                            + "\n"
+                            + "                LPixel = 0f;\n"
+                            + "                tm_200Pixel = 0f;\n"
+                            + "                th_2Pixel = 0f;\n"
+                            + "                th_0_1Pixel = 0f;\n"
+                            + "\n"
+                            + "                HHot = RnHot - GHot;\n"
+                            + "                a = 0.0f;\n"
+                            + "                b = 0.0f;\n"
+                            + "                errorH = 10.0f;\n"
+                            + "                step = 1;\n"
+                            + "                z0mHot = (float) Math.exp(-5.809f + 5.62f * SAVI_hot);\n"
+                            + "                U_starHot = (float) (k * Uref / Math.log(z200 / z0mHot));\n"
+                            + "                r_ahHot = (float) (Math.log(z2 / z1) / (U_starHot * k));\n"
+                            + "                while (errorH > MaxAllowedError && step < 15) {\n"
+                            + "\n"
+                            + "                    a = ((HHot) * r_ahHot) / (p * cp * (indexMax - indexMin));\n"
+                            + "                    b = -a * (indexMin - T0);\n"
+                            + "\n"
+                            + "                    //PARTE DO PIXEL QUENTE\n"
+                            + "                    HHot = p * cp * (b + a * (indexMax - T0)) / r_ahHot;\n"
+                            + "                    LHot = (float) (-(p * cp * U_starHot * U_starHot * U_starHot * (indexMax)) / (k * g * HHot));\n"
+                            + "\n"
+                            + "                    tm_200Hot = GenericSEB.Psim(LHot);\n"
+                            + "                    th_2Hot = GenericSEB.Psih(z2, LHot);\n"
+                            + "                    th_0_1Hot = GenericSEB.Psih(z1, LHot);\n"
+                            + "\n"
+                            + "                    U_starHot = (float) (k * Uref / (Math.log(z200 / z0mHot) - tm_200Hot));\n"
+                            + "                    r_ah_anteriorHot = r_ahHot;\n"
+                            + "                    r_ahHot = (float) ((Math.log(z2 / z1) - th_2Hot + th_0_1Hot) / (U_starHot * k));\n"
+                            + "\n"
+                            + "                    //PARTE DE CADA PIXEL\n"
+                            + "                    H = p * cp * (b + a * (" + ts + " - T0)) / r_ah;\n"
+                            + "                    LPixel = (float) (-(p * cp * U_star * U_star * U_star * (" + ts + ")) / (k * g * H));\n"
+                            + "\n"
+                            + "                    tm_200Pixel = GenericSEB.Psim(LPixel);\n"
+                            + "                    th_2Pixel = GenericSEB.Psih(z2, LPixel);\n"
+                            + "                    th_0_1Pixel = GenericSEB.Psih(z1, LPixel);\n"
+                            + "\n"
+                            + "                    U_star = (float) (k * Uref / (Math.log(z200 / z0m) - tm_200Pixel));\n"
+                            + "                    r_ah = (float) ((Math.log(z2 / z1) - th_2Pixel + th_0_1Pixel) / (U_star * k));\n"
+                            + "\n"
+                            + "                    errorH = Math.abs(((r_ahHot - r_ah_anteriorHot) * 100) / r_ahHot);\n"
+                            + "\n"
+                            + "                    step++;\n"
+                            + "                }\n\n");
+
+//                    System.out.println(ident + "            " + lexer.analyse(equation, structure, null, LanguageType.JAVA) + ";\n");
+//                    print = true;
+                }
                 equation = ident + "            " + lexer.analyse(equation, structure, null, LanguageType.JAVA) + ";\n";
                 ex.evaluateExpr(equation);
                 outEquation = ex.getOutput();
@@ -2917,10 +3150,16 @@ public class GenericSEB {
                         }
                     }
                     equation += string;
+//                    if (print) {
+//                        System.out.println(string);
+//                        System.out.println(equation);
+//                    }
                 }
+
                 equation += "\n\n";
                 variables.add(eq.getTerm());
                 source.append(equation);
+
             }
             if (eq.getCondition() != null) {
                 source.append("            }\n\n");
@@ -3108,8 +3347,8 @@ public class GenericSEB {
 //                source.append("System.out.println(SAVI_hot);");
 //                source.append("System.out.println(tMax);");
 //                source.append("System.out.println(tMin);");
-                source.append("        float[] coef = new float[2];\n"
-                        + "        GenericSEB.calculaAB(coef, RnHot, GHot, Uref, SAVI_hot, tMax, tMin);\n");
+//                source.append("        float[] coef = new float[2];\n"
+//                        + "        GenericSEB.calculaAB(coef, RnHot, GHot, Uref, SAVI_hot, tMax, tMin);\n");
 //            source.append("        System.out.println(\"pixel1:\"+pixel1[10057582]);\n");
 //            source.append("        System.out.println(\"pixel2:\"+pixel2[10057582]);\n");
 //            source.append("        System.out.println(\"pixel3:\"+pixel3[10057582]);\n");
@@ -3139,12 +3378,27 @@ public class GenericSEB {
 //                source.append("        System.out.println(\"tMax:\"+tMax);\n");
 //                source.append("        System.out.println(\"tMin:\"+tMin);\n");
 //            }
+//                source.append("        ret.put(\"RnHot\",RnHot);\n\n");
+//                source.append("        ret.put(\"GHot\",GHot);\n\n");
+//                source.append("        ret.put(\"SAVI_hot\",SAVI_hot);\n\n");
+//                source.append("        ret.put(\"tMax\",tMax);\n\n");
+//                source.append("        ret.put(\"tMin\",tMin);\n\n");
+                source.append("        ret.put(\"RnHot\",new float[]{RnHot});\n\n");
+                source.append("        ret.put(\"GHot\",new float[]{GHot});\n\n");
+                source.append("        ret.put(\"SAVI_hot\",new float[]{SAVI_hot});\n\n");
+                source.append("        ret.put(\"indexMax\",new float[]{tMax});\n\n");
+                source.append("        ret.put(\"indexMin\",new float[]{tMin});\n\n");
 //            source.append("        System.exit(1);\n");
-                source.append("        ret.put(\"coef\",coef);\n\n");
+//                source.append("        ret.put(\"coef\",coef);\n\n");
             } else if (indexEnum.equals(IndexEnum.SEBAL)) {
-                source.append("        float[] coef = new float[2];\n"
-                        + "        GenericSEB.calculaAB(coef, RnHot, GHot, Uref, SAVI_hot, indexMax, indexMin);\n");
-                source.append("        ret.put(\"coef\",coef);\n\n");
+//                source.append("        float[] coef = new float[2];\n"
+//                        + "        GenericSEB.calculaAB(coef, RnHot, GHot, Uref, SAVI_hot, indexMax, indexMin);\n");
+//                source.append("        ret.put(\"coef\",coef);\n\n");
+                source.append("        ret.put(\"RnHot\",new float[]{RnHot});\n\n");
+                source.append("        ret.put(\"GHot\",new float[]{GHot});\n\n");
+                source.append("        ret.put(\"SAVI_hot\",new float[]{SAVI_hot});\n\n");
+                source.append("        ret.put(\"indexMax\",new float[]{indexMax});\n\n");
+                source.append("        ret.put(\"indexMin\",new float[]{indexMin});\n\n");
             } else if (indexEnum.equals(IndexEnum.SSEB)) {
                 source.append(
                         //                        "            System.out.println(java.util.Arrays.toString(indexMax));\n"
@@ -3160,13 +3414,13 @@ public class GenericSEB {
                         + "        }\n"
                         + "        TC = TC / indexMax.length;\n"
                         + "        TH = TH / indexMax.length;\n"
-                        + "        System.out.println(\"SSEB JAVA\");\n"
-                        + "        System.out.println(java.util.Arrays.toString(indexMax));\n"
-                        + "        System.out.println(java.util.Arrays.toString(TsMin));\n"
-                        + "        System.out.println(java.util.Arrays.toString(indexMin));\n"
-                        + "        System.out.println(java.util.Arrays.toString(TsMax));\n"
-                        + "        System.out.println(TC);\n"
-                        + "        System.out.println(TH);\n"
+                        //                        + "        System.out.println(\"SSEB JAVA\");\n"
+                        //                        + "        System.out.println(java.util.Arrays.toString(indexMax));\n"
+                        //                        + "        System.out.println(java.util.Arrays.toString(TsMin));\n"
+                        //                        + "        System.out.println(java.util.Arrays.toString(indexMin));\n"
+                        //                        + "        System.out.println(java.util.Arrays.toString(TsMax));\n"
+                        //                        + "        System.out.println(TC);\n"
+                        //                        + "        System.out.println(TH);\n"
                         + "        ret.put(\"TC\", new float[]{TC});\n"
                         + "        ret.put(\"TH\", new float[]{TH});\n\n");
             } else if (indexEnum.equals(IndexEnum.SSEBI)) {
@@ -3491,11 +3745,11 @@ public class GenericSEB {
 
     }
 
-    protected static float X(float Zref_m, float L) {
+    public static float X(float Zref_m, float L) {
         return (float) (Math.sqrt(Math.sqrt((1.0f - 16.0f * Zref_m / L))));
     }
 
-    protected static float Psim(float L) {
+    public static float Psim(float L) {
         if (L < 0.0f) {
             /* unstable */
             float x200 = X(200, L);
@@ -3508,7 +3762,7 @@ public class GenericSEB {
         }
     }
 
-    protected static float Psih(float Zref_h, float L) {
+    public static float Psih(float Zref_h, float L) {
         if (L < 0.0f) {
             /* unstable */
             float x = X(Zref_h, L);
