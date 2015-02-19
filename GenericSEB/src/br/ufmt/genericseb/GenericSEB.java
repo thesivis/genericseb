@@ -1396,67 +1396,7 @@ public class GenericSEB {
 
                 }
             } else {
-                //AQUI
-                if (indexSEBALLine != null && i == indexSEBALLine) {
 
-                    gpuCode.append(
-                            "                z0m = (float) expf(-5.809f + 5.62f * SAVI);\n"
-                            + "                U_star = (float) (k * Uref / logf(z200 / z0m));\n"
-                            + "                r_ah = (float) (logf(z2 / z1) / (U_star * k));\n"
-                            + "\n"
-                            + "                float LHot = 0.0f;\n"
-                            + "                float tm_200Hot = 0.0f;\n"
-                            + "                float th_2Hot = 0.0f;\n"
-                            + "                float th_0_1Hot = 0.0f;\n"
-                            + "\n"
-                            + "                float LPixel = 0.0f;\n"
-                            + "                float tm_200Pixel = 0.0f;\n"
-                            + "                float th_2Pixel = 0.0f;\n"
-                            + "                float th_0_1Pixel = 0.0f;\n"
-                            + "\n"
-                            + "                float HHot = RnHot - GHot;\n"
-                            + "                float a = 0.0f;\n"
-                            + "                float b = 0.0f;\n"
-                            + "                float errorH = 10.0f;\n"
-                            + "                float r_ah_anteriorHot = 0.0f;\n"
-                            + "                int step = 1;\n"
-                            + "                float z0mHot = (float) expf(-5.809f + 5.62f * SAVI_hot);\n"
-                            + "                float U_starHot = (float) (k * Uref / logf(z200 / z0mHot));\n"
-                            + "                float r_ahHot = (float) (logf(z2 / z1) / (U_starHot * k));\n"
-                            + "                while (errorH > MaxAllowedError && step < 15) {\n"
-                            + "\n"
-                            + "                    a = ((HHot) * r_ahHot) / (p * cp * (indexMax - indexMin));\n"
-                            + "                    b = -a * (indexMin - T0);\n"
-                            + "\n"
-                            + "                    //PARTE DO PIXEL QUENTE\n"
-                            + "                    HHot = p * cp * (b + a * (indexMax - T0)) / r_ahHot;\n"
-                            + "                    LHot = (float) (-(p * cp * U_starHot * U_starHot * U_starHot * (indexMax)) / (k * g * HHot));\n"
-                            + "\n"
-                            + "                    tm_200Hot = Psim(LHot);\n"
-                            + "                    th_2Hot = Psih(z2, LHot);\n"
-                            + "                    th_0_1Hot = Psih(z1, LHot);\n"
-                            + "\n"
-                            + "                    U_starHot = (float) (k * Uref / (logf(z200 / z0mHot) - tm_200Hot));\n"
-                            + "                    r_ah_anteriorHot = r_ahHot;\n"
-                            + "                    r_ahHot = (float) ((logf(z2 / z1) - th_2Hot + th_0_1Hot) / (U_starHot * k));\n"
-                            + "\n"
-                            + "                    //PARTE DE CADA PIXEL\n"
-                            + "                    H = p * cp * (b + a * (Ts - T0)) / r_ah;\n"
-                            + "                    LPixel = (float) (-(p * cp * U_star * U_star * U_star * (Ts)) / (k * g * H));\n"
-                            + "\n"
-                            + "                    tm_200Pixel = Psim(LPixel);\n"
-                            + "                    th_2Pixel = Psih(z2, LPixel);\n"
-                            + "                    th_0_1Pixel = Psih(z1, LPixel);\n"
-                            + "\n"
-                            + "                    U_star = (float) (k * Uref / (logf(z200 / z0m) - tm_200Pixel));\n"
-                            + "                    r_ah = (float) ((logf(z2 / z1) - th_2Pixel + th_0_1Pixel) / (U_star * k));\n"
-                            + "\n"
-                            + "                    errorH = fabsf(((r_ahHot - r_ah_anteriorHot) * 100) / r_ahHot);\n"
-                            + "\n"
-                            + "                    step++;\n"
-                            + "                }\n\n");
-
-                }
                 equation = ident + "        " + lexer.analyse(equation, structure, null, language) + ";\n";
                 ex.evaluateExpr(equation);
                 outEquation = ex.getOutput();
@@ -1517,6 +1457,67 @@ public class GenericSEB {
             }
             if (eq.getCondition() != null) {
                 gpuCode.append("            }\n\n");
+            }
+            //AQUI
+            if (indexSEBALLine != null && i == indexSEBALLine) {
+
+                gpuCode.append(
+                        "                z0m = (float) expf(-5.809f + 5.62f * SAVI);\n"
+                        + "                U_star = (float) (k * Uref / logf(z200 / z0m));\n"
+                        + "                r_ah = (float) (logf(z2 / z1) / (U_star * k));\n"
+                        + "\n"
+                        + "                float LHot = 0.0f;\n"
+                        + "                float tm_200Hot = 0.0f;\n"
+                        + "                float th_2Hot = 0.0f;\n"
+                        + "                float th_0_1Hot = 0.0f;\n"
+                        + "\n"
+                        + "                float LPixel = 0.0f;\n"
+                        + "                float tm_200Pixel = 0.0f;\n"
+                        + "                float th_2Pixel = 0.0f;\n"
+                        + "                float th_0_1Pixel = 0.0f;\n"
+                        + "\n"
+                        + "                float HHot = RnHot - GHot;\n"
+                        + "                float a = 0.0f;\n"
+                        + "                float b = 0.0f;\n"
+                        + "                float errorH = 10.0f;\n"
+                        + "                float r_ah_anteriorHot = 0.0f;\n"
+                        + "                int step = 1;\n"
+                        + "                float z0mHot = (float) expf(-5.809f + 5.62f * SAVI_hot);\n"
+                        + "                float U_starHot = (float) (k * Uref / logf(z200 / z0mHot));\n"
+                        + "                float r_ahHot = (float) (logf(z2 / z1) / (U_starHot * k));\n"
+                        + "                while (errorH > MaxAllowedError && step < 15) {\n"
+                        + "\n"
+                        + "                    a = ((HHot) * r_ahHot) / (p * cp * (indexMax - indexMin));\n"
+                        + "                    b = -a * (indexMin - T0);\n"
+                        + "\n"
+                        + "                    //PARTE DO PIXEL QUENTE\n"
+                        + "                    HHot = p * cp * (b + a * (indexMax - T0)) / r_ahHot;\n"
+                        + "                    LHot = (float) (-(p * cp * U_starHot * U_starHot * U_starHot * (indexMax)) / (k * g * HHot));\n"
+                        + "\n"
+                        + "                    tm_200Hot = Psim(LHot);\n"
+                        + "                    th_2Hot = Psih(z2, LHot);\n"
+                        + "                    th_0_1Hot = Psih(z1, LHot);\n"
+                        + "\n"
+                        + "                    U_starHot = (float) (k * Uref / (logf(z200 / z0mHot) - tm_200Hot));\n"
+                        + "                    r_ah_anteriorHot = r_ahHot;\n"
+                        + "                    r_ahHot = (float) ((logf(z2 / z1) - th_2Hot + th_0_1Hot) / (U_starHot * k));\n"
+                        + "\n"
+                        + "                    //PARTE DE CADA PIXEL\n"
+                        + "                    H = p * cp * (b + a * (Ts - T0)) / r_ah;\n"
+                        + "                    LPixel = (float) (-(p * cp * U_star * U_star * U_star * (Ts)) / (k * g * H));\n"
+                        + "\n"
+                        + "                    tm_200Pixel = Psim(LPixel);\n"
+                        + "                    th_2Pixel = Psih(z2, LPixel);\n"
+                        + "                    th_0_1Pixel = Psih(z1, LPixel);\n"
+                        + "\n"
+                        + "                    U_star = (float) (k * Uref / (logf(z200 / z0m) - tm_200Pixel));\n"
+                        + "                    r_ah = (float) ((logf(z2 / z1) - th_2Pixel + th_0_1Pixel) / (U_star * k));\n"
+                        + "\n"
+                        + "                    errorH = fabsf(((r_ahHot - r_ah_anteriorHot) * 100) / r_ahHot);\n"
+                        + "\n"
+                        + "                    step++;\n"
+                        + "                }\n\n");
+
             }
         }
 
@@ -2536,79 +2537,6 @@ public class GenericSEB {
 
                 }
             } else {
-                //aqui
-                if (indexSEBALLine != null && i == indexSEBALLine) {
-
-                    String ts = "Ts", savi = "SAVI";
-                    for (int j = 0; j < equations.size(); j++) {
-                        Equation eq3 = equations.get(j);
-                        if (eq3.getIndex() != null) {
-                            if (eq3.getTerm().equals("Ts")) {
-                                ts = "Ts[idx]";
-                            } else if (eq3.getTerm().equals("SAVI")) {
-                                savi = "SAVI[idx]";
-                            }
-                        }
-                    }
-
-                    gpuCode.append(
-                            "                z0m = (float) exp(-5.809f + 5.62f * " + savi + ");\n"
-                            + "                U_star = (float) (k * Uref / log(z200 / z0m));\n"
-                            + "                r_ah = (float) (log(z2 / z1) / (U_star * k));\n"
-                            + "\n"
-                            + "                float LHot = 0.0f;\n"
-                            + "                float tm_200Hot = 0.0f;\n"
-                            + "                float th_2Hot = 0.0f;\n"
-                            + "                float th_0_1Hot = 0.0f;\n"
-                            + "\n"
-                            + "                float LPixel = 0.0f;\n"
-                            + "                float tm_200Pixel = 0.0f;\n"
-                            + "                float th_2Pixel = 0.0f;\n"
-                            + "                float th_0_1Pixel = 0.0f;\n"
-                            + "\n"
-                            + "                float HHot = RnHot - GHot;\n"
-                            + "                float a = 0.0f;\n"
-                            + "                float b = 0.0f;\n"
-                            + "                float errorH = 10.0f;\n"
-                            + "                float r_ah_anteriorHot = 0.0f;\n"
-                            + "                int step = 1;\n"
-                            + "                float z0mHot = (float) exp(-5.809f + 5.62f * SAVI_hot);\n"
-                            + "                float U_starHot = (float) (k * Uref / log(z200 / z0mHot));\n"
-                            + "                float r_ahHot = (float) (log(z2 / z1) / (U_starHot * k));\n"
-                            + "                while (errorH > MaxAllowedError && step < 15) {\n"
-                            + "\n"
-                            + "                    a = ((HHot) * r_ahHot) / (p * cp * (indexMax - indexMin));\n"
-                            + "                    b = -a * (indexMin - T0);\n"
-                            + "\n"
-                            + "                    //PARTE DO PIXEL QUENTE\n"
-                            + "                    HHot = p * cp * (b + a * (indexMax - T0)) / r_ahHot;\n"
-                            + "                    LHot = (float) (-(p * cp * U_starHot * U_starHot * U_starHot * (indexMax)) / (k * g * HHot));\n"
-                            + "\n"
-                            + "                    tm_200Hot = Psim(LHot);\n"
-                            + "                    th_2Hot = Psih(z2, LHot);\n"
-                            + "                    th_0_1Hot = Psih(z1, LHot);\n"
-                            + "\n"
-                            + "                    U_starHot = (float) (k * Uref / (log(z200 / z0mHot) - tm_200Hot));\n"
-                            + "                    r_ah_anteriorHot = r_ahHot;\n"
-                            + "                    r_ahHot = (float) ((log(z2 / z1) - th_2Hot + th_0_1Hot) / (U_starHot * k));\n"
-                            + "\n"
-                            + "                    //PARTE DE CADA PIXEL\n"
-                            + "                    H = p * cp * (b + a * (" + ts + " - T0)) / r_ah;\n"
-                            + "                    LPixel = (float) (-(p * cp * U_star * U_star * U_star * (" + ts + ")) / (k * g * H));\n"
-                            + "\n"
-                            + "                    tm_200Pixel = Psim(LPixel);\n"
-                            + "                    th_2Pixel = Psih(z2, LPixel);\n"
-                            + "                    th_0_1Pixel = Psih(z1, LPixel);\n"
-                            + "\n"
-                            + "                    U_star = (float) (k * Uref / (log(z200 / z0m) - tm_200Pixel));\n"
-                            + "                    r_ah = (float) ((log(z2 / z1) - th_2Pixel + th_0_1Pixel) / (U_star * k));\n"
-                            + "\n"
-                            + "                    errorH = fabs(((r_ahHot - r_ah_anteriorHot) * 100) / r_ahHot);\n"
-                            + "\n"
-                            + "                    step++;\n"
-                            + "                }\n\n");
-
-                }
 
                 equation = ident + "        " + lexer.analyse(equation, structure, null, language) + ";\n";
                 ex.evaluateExpr(equation);
@@ -2662,6 +2590,79 @@ public class GenericSEB {
             }
             if (eq.getCondition() != null) {
                 gpuCode.append("        }\n\n");
+            }
+            //aqui
+            if (indexSEBALLine != null && i == indexSEBALLine) {
+
+                String ts = "Ts", savi = "SAVI";
+                for (int j = 0; j < equations.size(); j++) {
+                    Equation eq3 = equations.get(j);
+                    if (eq3.getIndex() != null) {
+                        if (eq3.getTerm().equals("Ts")) {
+                            ts = "Ts[idx]";
+                        } else if (eq3.getTerm().equals("SAVI")) {
+                            savi = "SAVI[idx]";
+                        }
+                    }
+                }
+
+                gpuCode.append(
+                        "                z0m = (float) exp(-5.809f + 5.62f * " + savi + ");\n"
+                        + "                U_star = (float) (k * Uref / log(z200 / z0m));\n"
+                        + "                r_ah = (float) (log(z2 / z1) / (U_star * k));\n"
+                        + "\n"
+                        + "                float LHot = 0.0f;\n"
+                        + "                float tm_200Hot = 0.0f;\n"
+                        + "                float th_2Hot = 0.0f;\n"
+                        + "                float th_0_1Hot = 0.0f;\n"
+                        + "\n"
+                        + "                float LPixel = 0.0f;\n"
+                        + "                float tm_200Pixel = 0.0f;\n"
+                        + "                float th_2Pixel = 0.0f;\n"
+                        + "                float th_0_1Pixel = 0.0f;\n"
+                        + "\n"
+                        + "                float HHot = RnHot - GHot;\n"
+                        + "                float a = 0.0f;\n"
+                        + "                float b = 0.0f;\n"
+                        + "                float errorH = 10.0f;\n"
+                        + "                float r_ah_anteriorHot = 0.0f;\n"
+                        + "                int step = 1;\n"
+                        + "                float z0mHot = (float) exp(-5.809f + 5.62f * SAVI_hot);\n"
+                        + "                float U_starHot = (float) (k * Uref / log(z200 / z0mHot));\n"
+                        + "                float r_ahHot = (float) (log(z2 / z1) / (U_starHot * k));\n"
+                        + "                while (errorH > MaxAllowedError && step < 15) {\n"
+                        + "\n"
+                        + "                    a = ((HHot) * r_ahHot) / (p * cp * (indexMax - indexMin));\n"
+                        + "                    b = -a * (indexMin - T0);\n"
+                        + "\n"
+                        + "                    //PARTE DO PIXEL QUENTE\n"
+                        + "                    HHot = p * cp * (b + a * (indexMax - T0)) / r_ahHot;\n"
+                        + "                    LHot = (float) (-(p * cp * U_starHot * U_starHot * U_starHot * (indexMax)) / (k * g * HHot));\n"
+                        + "\n"
+                        + "                    tm_200Hot = Psim(LHot);\n"
+                        + "                    th_2Hot = Psih(z2, LHot);\n"
+                        + "                    th_0_1Hot = Psih(z1, LHot);\n"
+                        + "\n"
+                        + "                    U_starHot = (float) (k * Uref / (log(z200 / z0mHot) - tm_200Hot));\n"
+                        + "                    r_ah_anteriorHot = r_ahHot;\n"
+                        + "                    r_ahHot = (float) ((log(z2 / z1) - th_2Hot + th_0_1Hot) / (U_starHot * k));\n"
+                        + "\n"
+                        + "                    //PARTE DE CADA PIXEL\n"
+                        + "                    H = p * cp * (b + a * (" + ts + " - T0)) / r_ah;\n"
+                        + "                    LPixel = (float) (-(p * cp * U_star * U_star * U_star * (" + ts + ")) / (k * g * H));\n"
+                        + "\n"
+                        + "                    tm_200Pixel = Psim(LPixel);\n"
+                        + "                    th_2Pixel = Psih(z2, LPixel);\n"
+                        + "                    th_0_1Pixel = Psih(z1, LPixel);\n"
+                        + "\n"
+                        + "                    U_star = (float) (k * Uref / (log(z200 / z0m) - tm_200Pixel));\n"
+                        + "                    r_ah = (float) ((log(z2 / z1) - th_2Pixel + th_0_1Pixel) / (U_star * k));\n"
+                        + "\n"
+                        + "                    errorH = fabs(((r_ahHot - r_ah_anteriorHot) * 100) / r_ahHot);\n"
+                        + "\n"
+                        + "                    step++;\n"
+                        + "                }\n\n");
+
             }
         }
 
@@ -3158,79 +3159,7 @@ public class GenericSEB {
                 }
             } else {
 //                boolean print = false;
-                if (indexSEBALLine != null && i == indexSEBALLine) {
-                    String ts = "Ts", savi = "SAVI";
-                    for (int j = 0; j < equations.size(); j++) {
-                        Equation eq3 = equations.get(j);
-                        if (eq3.getIndex() != null) {
-                            if (eq3.getTerm().equals("Ts")) {
-                                ts = "Ts[i]";
-                            } else if (eq3.getTerm().equals("SAVI")) {
-                                savi = "SAVI[i]";
-                            }
-                        }
 
-                    }
-                    source.append(
-                            "                z0m = (float) Math.exp(-5.809f + 5.62f * " + savi + ");\n"
-                            + "                U_star = (float) (k * Uref / Math.log(z200 / z0m));\n"
-                            + "                r_ah = (float) (Math.log(z2 / z1) / (U_star * k));\n"
-                            + "\n"
-                            + "                H = 0f;\n"
-                            + "                LHot = 0f;\n"
-                            + "                tm_200Hot = 0f;\n"
-                            + "                th_2Hot = 0f;\n"
-                            + "                th_0_1Hot = 0f;\n"
-                            + "\n"
-                            + "                LPixel = 0f;\n"
-                            + "                tm_200Pixel = 0f;\n"
-                            + "                th_2Pixel = 0f;\n"
-                            + "                th_0_1Pixel = 0f;\n"
-                            + "\n"
-                            + "                HHot = RnHot - GHot;\n"
-                            + "                a = 0.0f;\n"
-                            + "                b = 0.0f;\n"
-                            + "                errorH = 10.0f;\n"
-                            + "                step = 1;\n"
-                            + "                z0mHot = (float) Math.exp(-5.809f + 5.62f * SAVI_hot);\n"
-                            + "                U_starHot = (float) (k * Uref / Math.log(z200 / z0mHot));\n"
-                            + "                r_ahHot = (float) (Math.log(z2 / z1) / (U_starHot * k));\n"
-                            + "                while (errorH > MaxAllowedError && step < 15) {\n"
-                            + "\n"
-                            + "                    a = ((HHot) * r_ahHot) / (p * cp * (indexMax - indexMin));\n"
-                            + "                    b = -a * (indexMin - T0);\n"
-                            + "\n"
-                            + "                    //PARTE DO PIXEL QUENTE\n"
-                            + "                    HHot = p * cp * (b + a * (indexMax - T0)) / r_ahHot;\n"
-                            + "                    LHot = (float) (-(p * cp * U_starHot * U_starHot * U_starHot * (indexMax)) / (k * g * HHot));\n"
-                            + "\n"
-                            + "                    tm_200Hot = GenericSEB.Psim(LHot);\n"
-                            + "                    th_2Hot = GenericSEB.Psih(z2, LHot);\n"
-                            + "                    th_0_1Hot = GenericSEB.Psih(z1, LHot);\n"
-                            + "\n"
-                            + "                    U_starHot = (float) (k * Uref / (Math.log(z200 / z0mHot) - tm_200Hot));\n"
-                            + "                    r_ah_anteriorHot = r_ahHot;\n"
-                            + "                    r_ahHot = (float) ((Math.log(z2 / z1) - th_2Hot + th_0_1Hot) / (U_starHot * k));\n"
-                            + "\n"
-                            + "                    //PARTE DE CADA PIXEL\n"
-                            + "                    H = p * cp * (b + a * (" + ts + " - T0)) / r_ah;\n"
-                            + "                    LPixel = (float) (-(p * cp * U_star * U_star * U_star * (" + ts + ")) / (k * g * H));\n"
-                            + "\n"
-                            + "                    tm_200Pixel = GenericSEB.Psim(LPixel);\n"
-                            + "                    th_2Pixel = GenericSEB.Psih(z2, LPixel);\n"
-                            + "                    th_0_1Pixel = GenericSEB.Psih(z1, LPixel);\n"
-                            + "\n"
-                            + "                    U_star = (float) (k * Uref / (Math.log(z200 / z0m) - tm_200Pixel));\n"
-                            + "                    r_ah = (float) ((Math.log(z2 / z1) - th_2Pixel + th_0_1Pixel) / (U_star * k));\n"
-                            + "\n"
-                            + "                    errorH = Math.abs(((r_ahHot - r_ah_anteriorHot) * 100) / r_ahHot);\n"
-                            + "\n"
-                            + "                    step++;\n"
-                            + "                }\n\n");
-
-//                    System.out.println(ident + "            " + lexer.analyse(equation, structure, null, LanguageType.JAVA) + ";\n");
-//                    print = true;
-                }
                 equation = ident + "            " + lexer.analyse(equation, structure, null, LanguageType.JAVA) + ";\n";
                 ex.evaluateExpr(equation);
                 outEquation = ex.getOutput();
@@ -3277,10 +3206,83 @@ public class GenericSEB {
                 equation += "\n\n";
                 variables.add(eq.getTerm());
                 source.append(equation);
-
             }
             if (eq.getCondition() != null) {
                 source.append("            }\n\n");
+            }
+
+            if (indexSEBALLine != null && i == indexSEBALLine) {
+                String ts = "Ts", savi = "SAVI";
+                for (int j = 0; j < equations.size(); j++) {
+                    Equation eq3 = equations.get(j);
+                    if (eq3.getIndex() != null) {
+                        if (eq3.getTerm().equals("Ts")) {
+                            ts = "Ts[i]";
+                        } else if (eq3.getTerm().equals("SAVI")) {
+                            savi = "SAVI[i]";
+                        }
+                    }
+
+                }
+                source.append(
+                        "                z0m = (float) Math.exp(-5.809f + 5.62f * " + savi + ");\n"
+                        + "                U_star = (float) (k * Uref / Math.log(z200 / z0m));\n"
+                        + "                r_ah = (float) (Math.log(z2 / z1) / (U_star * k));\n"
+                        + "\n"
+                        + "                H = 0f;\n"
+                        + "                LHot = 0f;\n"
+                        + "                tm_200Hot = 0f;\n"
+                        + "                th_2Hot = 0f;\n"
+                        + "                th_0_1Hot = 0f;\n"
+                        + "\n"
+                        + "                LPixel = 0f;\n"
+                        + "                tm_200Pixel = 0f;\n"
+                        + "                th_2Pixel = 0f;\n"
+                        + "                th_0_1Pixel = 0f;\n"
+                        + "\n"
+                        + "                HHot = RnHot - GHot;\n"
+                        + "                a = 0.0f;\n"
+                        + "                b = 0.0f;\n"
+                        + "                errorH = 10.0f;\n"
+                        + "                step = 1;\n"
+                        + "                z0mHot = (float) Math.exp(-5.809f + 5.62f * SAVI_hot);\n"
+                        + "                U_starHot = (float) (k * Uref / Math.log(z200 / z0mHot));\n"
+                        + "                r_ahHot = (float) (Math.log(z2 / z1) / (U_starHot * k));\n"
+                        + "                while (errorH > MaxAllowedError && step < 15) {\n"
+                        + "\n"
+                        + "                    a = ((HHot) * r_ahHot) / (p * cp * (indexMax - indexMin));\n"
+                        + "                    b = -a * (indexMin - T0);\n"
+                        + "\n"
+                        + "                    //PARTE DO PIXEL QUENTE\n"
+                        + "                    HHot = p * cp * (b + a * (indexMax - T0)) / r_ahHot;\n"
+                        + "                    LHot = (float) (-(p * cp * U_starHot * U_starHot * U_starHot * (indexMax)) / (k * g * HHot));\n"
+                        + "\n"
+                        + "                    tm_200Hot = GenericSEB.Psim(LHot);\n"
+                        + "                    th_2Hot = GenericSEB.Psih(z2, LHot);\n"
+                        + "                    th_0_1Hot = GenericSEB.Psih(z1, LHot);\n"
+                        + "\n"
+                        + "                    U_starHot = (float) (k * Uref / (Math.log(z200 / z0mHot) - tm_200Hot));\n"
+                        + "                    r_ah_anteriorHot = r_ahHot;\n"
+                        + "                    r_ahHot = (float) ((Math.log(z2 / z1) - th_2Hot + th_0_1Hot) / (U_starHot * k));\n"
+                        + "\n"
+                        + "                    //PARTE DE CADA PIXEL\n"
+                        + "                    H = p * cp * (b + a * (" + ts + " - T0)) / r_ah;\n"
+                        + "                    LPixel = (float) (-(p * cp * U_star * U_star * U_star * (" + ts + ")) / (k * g * H));\n"
+                        + "\n"
+                        + "                    tm_200Pixel = GenericSEB.Psim(LPixel);\n"
+                        + "                    th_2Pixel = GenericSEB.Psih(z2, LPixel);\n"
+                        + "                    th_0_1Pixel = GenericSEB.Psih(z1, LPixel);\n"
+                        + "\n"
+                        + "                    U_star = (float) (k * Uref / (Math.log(z200 / z0m) - tm_200Pixel));\n"
+                        + "                    r_ah = (float) ((Math.log(z2 / z1) - th_2Pixel + th_0_1Pixel) / (U_star * k));\n"
+                        + "\n"
+                        + "                    errorH = Math.abs(((r_ahHot - r_ah_anteriorHot) * 100) / r_ahHot);\n"
+                        + "\n"
+                        + "                    step++;\n"
+                        + "                }\n\n");
+
+//                    System.out.println(ident + "            " + lexer.analyse(equation, structure, null, LanguageType.JAVA) + ";\n");
+//                    print = true;
             }
         }
 
