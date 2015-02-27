@@ -10,13 +10,15 @@ import java.io.File;
  *
  * @author raphael
  */
-public class Image extends Equation {
+public class Image extends Name {
 
     private File file;
+    private String value;
 
     public Image(String name, String value, File file) {
-        super(value, name);
+        super(name);
         this.file = file;
+        this.value = value;
     }
 
     public File getFile() {
@@ -27,9 +29,12 @@ public class Image extends Equation {
         this.file = file;
     }
 
-    @Override
-    public String toString() {
-        return getName(); //To change body of generated methods, choose Tools | Templates.
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
     }
 
 }
