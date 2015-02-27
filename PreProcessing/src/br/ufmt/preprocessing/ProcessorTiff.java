@@ -153,7 +153,7 @@ public class ProcessorTiff {
         }
         return null;
     }
-    
+
     private boolean isIndex(String index) {
         return index.startsWith(IndexEnum.SEBAL.toString().toLowerCase()) || index.startsWith(IndexEnum.SEBTA.toString().toLowerCase())
                 || index.startsWith(IndexEnum.SSEB.toString().toLowerCase()) || index.startsWith(IndexEnum.SSEBI.toString().toLowerCase());
@@ -224,8 +224,10 @@ public class ProcessorTiff {
             Logger.getLogger(ProcessorTiff.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    private boolean isCoeficients(String coef){
-        return (coef.equals("coef") || coef.equals("TC") || coef.equals("TH")
-                 || coef.equals("aH") || coef.equals("bH") || coef.equals("aLE") || coef.equals("bLE"));
+
+    private boolean isCoeficients(String coef) {
+        return (coef.equals("indexMax") || coef.equals("RnHot") || coef.equals("SAVI_hot") || coef.equals("GHot")
+                || coef.equals("indexMin") || coef.equals("TC") || coef.equals("TH")
+                || coef.equals("aH") || coef.equals("bH") || coef.equals("aLE") || coef.equals("bLE"));
     }
 }
